@@ -15,6 +15,7 @@
 - Contains the standard package contents.
 - Also includes Microsoft Fixed Version WebView2 Runtime under `runtime/webview2/`.
 - Built only when `WEBVIEW2_FIXED_RUNTIME_DIR` points to an approved local runtime directory.
+- On startup the app points WebView2 at that folder through `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`, which is the WebView2-supported override for a fixed runtime.
 
 ## GitHub release flow
 

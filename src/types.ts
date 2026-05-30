@@ -54,6 +54,7 @@ export type TypingPulse = {
 export type RuntimeInfo = {
   appVersion: string;
   dataDir: string;
+  fixedWebView2Runtime: string | null;
   petRoots: string[];
   portableMode: boolean;
 };

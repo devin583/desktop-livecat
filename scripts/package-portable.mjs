@@ -39,6 +39,20 @@ function copyStandard(target) {
   fs.copyFileSync(path.join(root, "docs", "distribution.md"), path.join(target, "README-portable.md"));
 }
 
+function resolveFixedRuntime(from) {
+  if (fs.existsSync(path.join(from, "msedgewebview2.exe"))) return from;
+
+  for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const candidate = path.join(from, entry.name);
+    if (fs.existsSync(path.join(candidate, "msedgewebview2.exe"))) return candidate;
+  }
+
+  throw new Error(
+    `WEBVIEW2_FIXED_RUNTIME_DIR must point to an extracted Fixed Version WebView2 runtime folder: ${from}`,
+  );
+}
+
 function zipFolder(folder) {
   const zipPath = `${folder}.zip`;
   fs.rmSync(zipPath, { force: true });
@@ -64,7 +78,7 @@ const written = [zipFolder(standard)];
 const fixedRuntime = process.env.WEBVIEW2_FIXED_RUNTIME_DIR;
 if (fixedRuntime) {
   copyStandard(full);
-  copyDir(fixedRuntime, path.join(full, "runtime", "webview2"));
+  copyDir(resolveFixedRuntime(fixedRuntime), path.join(full, "runtime", "webview2"));
   written.push(zipFolder(full));
 }
 

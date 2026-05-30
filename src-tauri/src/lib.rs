@@ -32,6 +32,8 @@ struct RuntimeInfo {
     app_version: String,
     #[serde(rename = "dataDir")]
     data_dir: String,
+    #[serde(rename = "fixedWebView2Runtime")]
+    fixed_webview2_runtime: Option<String>,
     #[serde(rename = "petRoots")]
     pet_roots: Vec<String>,
     #[serde(rename = "portableMode")]
@@ -108,6 +110,8 @@ fn runtime_info(app: AppHandle) -> RuntimeInfo {
     RuntimeInfo {
         app_version: env!("CARGO_PKG_VERSION").to_string(),
         data_dir: data,
+        fixed_webview2_runtime: fixed_webview2_runtime_dir()
+            .map(|path| path.to_string_lossy().into_owned()),
         pet_roots: roots,
         portable_mode,
     }
@@ -236,6 +240,40 @@ fn state_path(app: &AppHandle) -> PathBuf {
         .unwrap_or_else(|_| PathBuf::from(".desktop-livecat-data"))
         .join("state.json")
 }
+
+#[cfg(target_os = "windows")]
+fn fixed_webview2_runtime_dir() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    let root = exe.parent()?.join("runtime").join("webview2");
+    if root.join("msedgewebview2.exe").is_file() {
+        return Some(root);
+    }
+
+    fs::read_dir(root)
+        .ok()?
+        .flatten()
+        .map(|entry| entry.path())
+        .find(|path| path.join("msedgewebview2.exe").is_file())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn fixed_webview2_runtime_dir() -> Option<PathBuf> {
+    None
+}
+
+#[cfg(target_os = "windows")]
+fn configure_fixed_webview2_runtime() {
+    if std::env::var_os("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER").is_some() {
+        return;
+    }
+
+    if let Some(runtime) = fixed_webview2_runtime_dir() {
+        std::env::set_var("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", runtime);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn configure_fixed_webview2_runtime() {}
 
 fn reveal_path(path: &Path) -> Result<(), String> {
     #[cfg(target_os = "windows")]
@@ -379,6 +417,8 @@ fn place_initial_pet(app: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    configure_fixed_webview2_runtime();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
