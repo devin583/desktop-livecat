@@ -42,8 +42,10 @@ npm run tauri:build
 npm run package:portable
 ```
 
-The portable packaging script expects a Windows Tauri release build. To include
-a Fixed Version WebView2 Runtime in the full-offline folder, set:
+`npm run tauri:build` intentionally uses `tauri build --no-bundle` so the default
+deliverable stays a portable zip instead of an installer. The packaging script
+then writes `release/desktop-livecat-win11-x64.zip` on Windows. To include a
+Fixed Version WebView2 Runtime in the full-offline folder, set:
 
 ```bash
 WEBVIEW2_FIXED_RUNTIME_DIR=/path/to/fixed-webview2 npm run package:portable

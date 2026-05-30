@@ -31,7 +31,7 @@ function copyStandard(target) {
   fs.mkdirSync(target, { recursive: true });
   const exe = exeCandidates.find((candidate) => fs.existsSync(candidate));
   if (!exe) {
-    throw new Error("Run `npm run tauri:build` on Windows before packaging.");
+    throw new Error("Run `npm run tauri:build` before packaging.");
   }
   fs.copyFileSync(exe, path.join(target, path.basename(exe)));
   copyDir(path.join(root, "pets"), path.join(target, "pets"));

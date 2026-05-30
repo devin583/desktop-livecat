@@ -11,7 +11,8 @@
     "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
+    "tauri:build": "tauri build --no-bundle",
+    "tauri:bundle": "tauri build",
     "package:portable": "node scripts/package-portable.mjs",
     "validate:pets": "node scripts/validate-resource-packs.mjs"
   },
