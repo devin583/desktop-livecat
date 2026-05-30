@@ -9,6 +9,7 @@
     "check": "npm run validate:pets && npm run build",
     "preview": "vite preview",
     "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
+    "download:webview2-fixed": "node scripts/download-webview2-fixed-runtime.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build --no-bundle",
