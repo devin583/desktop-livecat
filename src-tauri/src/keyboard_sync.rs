@@ -110,11 +110,11 @@ mod platform {
             0,
             0,
             HWND_MESSAGE,
-            0,
+            ptr::null_mut(),
             instance,
             ptr::null(),
         );
-        if hwnd == 0 {
+        if hwnd.is_null() {
             STARTED.store(false, Ordering::SeqCst);
             return false;
         }
@@ -133,7 +133,7 @@ mod platform {
         }
 
         let mut message: MSG = std::mem::zeroed();
-        while GetMessageW(&mut message, 0, 0, 0) > 0 {
+        while GetMessageW(&mut message, ptr::null_mut(), 0, 0) > 0 {
             TranslateMessage(&message);
             DispatchMessageW(&message);
         }
@@ -142,14 +142,14 @@ mod platform {
     }
 
     unsafe fn run_hook_loop() {
-        let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), 0, 0);
-        if hook == 0 {
+        let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), ptr::null_mut(), 0);
+        if hook.is_null() {
             STARTED.store(false, Ordering::SeqCst);
             return;
         }
 
         let mut message: MSG = std::mem::zeroed();
-        while GetMessageW(&mut message, 0, 0, 0) > 0 {
+        while GetMessageW(&mut message, ptr::null_mut(), 0, 0) > 0 {
             TranslateMessage(&message);
             DispatchMessageW(&message);
         }
@@ -196,7 +196,7 @@ mod platform {
             emit_pulse("windows-hook-fallback");
         }
 
-        CallNextHookEx(0 as HHOOK, code, w_param, l_param)
+        CallNextHookEx(ptr::null_mut() as HHOOK, code, w_param, l_param)
     }
 
     fn emit_pulse(source: &'static str) {

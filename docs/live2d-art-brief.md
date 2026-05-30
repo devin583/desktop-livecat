@@ -34,7 +34,7 @@ part names before importing into Cubism Editor.
 ## Included concept asset
 
 - `pets/livecat-default/preview/livecat-ai-concept.png` is a non-final concept reference for silhouette, facial softness, and keyboard pose.
-- It is not treated as a riggable source file. The production source must be a layered PSD/Clip Studio file following `pets/livecat-default/source/layer-map.json`.
+- It is not treated as a riggable source file. The production source must be a layered PSD/Clip Studio file following `pets/livecat-default/source/livecat-layer-map.json`.
 
 ## Required motions
 
