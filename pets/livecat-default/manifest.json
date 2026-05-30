@@ -1,0 +1,26 @@
+{
+  "id": "livecat-default",
+  "name": "Mochi Prototype",
+  "version": "0.1.0",
+  "artist": "Desktop LiveCat",
+  "description": "Original round-faced keyboard cat prototype prepared for Live2D Cubism model replacement.",
+  "preview": "preview/livecat.svg",
+  "tags": ["round", "keyboard", "pomodoro", "live2d-ready"],
+  "live2d": {
+    "modelJson": "model/livecat.model3.json",
+    "sdk": "Live2D Cubism SDK for Web"
+  },
+  "motions": {
+    "idle": "motions/idle.motion3.json",
+    "blink": "motions/blink.motion3.json",
+    "typing_sync": "motions/typing_sync.motion3.json",
+    "pomodoro_focus": "motions/pomodoro_focus.motion3.json",
+    "pomodoro_break": "motions/pomodoro_break.motion3.json",
+    "dragged": "motions/dragged.motion3.json",
+    "fall_recover": "motions/fall_recover.motion3.json"
+  },
+  "privacy": {
+    "keyboardSync": "rhythm-only",
+    "storesKeyValues": false
+  }
+}
