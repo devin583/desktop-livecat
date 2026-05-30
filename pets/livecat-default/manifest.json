@@ -1,14 +1,16 @@
 {
   "id": "livecat-default",
   "name": "Mochi Prototype",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "artist": "Desktop LiveCat",
-  "description": "Original round-faced keyboard cat prototype prepared for Live2D Cubism model replacement.",
-  "preview": "preview/livecat.svg",
-  "tags": ["round", "keyboard", "pomodoro", "live2d-ready"],
+  "description": "Original round-faced keyboard cat prototype with AI concept art, Live2D source layer plan, motion specs, and Cubism model slot.",
+  "preview": "preview/livecat-ai-concept.png",
+  "tags": ["round", "keyboard", "pomodoro", "live2d-ready", "ai-source", "layered"],
   "live2d": {
     "modelJson": "model/livecat.model3.json",
-    "sdk": "Live2D Cubism SDK for Web"
+    "sdk": "Live2D Cubism SDK for Web",
+    "parameterSpec": "model/livecat-parameter-spec.json",
+    "sourceLayerMap": "source/livecat-layer-map.json"
   },
   "motions": {
     "idle": "motions/idle.motion3.json",
@@ -17,7 +19,21 @@
     "pomodoro_focus": "motions/pomodoro_focus.motion3.json",
     "pomodoro_break": "motions/pomodoro_break.motion3.json",
     "dragged": "motions/dragged.motion3.json",
-    "fall_recover": "motions/fall_recover.motion3.json"
+    "fall_recover": "motions/fall_recover.motion3.json",
+    "sleep": "motions/sleep.motion3.json"
+  },
+  "expressions": {
+    "focus": "expressions/focus.exp3.json",
+    "break": "expressions/break.exp3.json",
+    "happy": "expressions/happy.exp3.json",
+    "sleepy": "expressions/sleepy.exp3.json",
+    "focused": "expressions/focused.exp3.json"
+  },
+  "behavior": {
+    "typingStopMs": 1200,
+    "idleFps": 30,
+    "activeFps": 60,
+    "lowPowerFps": 18
   },
   "privacy": {
     "keyboardSync": "rhythm-only",

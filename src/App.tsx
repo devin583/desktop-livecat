@@ -1,118 +1,39 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from "react";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
   Coffee,
   Eye,
+  FolderOpen,
+  Gauge,
   Keyboard,
   MousePointer2,
   Pause,
   Play,
+  RefreshCw,
   RotateCcw,
   SkipForward,
   TimerReset,
 } from "lucide-react";
 import { probeLive2DRuntime, type Live2DRuntimeProbe } from "./live2dRuntime";
+import {
+  fallbackPet,
+  initialState,
+  normalizeState,
+  resetPomodoroDuration,
+  secondsToClock,
+} from "./petState";
+import { safeInvoke } from "./tauriBridge";
+import type { AppState, KeyboardStatus, PetMood, PetPack, RuntimeInfo, TypingPulse } from "./types";
 import "./App.css";
-
-type PetPack = {
-  id: string;
-  name: string;
-  version: string;
-  artist: string;
-  description: string;
-  live2d_model: string | null;
-  preview: string | null;
-  source: string;
-  tags: string[];
-};
-
-type AppState = {
-  selectedPetId: string;
-  scale: number;
-  clickThrough: boolean;
-  alwaysOnTop: boolean;
-  pomodoro: {
-    mode: "focus" | "break";
-    focusMinutes: number;
-    breakMinutes: number;
-    remainingSeconds: number;
-    running: boolean;
-    completedToday: number;
-    day: string;
-  };
-};
-
-type KeyboardStatus = {
-  supported: boolean;
-  backend: string;
-  message: string;
-};
-
-type TypingPulse = {
-  at_ms: number;
-  source: string;
-};
-
-const fallbackPet: PetPack = {
-  id: "livecat-default",
-  name: "Mochi Prototype",
-  version: "0.1.0",
-  artist: "Desktop LiveCat",
-  description: "Original round-faced keyboard cat prototype.",
-  live2d_model: "model/livecat.model3.json",
-  preview: "preview/livecat.svg",
-  source: "bundled-fallback",
-  tags: ["round", "keyboard", "live2d-ready"],
-};
-
-const todayKey = () => new Date().toISOString().slice(0, 10);
-
-const initialState: AppState = {
-  selectedPetId: fallbackPet.id,
-  scale: 1,
-  clickThrough: false,
-  alwaysOnTop: true,
-  pomodoro: {
-    mode: "focus",
-    focusMinutes: 25,
-    breakMinutes: 5,
-    remainingSeconds: 25 * 60,
-    running: false,
-    completedToday: 0,
-    day: todayKey(),
-  },
-};
-
-async function safeInvoke<T>(command: string, args?: Record<string, unknown>) {
-  try {
-    return await invoke<T>(command, args);
-  } catch (error) {
-    console.warn(`Tauri command failed: ${command}`, error);
-    return null;
-  }
-}
-
-function secondsToClock(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  return `${minutes.toString().padStart(2, "0")}:${rest
-    .toString()
-    .padStart(2, "0")}`;
-}
-
-function normalizePomodoro(state: AppState): AppState {
-  const day = todayKey();
-  if (state.pomodoro.day === day) return state;
-  return {
-    ...state,
-    pomodoro: {
-      ...state.pomodoro,
-      completedToday: 0,
-      day,
-    },
-  };
-}
 
 function usePersistedState() {
   const [state, setState] = useState<AppState>(initialState);
@@ -123,8 +44,8 @@ function usePersistedState() {
     safeInvoke<AppState>("load_state").then((stored) => {
       if (cancelled) return;
       const local = localStorage.getItem("desktop-livecat-state");
-      const fallback = local ? (JSON.parse(local) as AppState) : initialState;
-      setState(normalizePomodoro(stored ?? fallback));
+      const fallback = local ? (JSON.parse(local) as Partial<AppState>) : initialState;
+      setState(normalizeState(stored ?? fallback));
       hydratedRef.current = true;
     });
     return () => {
@@ -155,8 +76,11 @@ function App() {
     runtimeAvailable: false,
     reason: "Live2D runtime probe has not run yet.",
   });
+  const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInfo | null>(null);
   const [lastTypingPulse, setLastTypingPulse] = useState(0);
   const [typingRate, setTypingRate] = useState(0);
+  const [look, setLook] = useState({ x: 0, y: 0 });
+  const [dragged, setDragged] = useState(false);
   const pulsesRef = useRef<number[]>([]);
 
   const selectedPet = useMemo(
@@ -169,12 +93,21 @@ function App() {
     pulsesRef.current = [...pulsesRef.current.filter((at) => now - at < 2600), now];
     setTypingRate(Math.min(1, pulsesRef.current.length / 16));
     setLastTypingPulse(now);
-    if (source !== keyboardStatus.backend) {
-      setKeyboardStatus((current) => ({ ...current, backend: source }));
-    }
-  }, [keyboardStatus.backend]);
+    setKeyboardStatus((current) =>
+      source === current.backend ? current : { ...current, backend: source },
+    );
+  }, []);
 
   useEffect(() => {
+    safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
+      if (loaded?.length) setPets(loaded);
+    });
+    safeInvoke<RuntimeInfo>("runtime_info").then((info) => {
+      if (info) setRuntimeInfo(info);
+    });
+  }, []);
+
+  const refreshPets = useCallback(() => {
     safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
       if (loaded?.length) setPets(loaded);
     });
@@ -182,12 +115,23 @@ function App() {
 
   useEffect(() => {
     const modelPath = selectedPet.live2d_model
-      ? `/pets/${selectedPet.id}/${selectedPet.live2d_model}`
+      ? selectedPet.source.includes("/") || selectedPet.source.includes("\\")
+        ? convertFileSrc(`${selectedPet.source}/${selectedPet.live2d_model}`)
+        : `/pets/${selectedPet.id}/${selectedPet.live2d_model}`
       : null;
     void probeLive2DRuntime(modelPath).then(setLive2dProbe);
-  }, [selectedPet.id, selectedPet.live2d_model]);
+  }, [selectedPet.id, selectedPet.live2d_model, selectedPet.source]);
 
   useEffect(() => {
+    if (!state.keyboardSyncEnabled) {
+      setKeyboardStatus({
+        supported: false,
+        backend: "disabled",
+        message: "Keyboard rhythm sync is disabled.",
+      });
+      return;
+    }
+
     safeInvoke<KeyboardStatus>("enable_keyboard_sync").then((status) => {
       if (status) setKeyboardStatus(status);
     });
@@ -206,7 +150,7 @@ function App() {
       window.removeEventListener("keydown", onKeyDown);
       void unlistenPromise.then((unlisten) => unlisten());
     };
-  }, [registerPulse]);
+  }, [registerPulse, state.keyboardSyncEnabled]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -261,6 +205,13 @@ function App() {
     void safeInvoke("set_pet_always_on_top", { enabled: state.alwaysOnTop });
   }, [state.alwaysOnTop]);
 
+  useEffect(() => {
+    const label = `${state.pomodoro.mode === "focus" ? "Focus" : "Break"} ${secondsToClock(
+      state.pomodoro.remainingSeconds,
+    )}`;
+    void safeInvoke("set_tray_status", { tooltip: `Desktop LiveCat - ${label}` });
+  }, [state.pomodoro.mode, state.pomodoro.remainingSeconds]);
+
   const setClickThroughPreview = () => {
     setState((current) => ({ ...current, clickThrough: true }));
     void safeInvoke("set_click_through", { enabled: true });
@@ -285,8 +236,6 @@ function App() {
             ? "break"
             : "focus"
           : current.pomodoro.mode;
-      const minutes =
-        nextMode === "focus" ? current.pomodoro.focusMinutes : current.pomodoro.breakMinutes;
 
       return {
         ...current,
@@ -294,7 +243,7 @@ function App() {
           ...current.pomodoro,
           mode: nextMode,
           running: false,
-          remainingSeconds: minutes * 60,
+          remainingSeconds: resetPomodoroDuration(current.pomodoro, nextMode),
           completedToday:
             action === "skip" && current.pomodoro.mode === "focus"
               ? current.pomodoro.completedToday + 1
@@ -303,6 +252,23 @@ function App() {
       };
     });
   };
+
+  useEffect(() => {
+    const listeners = [
+      listen("tray://timer-toggle", () => pomodoroAction("toggle")),
+      listen("tray://timer-reset", () => pomodoroAction("reset")),
+      listen("tray://timer-skip", () => pomodoroAction("skip")),
+      listen("tray://reload-pets", refreshPets),
+      listen("tray://click-through-off", () => {
+        setState((current) => ({ ...current, clickThrough: false }));
+      }),
+    ];
+    return () => {
+      void Promise.all(listeners).then((unlisteners) => {
+        unlisteners.forEach((unlisten) => unlisten());
+      });
+    };
+  }, [refreshPets]);
 
   const selectPreset = (focusMinutes: number, breakMinutes: number) => {
     setState((current) => ({
@@ -318,8 +284,38 @@ function App() {
     }));
   };
 
+  const setDuration = (field: "focusMinutes" | "breakMinutes", value: number) => {
+    const bounded = Math.min(field === "focusMinutes" ? 180 : 90, Math.max(1, Math.round(value)));
+    setState((current) => {
+      const pomodoro = { ...current.pomodoro, [field]: bounded, running: false };
+      return {
+        ...current,
+        pomodoro: {
+          ...pomodoro,
+          remainingSeconds: resetPomodoroDuration(pomodoro),
+        },
+      };
+    });
+  };
+
+  const revealResources = () => {
+    void safeInvoke<string>("reveal_resources").then(() => refreshPets());
+  };
+
+  const updateLook = (event: PointerEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    setLook({
+      x: Math.max(-1, Math.min(1, x)),
+      y: Math.max(-1, Math.min(1, y)),
+    });
+  };
+
   const isTyping = Date.now() - lastTypingPulse < 1200;
-  const petMood = isTyping
+  const petMood: PetMood = dragged
+    ? "dragged"
+    : isTyping
     ? "typing"
     : state.pomodoro.running && state.pomodoro.mode === "focus"
       ? "focus"
@@ -328,13 +324,39 @@ function App() {
         : "idle";
 
   return (
-    <main className="pet-app" style={{ ["--pet-scale" as string]: state.scale }}>
+    <main
+      className="pet-app"
+      style={
+        {
+          "--pet-scale": state.scale,
+          "--look-x": look.x,
+          "--look-y": look.y,
+        } as CSSProperties
+      }
+    >
       <section
-        className={`pet-stage mood-${petMood} renderer-${live2dProbe.renderer}`}
+        className={`pet-stage mood-${petMood} renderer-${live2dProbe.renderer} ${
+          state.lowPower ? "low-power" : ""
+        }`}
         data-tauri-drag-region
         aria-label="Desktop LiveCat stage"
+        onPointerMove={updateLook}
+        onPointerDown={() => setDragged(true)}
+        onPointerUp={() => setDragged(false)}
+        onPointerCancel={() => setDragged(false)}
+        onPointerLeave={() => {
+          setDragged(false);
+          setLook({ x: 0, y: 0 });
+        }}
       >
         <div className="live2d-layer" data-tauri-drag-region>
+          <canvas
+            className="live2d-canvas"
+            width={640}
+            height={720}
+            aria-hidden="true"
+            title={live2dProbe.reason}
+          />
           <div className="cat" style={{ ["--typing-rate" as string]: typingRate }}>
             <div className="tail" />
             <div className="body">
@@ -408,8 +430,37 @@ function App() {
               aria-label="Keyboard rhythm"
               title={keyboardStatus.message}
               className={isTyping ? "active" : ""}
+              onClick={() =>
+                setState((current) => ({
+                  ...current,
+                  keyboardSyncEnabled: !current.keyboardSyncEnabled,
+                }))
+              }
             >
               <Keyboard size={16} />
+            </button>
+          </div>
+
+          <div className="icon-row">
+            <button type="button" aria-label="Reload pets" title="Reload pets" onClick={refreshPets}>
+              <RefreshCw size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="Open resources"
+              title={runtimeInfo?.petRoots.join("\n") || "Open resources"}
+              onClick={revealResources}
+            >
+              <FolderOpen size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="Low power"
+              title="Low power"
+              className={state.lowPower ? "active" : ""}
+              onClick={() => setState((current) => ({ ...current, lowPower: !current.lowPower }))}
+            >
+              <Gauge size={16} />
             </button>
           </div>
 
@@ -450,6 +501,25 @@ function App() {
               <Coffee size={14} />
               50/10
             </button>
+          </div>
+
+          <div className="duration-row">
+            <input
+              aria-label="Focus minutes"
+              type="number"
+              min="1"
+              max="180"
+              value={state.pomodoro.focusMinutes}
+              onChange={(event) => setDuration("focusMinutes", Number(event.currentTarget.value))}
+            />
+            <input
+              aria-label="Break minutes"
+              type="number"
+              min="1"
+              max="90"
+              value={state.pomodoro.breakMinutes}
+              onChange={(event) => setDuration("breakMinutes", Number(event.currentTarget.value))}
+            />
           </div>
         </aside>
       </section>

@@ -1,0 +1,119 @@
+{
+  "Version": 3,
+  "Meta": {
+    "Duration": 4,
+    "Fps": 30,
+    "Loop": true,
+    "AreBeziersRestricted": true,
+    "CurveCount": 6,
+    "TotalSegmentCount": 18,
+    "TotalPointCount": 24,
+    "UserDataCount": 0,
+    "TotalUserDataSize": 0
+  },
+  "Curves": [
+    {
+      "Target": "Parameter",
+      "Id": "ParamBreath",
+      "Segments": [
+        0,
+        0.42,
+        0,
+        1,
+        1,
+        0,
+        2,
+        0.5,
+        0,
+        3,
+        0.18,
+        0,
+        4,
+        0.42
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamAngleX",
+      "Segments": [
+        0,
+        -2,
+        0,
+        1.4,
+        1.5,
+        0,
+        2.8,
+        2.5,
+        0,
+        4,
+        -2
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamAngleY",
+      "Segments": [
+        0,
+        0,
+        0,
+        2,
+        2,
+        0,
+        4,
+        0
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamTailBaseAngle",
+      "Segments": [
+        0,
+        -8,
+        0,
+        1.4,
+        9,
+        0,
+        2.8,
+        5,
+        0,
+        4,
+        -8
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamTailMidAngle",
+      "Segments": [
+        0,
+        6,
+        0,
+        1.4,
+        -11,
+        0,
+        2.8,
+        -4,
+        0,
+        4,
+        6
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamTailTipAngle",
+      "Segments": [
+        0,
+        12,
+        0,
+        1.4,
+        -16,
+        0,
+        2.8,
+        -7,
+        0,
+        4,
+        12
+      ]
+    }
+  ],
+  "UserData": []
+}

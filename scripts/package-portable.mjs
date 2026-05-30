@@ -1,14 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const out = path.join(root, "release");
-const standard = path.join(out, "desktop-livecat-win11-x64");
-const full = path.join(out, "desktop-livecat-win11-x64-full-offline");
+const platformSuffix =
+  process.platform === "win32" ? "win11-x64" : `${process.platform}-${process.arch}`;
+const standard = path.join(out, `desktop-livecat-${platformSuffix}`);
+const full = path.join(out, `desktop-livecat-${platformSuffix}-full-offline`);
 const exeCandidates = [
   path.join(root, "src-tauri", "target", "release", "desktop-livecat.exe"),
-  path.join(root, "src-tauri", "target", "release", "bundle", "nsis", "Desktop LiveCat_0.1.0_x64-setup.exe"),
+  path.join(root, "src-tauri", "target", "release", "desktop-livecat"),
+  path.join(root, "src-tauri", "target", "release", "bundle", "nsis", "Desktop LiveCat_0.5.0_x64-setup.exe"),
 ];
 
 function copyDir(from, to) {
@@ -35,12 +39,34 @@ function copyStandard(target) {
   fs.copyFileSync(path.join(root, "docs", "distribution.md"), path.join(target, "README-portable.md"));
 }
 
+function zipFolder(folder) {
+  const zipPath = `${folder}.zip`;
+  fs.rmSync(zipPath, { force: true });
+
+  if (process.platform === "win32") {
+    execFileSync("powershell", [
+      "-NoProfile",
+      "-Command",
+      `Compress-Archive -Path '${folder}\\*' -DestinationPath '${zipPath}' -Force`,
+    ]);
+  } else {
+    execFileSync("zip", ["-qr", zipPath, path.basename(folder)], {
+      cwd: path.dirname(folder),
+    });
+  }
+
+  return zipPath;
+}
+
 copyStandard(standard);
+const written = [zipFolder(standard)];
 
 const fixedRuntime = process.env.WEBVIEW2_FIXED_RUNTIME_DIR;
 if (fixedRuntime) {
   copyStandard(full);
   copyDir(fixedRuntime, path.join(full, "runtime", "webview2"));
+  written.push(zipFolder(full));
 }
 
 console.log(`Portable folders written under ${out}`);
+console.log(`Archives:\n${written.map((item) => `- ${item}`).join("\n")}`);

@@ -1,0 +1,1306 @@
+{
+  "schema": "desktop-livecat.live2dLayerMap.v1",
+  "character": "Mochi Prototype",
+  "canvas": {
+    "width": 1024,
+    "height": 1024
+  },
+  "files": {
+    "concept": "preview/livecat-ai-concept.png",
+    "combinedSvg": "source/livecat-layers.svg",
+    "parameterSpec": "model/livecat-parameter-spec.json"
+  },
+  "importTarget": {
+    "cubismEditor": "5.x",
+    "preferredExchange": "PSD, RGB, 8bit/channel, sRGB",
+    "fallbackExchange": "transparent PNG layers assembled into PSD by preserving bbox placement",
+    "notes": [
+      "Use the SVG source as editable upstream art, not as the direct Cubism import format.",
+      "Flatten line and fill inside each named part before PSD import.",
+      "Keep layer names stable after the first Cubism import to preserve re-import mapping."
+    ]
+  },
+  "layers": [
+    {
+      "id": "tail_base",
+      "name": "Tail base",
+      "group": "Tail",
+      "z": 10,
+      "file": "source/layers/010_tail_base.svg",
+      "bbox": {
+        "x": 178,
+        "y": 526,
+        "width": 270,
+        "height": 230
+      },
+      "anchor": {
+        "x": 430,
+        "y": 682
+      },
+      "parameters": [
+        "ParamTailBaseAngle",
+        "ParamBodyAngleZ"
+      ],
+      "rig": "Root tail mesh. Bind to body and rotate with delayed follow."
+    },
+    {
+      "id": "tail_mid",
+      "name": "Tail middle band",
+      "group": "Tail",
+      "z": 11,
+      "file": "source/layers/011_tail_mid.svg",
+      "bbox": {
+        "x": 202,
+        "y": 555,
+        "width": 138,
+        "height": 110
+      },
+      "anchor": {
+        "x": 276,
+        "y": 612
+      },
+      "parameters": [
+        "ParamTailMidAngle"
+      ],
+      "rig": "Independent middle tail band for secondary curl deformation."
+    },
+    {
+      "id": "tail_tip",
+      "name": "Tail tip",
+      "group": "Tail",
+      "z": 12,
+      "file": "source/layers/012_tail_tip.svg",
+      "bbox": {
+        "x": 186,
+        "y": 509,
+        "width": 130,
+        "height": 134
+      },
+      "anchor": {
+        "x": 282,
+        "y": 612
+      },
+      "parameters": [
+        "ParamTailTipAngle"
+      ],
+      "rig": "Curl tip. Use smaller mesh and higher delayed spring than base."
+    },
+    {
+      "id": "ear_left_outer",
+      "name": "Left outer ear",
+      "group": "Head/Ears",
+      "z": 30,
+      "file": "source/layers/030_ear_left_outer.svg",
+      "bbox": {
+        "x": 319,
+        "y": 197,
+        "width": 146,
+        "height": 176
+      },
+      "anchor": {
+        "x": 412,
+        "y": 357
+      },
+      "parameters": [
+        "ParamEarLAngle",
+        "ParamAngleZ"
+      ],
+      "rig": "Rotate at lower inner base. Keep behind head base."
+    },
+    {
+      "id": "ear_right_outer",
+      "name": "Right outer ear",
+      "group": "Head/Ears",
+      "z": 31,
+      "file": "source/layers/031_ear_right_outer.svg",
+      "bbox": {
+        "x": 559,
+        "y": 197,
+        "width": 146,
+        "height": 176
+      },
+      "anchor": {
+        "x": 612,
+        "y": 357
+      },
+      "parameters": [
+        "ParamEarRAngle",
+        "ParamAngleZ"
+      ],
+      "rig": "Rotate at lower inner base. Mirror left ear rig."
+    },
+    {
+      "id": "ear_left_inner",
+      "name": "Left inner ear",
+      "group": "Head/Ears",
+      "z": 32,
+      "file": "source/layers/032_ear_left_inner.svg",
+      "bbox": {
+        "x": 345,
+        "y": 231,
+        "width": 88,
+        "height": 106
+      },
+      "anchor": {
+        "x": 405,
+        "y": 337
+      },
+      "parameters": [
+        "ParamEarLAngle"
+      ],
+      "rig": "Nested under outer ear. Subtle compression during ear twitch."
+    },
+    {
+      "id": "ear_right_inner",
+      "name": "Right inner ear",
+      "group": "Head/Ears",
+      "z": 33,
+      "file": "source/layers/033_ear_right_inner.svg",
+      "bbox": {
+        "x": 591,
+        "y": 231,
+        "width": 88,
+        "height": 106
+      },
+      "anchor": {
+        "x": 619,
+        "y": 337
+      },
+      "parameters": [
+        "ParamEarRAngle"
+      ],
+      "rig": "Nested under outer ear. Mirror left inner ear."
+    },
+    {
+      "id": "body_base",
+      "name": "Body base",
+      "group": "Body",
+      "z": 40,
+      "file": "source/layers/040_body_base.svg",
+      "bbox": {
+        "x": 352,
+        "y": 474,
+        "width": 320,
+        "height": 318
+      },
+      "anchor": {
+        "x": 512,
+        "y": 730
+      },
+      "parameters": [
+        "ParamBreath",
+        "ParamBodyAngleX",
+        "ParamBodyAngleY",
+        "ParamBodyAngleZ"
+      ],
+      "rig": "Main torso mesh. Breathing expands vertically and slightly laterally."
+    },
+    {
+      "id": "body_side_shadow",
+      "name": "Body side shadow",
+      "group": "Body",
+      "z": 41,
+      "file": "source/layers/041_body_side_shadow.svg",
+      "bbox": {
+        "x": 559,
+        "y": 522,
+        "width": 94,
+        "height": 218
+      },
+      "anchor": {
+        "x": 604,
+        "y": 650
+      },
+      "parameters": [
+        "ParamBodyAngleX",
+        "ParamBreath"
+      ],
+      "rig": "Dark side form. Keep as separate multiply-like layer for body turn."
+    },
+    {
+      "id": "chest_patch",
+      "name": "Chest patch",
+      "group": "Body",
+      "z": 42,
+      "file": "source/layers/042_chest_patch.svg",
+      "bbox": {
+        "x": 426,
+        "y": 544,
+        "width": 172,
+        "height": 218
+      },
+      "anchor": {
+        "x": 512,
+        "y": 662
+      },
+      "parameters": [
+        "ParamBreath",
+        "ParamBodyAngleY"
+      ],
+      "rig": "Chest patch should lag behind torso only very slightly."
+    },
+    {
+      "id": "back_paw_left",
+      "name": "Left back paw",
+      "group": "Paws",
+      "z": 50,
+      "file": "source/layers/050_back_paw_left.svg",
+      "bbox": {
+        "x": 348,
+        "y": 712,
+        "width": 104,
+        "height": 94
+      },
+      "anchor": {
+        "x": 404,
+        "y": 770
+      },
+      "parameters": [
+        "ParamBodyAngleZ",
+        "ParamSquash"
+      ],
+      "rig": "Back paw anchors pet on the desktop. Minimal motion."
+    },
+    {
+      "id": "back_paw_right",
+      "name": "Right back paw",
+      "group": "Paws",
+      "z": 51,
+      "file": "source/layers/051_back_paw_right.svg",
+      "bbox": {
+        "x": 572,
+        "y": 712,
+        "width": 104,
+        "height": 94
+      },
+      "anchor": {
+        "x": 620,
+        "y": 770
+      },
+      "parameters": [
+        "ParamBodyAngleZ",
+        "ParamSquash"
+      ],
+      "rig": "Back paw anchors pet on the desktop. Mirror left."
+    },
+    {
+      "id": "keyboard_shadow",
+      "name": "Keyboard shadow",
+      "group": "Keyboard",
+      "z": 60,
+      "file": "source/layers/060_keyboard_shadow.svg",
+      "bbox": {
+        "x": 304,
+        "y": 802,
+        "width": 416,
+        "height": 72
+      },
+      "anchor": {
+        "x": 512,
+        "y": 838
+      },
+      "parameters": [
+        "ParamSquash"
+      ],
+      "rig": "Grounding shadow. Do not bind to key press."
+    },
+    {
+      "id": "keyboard_body",
+      "name": "Keyboard body",
+      "group": "Keyboard",
+      "z": 61,
+      "file": "source/layers/061_keyboard_body.svg",
+      "bbox": {
+        "x": 306,
+        "y": 708,
+        "width": 412,
+        "height": 138
+      },
+      "anchor": {
+        "x": 512,
+        "y": 782
+      },
+      "parameters": [
+        "ParamKeyboardBounce",
+        "ParamKeyboardPressL",
+        "ParamKeyboardPressR"
+      ],
+      "rig": "Rigid prop mesh with slight bounce during typing."
+    },
+    {
+      "id": "key_01",
+      "name": "Keyboard key 01",
+      "group": "Keyboard/Keys",
+      "z": 71,
+      "file": "source/layers/071_key_01.svg",
+      "bbox": {
+        "x": 338,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 357,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_02",
+      "name": "Keyboard key 02",
+      "group": "Keyboard/Keys",
+      "z": 72,
+      "file": "source/layers/072_key_02.svg",
+      "bbox": {
+        "x": 377,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 396,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_03",
+      "name": "Keyboard key 03",
+      "group": "Keyboard/Keys",
+      "z": 73,
+      "file": "source/layers/073_key_03.svg",
+      "bbox": {
+        "x": 416,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 435,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_04",
+      "name": "Keyboard key 04",
+      "group": "Keyboard/Keys",
+      "z": 74,
+      "file": "source/layers/074_key_04.svg",
+      "bbox": {
+        "x": 455,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 474,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_05",
+      "name": "Keyboard key 05",
+      "group": "Keyboard/Keys",
+      "z": 75,
+      "file": "source/layers/075_key_05.svg",
+      "bbox": {
+        "x": 494,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 513,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_06",
+      "name": "Keyboard key 06",
+      "group": "Keyboard/Keys",
+      "z": 76,
+      "file": "source/layers/076_key_06.svg",
+      "bbox": {
+        "x": 533,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 552,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_07",
+      "name": "Keyboard key 07",
+      "group": "Keyboard/Keys",
+      "z": 77,
+      "file": "source/layers/077_key_07.svg",
+      "bbox": {
+        "x": 572,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 591,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_08",
+      "name": "Keyboard key 08",
+      "group": "Keyboard/Keys",
+      "z": 78,
+      "file": "source/layers/078_key_08.svg",
+      "bbox": {
+        "x": 611,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 630,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_09",
+      "name": "Keyboard key 09",
+      "group": "Keyboard/Keys",
+      "z": 79,
+      "file": "source/layers/079_key_09.svg",
+      "bbox": {
+        "x": 650,
+        "y": 736,
+        "width": 38,
+        "height": 36
+      },
+      "anchor": {
+        "x": 669,
+        "y": 752
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_10",
+      "name": "Keyboard key 10",
+      "group": "Keyboard/Keys",
+      "z": 80,
+      "file": "source/layers/080_key_10.svg",
+      "bbox": {
+        "x": 352,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 372,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_11",
+      "name": "Keyboard key 11",
+      "group": "Keyboard/Keys",
+      "z": 81,
+      "file": "source/layers/081_key_11.svg",
+      "bbox": {
+        "x": 394,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 414,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_12",
+      "name": "Keyboard key 12",
+      "group": "Keyboard/Keys",
+      "z": 82,
+      "file": "source/layers/082_key_12.svg",
+      "bbox": {
+        "x": 436,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 456,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardPressL",
+        "ParamKeyboardPressR"
+      ],
+      "rig": "Primary paw strike key. Give this key the strongest press curve."
+    },
+    {
+      "id": "key_13",
+      "name": "Keyboard key 13",
+      "group": "Keyboard/Keys",
+      "z": 83,
+      "file": "source/layers/083_key_13.svg",
+      "bbox": {
+        "x": 478,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 498,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardPressL",
+        "ParamKeyboardPressR"
+      ],
+      "rig": "Primary paw strike key. Give this key the strongest press curve."
+    },
+    {
+      "id": "key_14",
+      "name": "Keyboard key 14",
+      "group": "Keyboard/Keys",
+      "z": 84,
+      "file": "source/layers/084_key_14.svg",
+      "bbox": {
+        "x": 520,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 540,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_15",
+      "name": "Keyboard key 15",
+      "group": "Keyboard/Keys",
+      "z": 85,
+      "file": "source/layers/085_key_15.svg",
+      "bbox": {
+        "x": 562,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 582,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_16",
+      "name": "Keyboard key 16",
+      "group": "Keyboard/Keys",
+      "z": 86,
+      "file": "source/layers/086_key_16.svg",
+      "bbox": {
+        "x": 604,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 624,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_17",
+      "name": "Keyboard key 17",
+      "group": "Keyboard/Keys",
+      "z": 87,
+      "file": "source/layers/087_key_17.svg",
+      "bbox": {
+        "x": 646,
+        "y": 768,
+        "width": 40,
+        "height": 36
+      },
+      "anchor": {
+        "x": 666,
+        "y": 784
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_18",
+      "name": "Keyboard key 18",
+      "group": "Keyboard/Keys",
+      "z": 88,
+      "file": "source/layers/088_key_18.svg",
+      "bbox": {
+        "x": 382,
+        "y": 799,
+        "width": 54,
+        "height": 34
+      },
+      "anchor": {
+        "x": 409,
+        "y": 814
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_19",
+      "name": "Keyboard key 19",
+      "group": "Keyboard/Keys",
+      "z": 89,
+      "file": "source/layers/089_key_19.svg",
+      "bbox": {
+        "x": 440,
+        "y": 799,
+        "width": 54,
+        "height": 34
+      },
+      "anchor": {
+        "x": 467,
+        "y": 814
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_20",
+      "name": "Keyboard key 20",
+      "group": "Keyboard/Keys",
+      "z": 90,
+      "file": "source/layers/090_key_20.svg",
+      "bbox": {
+        "x": 498,
+        "y": 799,
+        "width": 54,
+        "height": 34
+      },
+      "anchor": {
+        "x": 525,
+        "y": 814
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_21",
+      "name": "Keyboard key 21",
+      "group": "Keyboard/Keys",
+      "z": 91,
+      "file": "source/layers/091_key_21.svg",
+      "bbox": {
+        "x": 556,
+        "y": 799,
+        "width": 54,
+        "height": 34
+      },
+      "anchor": {
+        "x": 583,
+        "y": 814
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "key_22",
+      "name": "Keyboard key 22",
+      "group": "Keyboard/Keys",
+      "z": 92,
+      "file": "source/layers/092_key_22.svg",
+      "bbox": {
+        "x": 614,
+        "y": 799,
+        "width": 54,
+        "height": 34
+      },
+      "anchor": {
+        "x": 641,
+        "y": 814
+      },
+      "parameters": [
+        "ParamKeyboardBounce"
+      ],
+      "rig": "Individual key layer for rhythmic typing highlights."
+    },
+    {
+      "id": "front_paw_left",
+      "name": "Left front paw",
+      "group": "Paws",
+      "z": 110,
+      "file": "source/layers/110_front_paw_left.svg",
+      "bbox": {
+        "x": 392,
+        "y": 624,
+        "width": 102,
+        "height": 162
+      },
+      "anchor": {
+        "x": 445,
+        "y": 650
+      },
+      "parameters": [
+        "ParamPawLTap",
+        "ParamKeyboardPressL",
+        "ParamBodyAngleZ"
+      ],
+      "rig": "Typing paw. Rotate down onto left home keys, with squash at contact."
+    },
+    {
+      "id": "front_paw_right",
+      "name": "Right front paw",
+      "group": "Paws",
+      "z": 111,
+      "file": "source/layers/111_front_paw_right.svg",
+      "bbox": {
+        "x": 530,
+        "y": 624,
+        "width": 102,
+        "height": 162
+      },
+      "anchor": {
+        "x": 579,
+        "y": 650
+      },
+      "parameters": [
+        "ParamPawRTap",
+        "ParamKeyboardPressR",
+        "ParamBodyAngleZ"
+      ],
+      "rig": "Typing paw. Alternate with left paw on typing_sync motion."
+    },
+    {
+      "id": "head_base",
+      "name": "Head base",
+      "group": "Head",
+      "z": 120,
+      "file": "source/layers/120_head_base.svg",
+      "bbox": {
+        "x": 300,
+        "y": 280,
+        "width": 424,
+        "height": 330
+      },
+      "anchor": {
+        "x": 512,
+        "y": 455
+      },
+      "parameters": [
+        "ParamAngleX",
+        "ParamAngleY",
+        "ParamAngleZ"
+      ],
+      "rig": "Main face mesh. Use ParamAngleX/Y/Z and keep muzzle/eyes as children."
+    },
+    {
+      "id": "cheek_fur_left",
+      "name": "Left cheek fur",
+      "group": "Head",
+      "z": 121,
+      "file": "source/layers/121_cheek_fur_left.svg",
+      "bbox": {
+        "x": 304,
+        "y": 426,
+        "width": 92,
+        "height": 90
+      },
+      "anchor": {
+        "x": 379,
+        "y": 474
+      },
+      "parameters": [
+        "ParamAngleX",
+        "ParamMouthForm"
+      ],
+      "rig": "Small cheek silhouette pieces. Follow head angle, tiny squash on smile."
+    },
+    {
+      "id": "cheek_fur_right",
+      "name": "Right cheek fur",
+      "group": "Head",
+      "z": 122,
+      "file": "source/layers/122_cheek_fur_right.svg",
+      "bbox": {
+        "x": 628,
+        "y": 426,
+        "width": 92,
+        "height": 90
+      },
+      "anchor": {
+        "x": 645,
+        "y": 474
+      },
+      "parameters": [
+        "ParamAngleX",
+        "ParamMouthForm"
+      ],
+      "rig": "Mirror cheek silhouette."
+    },
+    {
+      "id": "forehead_tuft",
+      "name": "Forehead tuft",
+      "group": "Head",
+      "z": 123,
+      "file": "source/layers/123_forehead_tuft.svg",
+      "bbox": {
+        "x": 442,
+        "y": 251,
+        "width": 142,
+        "height": 128
+      },
+      "anchor": {
+        "x": 512,
+        "y": 360
+      },
+      "parameters": [
+        "ParamAngleZ",
+        "ParamHairFront"
+      ],
+      "rig": "Hair tuft. Add delayed wobble for head motion."
+    },
+    {
+      "id": "muzzle",
+      "name": "Muzzle",
+      "group": "Face",
+      "z": 130,
+      "file": "source/layers/130_muzzle.svg",
+      "bbox": {
+        "x": 436,
+        "y": 454,
+        "width": 152,
+        "height": 96
+      },
+      "anchor": {
+        "x": 512,
+        "y": 504
+      },
+      "parameters": [
+        "ParamAngleX",
+        "ParamMouthOpenY",
+        "ParamMouthForm"
+      ],
+      "rig": "Soft muzzle patch. Minor Y squash on mouth open."
+    },
+    {
+      "id": "nose",
+      "name": "Nose",
+      "group": "Face",
+      "z": 131,
+      "file": "source/layers/131_nose.svg",
+      "bbox": {
+        "x": 491,
+        "y": 471,
+        "width": 42,
+        "height": 32
+      },
+      "anchor": {
+        "x": 512,
+        "y": 492
+      },
+      "parameters": [
+        "ParamMouthForm"
+      ],
+      "rig": "Tiny nose. Follow muzzle, no independent mesh needed."
+    },
+    {
+      "id": "mouth",
+      "name": "Mouth",
+      "group": "Face",
+      "z": 132,
+      "file": "source/layers/132_mouth.svg",
+      "bbox": {
+        "x": 470,
+        "y": 498,
+        "width": 84,
+        "height": 56
+      },
+      "anchor": {
+        "x": 512,
+        "y": 520
+      },
+      "parameters": [
+        "ParamMouthOpenY",
+        "ParamMouthForm"
+      ],
+      "rig": "Smile curve. Add open-mouth replacement art if voice/TTS is added."
+    },
+    {
+      "id": "eye_left_white",
+      "name": "Left eye white",
+      "group": "Eyes/Left",
+      "z": 140,
+      "file": "source/layers/140_eye_left_white.svg",
+      "bbox": {
+        "x": 390,
+        "y": 392,
+        "width": 76,
+        "height": 96
+      },
+      "anchor": {
+        "x": 428,
+        "y": 442
+      },
+      "parameters": [
+        "ParamEyeLOpen",
+        "ParamEyeBallX",
+        "ParamEyeBallY",
+        "ParamAngleX"
+      ],
+      "rig": "Eye white. Mask iris and highlight inside this boundary."
+    },
+    {
+      "id": "eye_right_white",
+      "name": "Right eye white",
+      "group": "Eyes/Right",
+      "z": 141,
+      "file": "source/layers/141_eye_right_white.svg",
+      "bbox": {
+        "x": 558,
+        "y": 392,
+        "width": 76,
+        "height": 96
+      },
+      "anchor": {
+        "x": 596,
+        "y": 442
+      },
+      "parameters": [
+        "ParamEyeROpen",
+        "ParamEyeBallX",
+        "ParamEyeBallY",
+        "ParamAngleX"
+      ],
+      "rig": "Eye white. Mirror left eye."
+    },
+    {
+      "id": "iris_left",
+      "name": "Left iris",
+      "group": "Eyes/Left",
+      "z": 142,
+      "file": "source/layers/142_iris_left.svg",
+      "bbox": {
+        "x": 406,
+        "y": 409,
+        "width": 44,
+        "height": 64
+      },
+      "anchor": {
+        "x": 428,
+        "y": 442
+      },
+      "parameters": [
+        "ParamEyeBallX",
+        "ParamEyeBallY",
+        "ParamEyeLOpen"
+      ],
+      "rig": "Iris should move inside eye mask with eyeball params."
+    },
+    {
+      "id": "iris_right",
+      "name": "Right iris",
+      "group": "Eyes/Right",
+      "z": 143,
+      "file": "source/layers/143_iris_right.svg",
+      "bbox": {
+        "x": 574,
+        "y": 409,
+        "width": 44,
+        "height": 64
+      },
+      "anchor": {
+        "x": 596,
+        "y": 442
+      },
+      "parameters": [
+        "ParamEyeBallX",
+        "ParamEyeBallY",
+        "ParamEyeROpen"
+      ],
+      "rig": "Mirror iris movement."
+    },
+    {
+      "id": "eye_highlight_left",
+      "name": "Left eye highlight",
+      "group": "Eyes/Left",
+      "z": 144,
+      "file": "source/layers/144_eye_highlight_left.svg",
+      "bbox": {
+        "x": 415,
+        "y": 417,
+        "width": 28,
+        "height": 28
+      },
+      "anchor": {
+        "x": 428,
+        "y": 431
+      },
+      "parameters": [
+        "ParamEyeBallX",
+        "ParamEyeBallY"
+      ],
+      "rig": "Highlight follows iris at 60 percent strength."
+    },
+    {
+      "id": "eye_highlight_right",
+      "name": "Right eye highlight",
+      "group": "Eyes/Right",
+      "z": 145,
+      "file": "source/layers/145_eye_highlight_right.svg",
+      "bbox": {
+        "x": 583,
+        "y": 417,
+        "width": 28,
+        "height": 28
+      },
+      "anchor": {
+        "x": 596,
+        "y": 431
+      },
+      "parameters": [
+        "ParamEyeBallX",
+        "ParamEyeBallY"
+      ],
+      "rig": "Mirror highlight."
+    },
+    {
+      "id": "eyelid_left",
+      "name": "Left eyelid",
+      "group": "Eyes/Left",
+      "z": 146,
+      "file": "source/layers/146_eyelid_left.svg",
+      "bbox": {
+        "x": 388,
+        "y": 386,
+        "width": 82,
+        "height": 44
+      },
+      "anchor": {
+        "x": 428,
+        "y": 407
+      },
+      "parameters": [
+        "ParamEyeLOpen"
+      ],
+      "rig": "Upper lid. Closes downward on ParamEyeLOpen."
+    },
+    {
+      "id": "eyelid_right",
+      "name": "Right eyelid",
+      "group": "Eyes/Right",
+      "z": 147,
+      "file": "source/layers/147_eyelid_right.svg",
+      "bbox": {
+        "x": 554,
+        "y": 386,
+        "width": 82,
+        "height": 44
+      },
+      "anchor": {
+        "x": 596,
+        "y": 407
+      },
+      "parameters": [
+        "ParamEyeROpen"
+      ],
+      "rig": "Upper lid. Mirror left lid."
+    },
+    {
+      "id": "brow_left",
+      "name": "Left brow",
+      "group": "Face",
+      "z": 150,
+      "file": "source/layers/150_brow_left.svg",
+      "bbox": {
+        "x": 392,
+        "y": 357,
+        "width": 62,
+        "height": 36
+      },
+      "anchor": {
+        "x": 424,
+        "y": 380
+      },
+      "parameters": [
+        "ParamBrowLY",
+        "ParamBrowLForm"
+      ],
+      "rig": "Soft expression brow. Keep subtle."
+    },
+    {
+      "id": "brow_right",
+      "name": "Right brow",
+      "group": "Face",
+      "z": 151,
+      "file": "source/layers/151_brow_right.svg",
+      "bbox": {
+        "x": 570,
+        "y": 357,
+        "width": 62,
+        "height": 36
+      },
+      "anchor": {
+        "x": 600,
+        "y": 380
+      },
+      "parameters": [
+        "ParamBrowRY",
+        "ParamBrowRForm"
+      ],
+      "rig": "Mirror brow."
+    },
+    {
+      "id": "blush_left",
+      "name": "Left blush",
+      "group": "Face",
+      "z": 160,
+      "file": "source/layers/160_blush_left.svg",
+      "bbox": {
+        "x": 354,
+        "y": 481,
+        "width": 58,
+        "height": 34
+      },
+      "anchor": {
+        "x": 383,
+        "y": 498
+      },
+      "parameters": [
+        "ParamCheek"
+      ],
+      "rig": "Expression tint. Fade for happy/break."
+    },
+    {
+      "id": "blush_right",
+      "name": "Right blush",
+      "group": "Face",
+      "z": 161,
+      "file": "source/layers/161_blush_right.svg",
+      "bbox": {
+        "x": 612,
+        "y": 481,
+        "width": 58,
+        "height": 34
+      },
+      "anchor": {
+        "x": 641,
+        "y": 498
+      },
+      "parameters": [
+        "ParamCheek"
+      ],
+      "rig": "Mirror expression tint."
+    },
+    {
+      "id": "whiskers_left",
+      "name": "Left whiskers",
+      "group": "Face",
+      "z": 170,
+      "file": "source/layers/170_whiskers_left.svg",
+      "bbox": {
+        "x": 301,
+        "y": 476,
+        "width": 138,
+        "height": 68
+      },
+      "anchor": {
+        "x": 438,
+        "y": 505
+      },
+      "parameters": [
+        "ParamAngleX",
+        "ParamMouthForm"
+      ],
+      "rig": "Three-stroke whisker layer. Keep vector-like and thin."
+    },
+    {
+      "id": "whiskers_right",
+      "name": "Right whiskers",
+      "group": "Face",
+      "z": 171,
+      "file": "source/layers/171_whiskers_right.svg",
+      "bbox": {
+        "x": 585,
+        "y": 476,
+        "width": 138,
+        "height": 68
+      },
+      "anchor": {
+        "x": 586,
+        "y": 505
+      },
+      "parameters": [
+        "ParamAngleX",
+        "ParamMouthForm"
+      ],
+      "rig": "Mirror whiskers."
+    }
+  ]
+}

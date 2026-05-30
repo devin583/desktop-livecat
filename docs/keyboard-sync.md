@@ -11,6 +11,7 @@ Desktop LiveCat maps typing rhythm to cat paw motion without storing key values.
 
 ## Windows bridge
 
-- Preferred final backend: Raw Input on Win11.
-- Current v0.1 bridge: low-level hook fallback in Windows builds plus focused-window browser fallback for development and non-Windows builds.
-- The app must expose a visible privacy switch before any future backend records more than rhythm.
+- Current Win11 backend: Raw Input registered against a hidden message-only window.
+- Fallback backend: `WH_KEYBOARD_LL` low-level hook if Raw Input registration fails.
+- Development fallback: focused-window browser events on non-Windows builds and while the native bridge is unavailable.
+- The app exposes a keyboard rhythm toggle and must never record text, key codes, scan codes, or window titles.

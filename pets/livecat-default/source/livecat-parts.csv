@@ -1,0 +1,60 @@
+z,id,name,group,file,bbox,anchor,parameters,rig
+10,tail_base,Tail base,Tail,source/layers/010_tail_base.svg,178 526 270 230,430 682,ParamTailBaseAngle ParamBodyAngleZ,Root tail mesh. Bind to body and rotate with delayed follow.
+11,tail_mid,Tail middle band,Tail,source/layers/011_tail_mid.svg,202 555 138 110,276 612,ParamTailMidAngle,Independent middle tail band for secondary curl deformation.
+12,tail_tip,Tail tip,Tail,source/layers/012_tail_tip.svg,186 509 130 134,282 612,ParamTailTipAngle,Curl tip. Use smaller mesh and higher delayed spring than base.
+30,ear_left_outer,Left outer ear,Head/Ears,source/layers/030_ear_left_outer.svg,319 197 146 176,412 357,ParamEarLAngle ParamAngleZ,Rotate at lower inner base. Keep behind head base.
+31,ear_right_outer,Right outer ear,Head/Ears,source/layers/031_ear_right_outer.svg,559 197 146 176,612 357,ParamEarRAngle ParamAngleZ,Rotate at lower inner base. Mirror left ear rig.
+32,ear_left_inner,Left inner ear,Head/Ears,source/layers/032_ear_left_inner.svg,345 231 88 106,405 337,ParamEarLAngle,Nested under outer ear. Subtle compression during ear twitch.
+33,ear_right_inner,Right inner ear,Head/Ears,source/layers/033_ear_right_inner.svg,591 231 88 106,619 337,ParamEarRAngle,Nested under outer ear. Mirror left inner ear.
+40,body_base,Body base,Body,source/layers/040_body_base.svg,352 474 320 318,512 730,ParamBreath ParamBodyAngleX ParamBodyAngleY ParamBodyAngleZ,Main torso mesh. Breathing expands vertically and slightly laterally.
+41,body_side_shadow,Body side shadow,Body,source/layers/041_body_side_shadow.svg,559 522 94 218,604 650,ParamBodyAngleX ParamBreath,Dark side form. Keep as separate multiply-like layer for body turn.
+42,chest_patch,Chest patch,Body,source/layers/042_chest_patch.svg,426 544 172 218,512 662,ParamBreath ParamBodyAngleY,Chest patch should lag behind torso only very slightly.
+50,back_paw_left,Left back paw,Paws,source/layers/050_back_paw_left.svg,348 712 104 94,404 770,ParamBodyAngleZ ParamSquash,Back paw anchors pet on the desktop. Minimal motion.
+51,back_paw_right,Right back paw,Paws,source/layers/051_back_paw_right.svg,572 712 104 94,620 770,ParamBodyAngleZ ParamSquash,Back paw anchors pet on the desktop. Mirror left.
+60,keyboard_shadow,Keyboard shadow,Keyboard,source/layers/060_keyboard_shadow.svg,304 802 416 72,512 838,ParamSquash,Grounding shadow. Do not bind to key press.
+61,keyboard_body,Keyboard body,Keyboard,source/layers/061_keyboard_body.svg,306 708 412 138,512 782,ParamKeyboardBounce ParamKeyboardPressL ParamKeyboardPressR,Rigid prop mesh with slight bounce during typing.
+71,key_01,Keyboard key 01,Keyboard/Keys,source/layers/071_key_01.svg,338 736 38 36,357 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+72,key_02,Keyboard key 02,Keyboard/Keys,source/layers/072_key_02.svg,377 736 38 36,396 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+73,key_03,Keyboard key 03,Keyboard/Keys,source/layers/073_key_03.svg,416 736 38 36,435 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+74,key_04,Keyboard key 04,Keyboard/Keys,source/layers/074_key_04.svg,455 736 38 36,474 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+75,key_05,Keyboard key 05,Keyboard/Keys,source/layers/075_key_05.svg,494 736 38 36,513 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+76,key_06,Keyboard key 06,Keyboard/Keys,source/layers/076_key_06.svg,533 736 38 36,552 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+77,key_07,Keyboard key 07,Keyboard/Keys,source/layers/077_key_07.svg,572 736 38 36,591 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+78,key_08,Keyboard key 08,Keyboard/Keys,source/layers/078_key_08.svg,611 736 38 36,630 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+79,key_09,Keyboard key 09,Keyboard/Keys,source/layers/079_key_09.svg,650 736 38 36,669 752,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+80,key_10,Keyboard key 10,Keyboard/Keys,source/layers/080_key_10.svg,352 768 40 36,372 784,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+81,key_11,Keyboard key 11,Keyboard/Keys,source/layers/081_key_11.svg,394 768 40 36,414 784,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+82,key_12,Keyboard key 12,Keyboard/Keys,source/layers/082_key_12.svg,436 768 40 36,456 784,ParamKeyboardPressL ParamKeyboardPressR,Primary paw strike key. Give this key the strongest press curve.
+83,key_13,Keyboard key 13,Keyboard/Keys,source/layers/083_key_13.svg,478 768 40 36,498 784,ParamKeyboardPressL ParamKeyboardPressR,Primary paw strike key. Give this key the strongest press curve.
+84,key_14,Keyboard key 14,Keyboard/Keys,source/layers/084_key_14.svg,520 768 40 36,540 784,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+85,key_15,Keyboard key 15,Keyboard/Keys,source/layers/085_key_15.svg,562 768 40 36,582 784,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+86,key_16,Keyboard key 16,Keyboard/Keys,source/layers/086_key_16.svg,604 768 40 36,624 784,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+87,key_17,Keyboard key 17,Keyboard/Keys,source/layers/087_key_17.svg,646 768 40 36,666 784,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+88,key_18,Keyboard key 18,Keyboard/Keys,source/layers/088_key_18.svg,382 799 54 34,409 814,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+89,key_19,Keyboard key 19,Keyboard/Keys,source/layers/089_key_19.svg,440 799 54 34,467 814,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+90,key_20,Keyboard key 20,Keyboard/Keys,source/layers/090_key_20.svg,498 799 54 34,525 814,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+91,key_21,Keyboard key 21,Keyboard/Keys,source/layers/091_key_21.svg,556 799 54 34,583 814,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+92,key_22,Keyboard key 22,Keyboard/Keys,source/layers/092_key_22.svg,614 799 54 34,641 814,ParamKeyboardBounce,Individual key layer for rhythmic typing highlights.
+110,front_paw_left,Left front paw,Paws,source/layers/110_front_paw_left.svg,392 624 102 162,445 650,ParamPawLTap ParamKeyboardPressL ParamBodyAngleZ,"Typing paw. Rotate down onto left home keys, with squash at contact."
+111,front_paw_right,Right front paw,Paws,source/layers/111_front_paw_right.svg,530 624 102 162,579 650,ParamPawRTap ParamKeyboardPressR ParamBodyAngleZ,Typing paw. Alternate with left paw on typing_sync motion.
+120,head_base,Head base,Head,source/layers/120_head_base.svg,300 280 424 330,512 455,ParamAngleX ParamAngleY ParamAngleZ,Main face mesh. Use ParamAngleX/Y/Z and keep muzzle/eyes as children.
+121,cheek_fur_left,Left cheek fur,Head,source/layers/121_cheek_fur_left.svg,304 426 92 90,379 474,ParamAngleX ParamMouthForm,"Small cheek silhouette pieces. Follow head angle, tiny squash on smile."
+122,cheek_fur_right,Right cheek fur,Head,source/layers/122_cheek_fur_right.svg,628 426 92 90,645 474,ParamAngleX ParamMouthForm,Mirror cheek silhouette.
+123,forehead_tuft,Forehead tuft,Head,source/layers/123_forehead_tuft.svg,442 251 142 128,512 360,ParamAngleZ ParamHairFront,Hair tuft. Add delayed wobble for head motion.
+130,muzzle,Muzzle,Face,source/layers/130_muzzle.svg,436 454 152 96,512 504,ParamAngleX ParamMouthOpenY ParamMouthForm,Soft muzzle patch. Minor Y squash on mouth open.
+131,nose,Nose,Face,source/layers/131_nose.svg,491 471 42 32,512 492,ParamMouthForm,"Tiny nose. Follow muzzle, no independent mesh needed."
+132,mouth,Mouth,Face,source/layers/132_mouth.svg,470 498 84 56,512 520,ParamMouthOpenY ParamMouthForm,Smile curve. Add open-mouth replacement art if voice/TTS is added.
+140,eye_left_white,Left eye white,Eyes/Left,source/layers/140_eye_left_white.svg,390 392 76 96,428 442,ParamEyeLOpen ParamEyeBallX ParamEyeBallY ParamAngleX,Eye white. Mask iris and highlight inside this boundary.
+141,eye_right_white,Right eye white,Eyes/Right,source/layers/141_eye_right_white.svg,558 392 76 96,596 442,ParamEyeROpen ParamEyeBallX ParamEyeBallY ParamAngleX,Eye white. Mirror left eye.
+142,iris_left,Left iris,Eyes/Left,source/layers/142_iris_left.svg,406 409 44 64,428 442,ParamEyeBallX ParamEyeBallY ParamEyeLOpen,Iris should move inside eye mask with eyeball params.
+143,iris_right,Right iris,Eyes/Right,source/layers/143_iris_right.svg,574 409 44 64,596 442,ParamEyeBallX ParamEyeBallY ParamEyeROpen,Mirror iris movement.
+144,eye_highlight_left,Left eye highlight,Eyes/Left,source/layers/144_eye_highlight_left.svg,415 417 28 28,428 431,ParamEyeBallX ParamEyeBallY,Highlight follows iris at 60 percent strength.
+145,eye_highlight_right,Right eye highlight,Eyes/Right,source/layers/145_eye_highlight_right.svg,583 417 28 28,596 431,ParamEyeBallX ParamEyeBallY,Mirror highlight.
+146,eyelid_left,Left eyelid,Eyes/Left,source/layers/146_eyelid_left.svg,388 386 82 44,428 407,ParamEyeLOpen,Upper lid. Closes downward on ParamEyeLOpen.
+147,eyelid_right,Right eyelid,Eyes/Right,source/layers/147_eyelid_right.svg,554 386 82 44,596 407,ParamEyeROpen,Upper lid. Mirror left lid.
+150,brow_left,Left brow,Face,source/layers/150_brow_left.svg,392 357 62 36,424 380,ParamBrowLY ParamBrowLForm,Soft expression brow. Keep subtle.
+151,brow_right,Right brow,Face,source/layers/151_brow_right.svg,570 357 62 36,600 380,ParamBrowRY ParamBrowRForm,Mirror brow.
+160,blush_left,Left blush,Face,source/layers/160_blush_left.svg,354 481 58 34,383 498,ParamCheek,Expression tint. Fade for happy/break.
+161,blush_right,Right blush,Face,source/layers/161_blush_right.svg,612 481 58 34,641 498,ParamCheek,Mirror expression tint.
+170,whiskers_left,Left whiskers,Face,source/layers/170_whiskers_left.svg,301 476 138 68,438 505,ParamAngleX ParamMouthForm,Three-stroke whisker layer. Keep vector-like and thin.
+171,whiskers_right,Right whiskers,Face,source/layers/171_whiskers_right.svg,585 476 138 68,586 505,ParamAngleX ParamMouthForm,Mirror whiskers.

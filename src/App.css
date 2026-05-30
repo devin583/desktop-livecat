@@ -27,6 +27,8 @@ input {
 
 .pet-app {
   --pet-scale: 1;
+  --look-x: 0;
+  --look-y: 0;
   width: 100%;
   height: 100%;
   background: transparent;
@@ -49,6 +51,15 @@ input {
   display: grid;
   place-items: end center;
   pointer-events: auto;
+}
+
+.live2d-canvas {
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cat {
@@ -101,6 +112,7 @@ input {
   box-shadow:
     inset calc(-13px * var(--pet-scale)) calc(-17px * var(--pet-scale)) 0 rgba(151, 57, 73, 0.1),
     0 calc(12px * var(--pet-scale)) calc(24px * var(--pet-scale)) rgba(81, 45, 47, 0.18);
+  translate: calc(var(--look-x) * 7px) calc(var(--look-y) * 3px);
   animation: head-follow 4.8s ease-in-out infinite;
 }
 
@@ -149,6 +161,7 @@ input {
   background: #443239;
   box-shadow: inset 0 calc(6px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.32);
   animation: blink 5.1s infinite;
+  translate: calc(var(--look-x) * 3px) calc(var(--look-y) * 2px);
 }
 
 .eye-left {
@@ -302,6 +315,24 @@ input {
   animation-duration: 2.2s;
 }
 
+.mood-dragged .cat {
+  animation: dragged-squash 0.8s ease-in-out infinite;
+}
+
+.mood-dragged .tail {
+  animation-duration: 0.9s;
+}
+
+.low-power .cat,
+.low-power .head,
+.low-power .tail,
+.low-power .ear,
+.low-power .eye,
+.low-power .paw,
+.low-power .keyboard-prop span {
+  animation-duration: 9s;
+}
+
 .control-strip {
   position: absolute;
   top: 12px;
@@ -350,6 +381,24 @@ input {
   grid-template-columns: 1fr 1fr;
 }
 
+.duration-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.duration-row input {
+  min-width: 0;
+  height: 28px;
+  box-sizing: border-box;
+  border: 1px solid rgba(83, 62, 69, 0.14);
+  border-radius: 7px;
+  background: #fffaf0;
+  color: #4c3a42;
+  text-align: center;
+  font-size: 12px;
+}
+
 .control-strip button {
   min-width: 0;
   height: 30px;
@@ -391,6 +440,16 @@ input {
   }
   45% {
     transform: translateY(9px) scaleX(1.035) scaleY(0.94);
+  }
+}
+
+@keyframes dragged-squash {
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1.04) scaleY(0.94) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(6px) scaleX(0.98) scaleY(1.03) rotate(2deg);
   }
 }
 

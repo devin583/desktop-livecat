@@ -1,16 +1,19 @@
 {
   "name": "desktop-livecat",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "check": "npm run validate:pets && npm run build",
     "preview": "vite preview",
+    "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "package:portable": "node scripts/package-portable.mjs"
+    "package:portable": "node scripts/package-portable.mjs",
+    "validate:pets": "node scripts/validate-resource-packs.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

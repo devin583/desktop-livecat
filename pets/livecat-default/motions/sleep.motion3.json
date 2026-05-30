@@ -1,0 +1,9 @@
+{
+  "Version": 3,
+  "Meta": { "Duration": 5, "Fps": 24, "Loop": true, "AreBeziersRestricted": true, "CurveCount": 3, "TotalSegmentCount": 6, "TotalPointCount": 9, "UserDataCount": 0, "TotalUserDataSize": 0 },
+  "Curves": [
+    { "Target": "Parameter", "Id": "ParamEyeLOpen", "Segments": [0, 0.08, 0, 2.5, 0.02, 5, 0.08] },
+    { "Target": "Parameter", "Id": "ParamEyeROpen", "Segments": [0, 0.08, 0, 2.5, 0.02, 5, 0.08] },
+    { "Target": "Parameter", "Id": "ParamBreath", "Segments": [0, 0.1, 0, 2.5, 0.55, 5, 0.1] }
+  ]
+}

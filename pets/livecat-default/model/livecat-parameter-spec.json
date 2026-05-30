@@ -1,0 +1,243 @@
+{
+  "schema": "desktop-livecat.live2dParameterSpec.v1",
+  "character": "Mochi Prototype",
+  "standardParameters": [
+    {
+      "id": "ParamAngleX",
+      "min": -30,
+      "default": 0,
+      "max": 30,
+      "use": "head horizontal turn"
+    },
+    {
+      "id": "ParamAngleY",
+      "min": -30,
+      "default": 0,
+      "max": 30,
+      "use": "head vertical turn"
+    },
+    {
+      "id": "ParamAngleZ",
+      "min": -30,
+      "default": 0,
+      "max": 30,
+      "use": "head tilt"
+    },
+    {
+      "id": "ParamBodyAngleX",
+      "min": -10,
+      "default": 0,
+      "max": 10,
+      "use": "body horizontal turn"
+    },
+    {
+      "id": "ParamBodyAngleY",
+      "min": -10,
+      "default": 0,
+      "max": 10,
+      "use": "body vertical turn"
+    },
+    {
+      "id": "ParamBodyAngleZ",
+      "min": -10,
+      "default": 0,
+      "max": 10,
+      "use": "body tilt"
+    },
+    {
+      "id": "ParamBreath",
+      "min": 0,
+      "default": 0.5,
+      "max": 1,
+      "use": "breathing"
+    },
+    {
+      "id": "ParamEyeLOpen",
+      "min": 0,
+      "default": 1,
+      "max": 1,
+      "use": "left blink"
+    },
+    {
+      "id": "ParamEyeROpen",
+      "min": 0,
+      "default": 1,
+      "max": 1,
+      "use": "right blink"
+    },
+    {
+      "id": "ParamEyeBallX",
+      "min": -1,
+      "default": 0,
+      "max": 1,
+      "use": "eye look x"
+    },
+    {
+      "id": "ParamEyeBallY",
+      "min": -1,
+      "default": 0,
+      "max": 1,
+      "use": "eye look y"
+    },
+    {
+      "id": "ParamMouthOpenY",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "mouth open"
+    },
+    {
+      "id": "ParamMouthForm",
+      "min": -1,
+      "default": 0,
+      "max": 1,
+      "use": "mouth smile/form"
+    }
+  ],
+  "customParameters": [
+    {
+      "id": "ParamEarLAngle",
+      "min": -25,
+      "default": 0,
+      "max": 25,
+      "use": "left ear twitch"
+    },
+    {
+      "id": "ParamEarRAngle",
+      "min": -25,
+      "default": 0,
+      "max": 25,
+      "use": "right ear twitch"
+    },
+    {
+      "id": "ParamTailBaseAngle",
+      "min": -35,
+      "default": 0,
+      "max": 35,
+      "use": "tail base sway"
+    },
+    {
+      "id": "ParamTailMidAngle",
+      "min": -45,
+      "default": 0,
+      "max": 45,
+      "use": "tail middle follow"
+    },
+    {
+      "id": "ParamTailTipAngle",
+      "min": -55,
+      "default": 0,
+      "max": 55,
+      "use": "tail tip follow"
+    },
+    {
+      "id": "ParamPawLTap",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "left typing paw contact"
+    },
+    {
+      "id": "ParamPawRTap",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "right typing paw contact"
+    },
+    {
+      "id": "ParamKeyboardPressL",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "left key press"
+    },
+    {
+      "id": "ParamKeyboardPressR",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "right key press"
+    },
+    {
+      "id": "ParamKeyboardBounce",
+      "min": -1,
+      "default": 0,
+      "max": 1,
+      "use": "keyboard prop bounce"
+    },
+    {
+      "id": "ParamHairFront",
+      "min": -1,
+      "default": 0,
+      "max": 1,
+      "use": "forehead tuft lag"
+    },
+    {
+      "id": "ParamCheek",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "blush opacity"
+    },
+    {
+      "id": "ParamSquash",
+      "min": -1,
+      "default": 0,
+      "max": 1,
+      "use": "drag/fall squash and stretch"
+    },
+    {
+      "id": "ParamStretch",
+      "min": 0,
+      "default": 0,
+      "max": 1,
+      "use": "break stretch pose"
+    }
+  ],
+  "motionBindings": {
+    "idle": [
+      "ParamBreath",
+      "ParamAngleX",
+      "ParamAngleY",
+      "ParamTailBaseAngle",
+      "ParamTailMidAngle",
+      "ParamTailTipAngle"
+    ],
+    "blink": [
+      "ParamEyeLOpen",
+      "ParamEyeROpen"
+    ],
+    "typing_sync": [
+      "ParamPawLTap",
+      "ParamPawRTap",
+      "ParamKeyboardPressL",
+      "ParamKeyboardPressR",
+      "ParamEarLAngle",
+      "ParamEarRAngle"
+    ],
+    "pomodoro_focus": [
+      "ParamBreath",
+      "ParamEyeBallY",
+      "ParamMouthForm",
+      "ParamTailBaseAngle"
+    ],
+    "pomodoro_break": [
+      "ParamStretch",
+      "ParamMouthOpenY",
+      "ParamTailBaseAngle",
+      "ParamTailTipAngle",
+      "ParamCheek"
+    ],
+    "dragged": [
+      "ParamSquash",
+      "ParamAngleZ",
+      "ParamTailBaseAngle",
+      "ParamTailTipAngle"
+    ],
+    "fall_recover": [
+      "ParamSquash",
+      "ParamBodyAngleZ",
+      "ParamAngleZ"
+    ]
+  }
+}

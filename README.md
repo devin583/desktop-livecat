@@ -4,18 +4,23 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.1 status
+## Current v0.5 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
 - Copyable `pets/` resource pack contract.
-- Animated original cat fallback with breathing, blinking, ears, tail, paws,
-  keyboard prop, keyboard rhythm sync, and Pomodoro states.
+- Animated original cat fallback with breathing, blinking, ear/tail secondary
+  motion, pointer-following eyes, paws, keyboard prop, keyboard rhythm sync, and
+  Pomodoro states.
 - Rust persistence into portable `data/state.json` when possible.
-- Windows keyboard rhythm bridge emits timing pulses only; it does not store key
-  values. Non-Windows dev builds use a focused-window fallback.
+- Windows keyboard rhythm bridge prefers Raw Input and falls back to a low-level
+  hook only if Raw Input registration fails. It emits timing pulses only; it
+  does not store key values. Non-Windows dev builds use a focused-window
+  fallback.
 - Live2D Cubism model slot and art/rig brief are ready. SDK binaries and
   third-party models are intentionally not committed.
+- GitHub Actions checks run on macOS and Windows. Tagged releases build the
+  Win11 portable package.
 
 ## Run locally
 
@@ -59,4 +64,5 @@ See [docs/resource-pack.md](docs/resource-pack.md) and
 
 - [docs/research.md](docs/research.md)
 - [docs/live2d-art-brief.md](docs/live2d-art-brief.md)
+- [docs/live2d-ai-generation-research.md](docs/live2d-ai-generation-research.md)
 - [docs/keyboard-sync.md](docs/keyboard-sync.md)

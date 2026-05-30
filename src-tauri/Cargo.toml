@@ -1,6 +1,6 @@
 [package]
 name = "desktop-livecat"
-version = "0.1.0"
+version = "0.5.0"
 description = "A portable Win11-first Live2D desktop cat."
 authors = ["Dubhe"]
 edition = "2021"
@@ -24,4 +24,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "0.61", features = [
+  "Win32_Devices_HumanInterfaceDevice",
+  "Win32_Foundation",
+  "Win32_System_LibraryLoader",
+  "Win32_UI_Input",
+  "Win32_UI_WindowsAndMessaging"
+] }

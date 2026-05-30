@@ -16,6 +16,12 @@
 - Also includes Microsoft Fixed Version WebView2 Runtime under `runtime/webview2/`.
 - Built only when `WEBVIEW2_FIXED_RUNTIME_DIR` points to an approved local runtime directory.
 
+## GitHub release flow
+
+- Push a `v*` tag to run `.github/workflows/windows-release.yml`.
+- The workflow builds on `windows-latest`, validates resource packs, builds Tauri, creates portable zip archives, uploads artifacts, and attaches zip files to a tagged GitHub Release.
+- The standard package is always produced. The full-offline package is produced by the local packaging script when a Fixed Version WebView2 runtime directory is supplied.
+
 ## Data migration
 
 Copy these directories next to the executable:

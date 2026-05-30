@@ -15,6 +15,27 @@
 - Tail: at least three deformable sections for secondary motion.
 - Prop: keyboard body and individual key layers for paw-tapping feedback.
 
+## Generated source kit
+
+The current project now includes a reproducible source kit for this brief:
+
+- Concept reference: `pets/livecat-default/preview/livecat-ai-concept.png`
+- Combined SVG source: `pets/livecat-default/source/livecat-layers.svg`
+- Individual SVG source parts: `pets/livecat-default/source/layers/*.svg`
+- Layer map and rig notes: `pets/livecat-default/source/livecat-layer-map.json`
+- Parts table for review or PSD assembly: `pets/livecat-default/source/livecat-parts.csv`
+- Cubism parameter plan: `pets/livecat-default/model/livecat-parameter-spec.json`
+- AI prompt pack: `pets/livecat-default/design/ai-prompts.md`
+
+The SVG files are editable upstream art. They are not the final Cubism import
+format. Convert or repaint them into a Photoshop/CLIP STUDIO PSD with stable
+part names before importing into Cubism Editor.
+
+## Included concept asset
+
+- `pets/livecat-default/preview/livecat-ai-concept.png` is a non-final concept reference for silhouette, facial softness, and keyboard pose.
+- It is not treated as a riggable source file. The production source must be a layered PSD/Clip Studio file following `pets/livecat-default/source/layer-map.json`.
+
 ## Required motions
 
 - `idle`: breathing, tiny head drift, subtle tail sway.
