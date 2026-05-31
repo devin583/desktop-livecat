@@ -1,6 +1,8 @@
 - [ ] Every cell has the same canvas size and alignment.
 - [ ] Idle loops without a visible jump.
 - [ ] tap_left and tap_right clearly press different key groups.
+- [ ] The keyboard reads as a computer keyboard with row offsets and a spacebar.
+- [ ] Keyboard labels or marks face the pet direction, not the viewer direction.
 - [ ] typing alternates left/right and does not look like sliding.
 - [ ] focus and break are readable at small desktop size.
 - [ ] failed/dragged has a recovery-friendly pose.

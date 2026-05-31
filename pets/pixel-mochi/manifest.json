@@ -1,9 +1,9 @@
 {
   "id": "pixel-mochi",
-  "name": "Pixel Mochi",
-  "version": "0.6.1",
+  "name": "Mochi Tabby",
+  "version": "0.6.3",
   "artist": "Desktop LiveCat",
-  "description": "Built-in 8 x 9 spritesheet cat sample for Codex-style custom pets, BongoCat-like typing taps, Pomodoro focus, and break states.",
+  "description": "Built-in orange tabby spritesheet cat sample for Codex-style custom pets, BongoCat-like typing taps, cat-facing keyboard, Pomodoro focus, and break states.",
   "preview": "preview/preview.svg",
   "renderMode": "spritesheet",
   "tags": [
@@ -14,18 +14,19 @@
     "template"
   ],
   "persona": {
-    "name": "Pixel Mochi",
+    "name": "Mochi Tabby",
     "species": "cat",
-    "style": "rounded desktop spritesheet",
+    "style": "orange tabby desktop spritesheet",
     "personality": "focused, soft, and reactive to keyboard rhythm",
     "palette": [
-      "#ffd8bf",
-      "#ef9d91",
-      "#2f2430",
-      "#fff6dd"
+      "#f3a547",
+      "#d8742d",
+      "#9f5128",
+      "#202631",
+      "#fff1d5"
     ],
     "accessories": [
-      "mini keyboard",
+      "cat-facing computer keyboard",
       "timer note"
     ]
   },

@@ -119,13 +119,14 @@ input {
   width: calc(178px * var(--pet-scale));
   height: calc(166px * var(--pet-scale));
   transform: translateX(-50%);
-  border-radius: 48% 48% 42% 42%;
+  border-radius: 46% 46% 40% 40% / 50% 50% 42% 42%;
   background:
-    radial-gradient(circle at 50% 21%, rgba(255, 255, 255, 0.62), transparent 28%),
-    linear-gradient(160deg, #f8d9c5 0%, #f5b9a6 45%, #e9988d 100%);
+    radial-gradient(ellipse at 50% 64%, rgba(255, 245, 220, 0.88) 0 31%, transparent 32%),
+    linear-gradient(96deg, transparent 0 23%, rgba(185, 82, 32, 0.22) 24% 28%, transparent 29% 43%, rgba(185, 82, 32, 0.18) 44% 48%, transparent 49% 100%),
+    linear-gradient(160deg, #f5b456 0%, #ea8c35 48%, #d86f2b 100%);
   box-shadow:
-    inset calc(-12px * var(--pet-scale)) calc(-16px * var(--pet-scale)) 0 rgba(187, 83, 91, 0.12),
-    0 calc(18px * var(--pet-scale)) calc(28px * var(--pet-scale)) rgba(92, 52, 47, 0.22);
+    inset calc(-12px * var(--pet-scale)) calc(-16px * var(--pet-scale)) 0 rgba(120, 54, 31, 0.14),
+    0 calc(18px * var(--pet-scale)) calc(28px * var(--pet-scale)) rgba(71, 47, 32, 0.24);
   z-index: 2;
 }
 
@@ -137,56 +138,79 @@ input {
   height: calc(100px * var(--pet-scale));
   transform: translateX(-50%);
   border-radius: 50% 50% 44% 44%;
-  background: rgba(255, 246, 231, 0.82);
+  background: rgba(255, 242, 216, 0.9);
 }
 
 .head {
   position: absolute;
   left: 50%;
-  bottom: calc(172px * var(--pet-scale));
-  width: calc(210px * var(--pet-scale));
-  height: calc(176px * var(--pet-scale));
+  bottom: calc(174px * var(--pet-scale));
+  width: calc(202px * var(--pet-scale));
+  height: calc(164px * var(--pet-scale));
   transform: translateX(-50%);
-  border-radius: 47% 47% 45% 45%;
+  border-radius: 44% 44% 46% 46% / 48% 48% 44% 44%;
   background:
-    radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.68), transparent 24%),
-    linear-gradient(145deg, #f9dfca 0%, #f4b5a1 50%, #e98c89 100%);
+    radial-gradient(ellipse at 50% 78%, rgba(255, 242, 216, 0.95) 0 25%, transparent 26%),
+    linear-gradient(90deg, transparent 0 26%, rgba(160, 70, 30, 0.2) 27% 31%, transparent 32% 69%, rgba(160, 70, 30, 0.18) 70% 74%, transparent 75% 100%),
+    linear-gradient(145deg, #f8bd66 0%, #ec8f3d 52%, #d86d2d 100%);
   box-shadow:
-    inset calc(-13px * var(--pet-scale)) calc(-17px * var(--pet-scale)) 0 rgba(151, 57, 73, 0.1),
-    0 calc(12px * var(--pet-scale)) calc(24px * var(--pet-scale)) rgba(81, 45, 47, 0.18);
+    inset calc(-13px * var(--pet-scale)) calc(-17px * var(--pet-scale)) 0 rgba(116, 49, 28, 0.12),
+    0 calc(12px * var(--pet-scale)) calc(24px * var(--pet-scale)) rgba(75, 47, 33, 0.2);
   translate: calc(var(--look-x) * 7px) calc(var(--look-y) * 3px);
   animation: head-follow 4.8s ease-in-out infinite;
   z-index: 6;
 }
 
+.head::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(12px * var(--pet-scale));
+  width: calc(78px * var(--pet-scale));
+  height: calc(58px * var(--pet-scale));
+  transform: translateX(-50%);
+  background:
+    linear-gradient(108deg, transparent 0 43%, rgba(118, 56, 32, 0.34) 44% 50%, transparent 51%),
+    linear-gradient(90deg, transparent 0 47%, rgba(118, 56, 32, 0.38) 48% 52%, transparent 53%),
+    linear-gradient(72deg, transparent 0 43%, rgba(118, 56, 32, 0.34) 44% 50%, transparent 51%);
+  clip-path: polygon(14% 0, 86% 0, 67% 100%, 50% 64%, 33% 100%);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
 .ear {
   position: absolute;
-  top: calc(-32px * var(--pet-scale));
-  width: calc(78px * var(--pet-scale));
-  height: calc(84px * var(--pet-scale));
-  border-radius: 22% 78% 22% 78%;
-  background: linear-gradient(145deg, #f5bea7, #e88983);
+  top: calc(-52px * var(--pet-scale));
+  width: calc(76px * var(--pet-scale));
+  height: calc(96px * var(--pet-scale));
+  border-radius: 18% 18% 30% 30%;
+  background: linear-gradient(145deg, #f6b45e 0%, #e07a31 72%);
+  clip-path: polygon(50% 0, 96% 100%, 4% 100%);
   transform-origin: bottom center;
-  box-shadow: inset calc(-9px * var(--pet-scale)) calc(-8px * var(--pet-scale)) 0 rgba(151, 57, 73, 0.1);
+  box-shadow: inset calc(-8px * var(--pet-scale)) calc(-10px * var(--pet-scale)) 0 rgba(110, 49, 29, 0.13);
   animation: ear-twitch 6.2s ease-in-out infinite;
 }
 
 .ear::after {
   content: "";
   position: absolute;
-  inset: calc(17px * var(--pet-scale)) calc(18px * var(--pet-scale)) calc(18px * var(--pet-scale));
-  border-radius: inherit;
-  background: #f9c9c3;
+  left: 50%;
+  bottom: calc(13px * var(--pet-scale));
+  width: calc(38px * var(--pet-scale));
+  height: calc(52px * var(--pet-scale));
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0, 96% 100%, 4% 100%);
+  background: #ffd1bd;
 }
 
 .ear-left {
-  left: calc(18px * var(--pet-scale));
-  transform: rotate(-24deg);
+  left: calc(20px * var(--pet-scale));
+  transform: rotate(-18deg);
 }
 
 .ear-right {
-  right: calc(18px * var(--pet-scale));
-  transform: scaleX(-1) rotate(-24deg);
+  right: calc(20px * var(--pet-scale));
+  transform: scaleX(-1) rotate(-18deg);
   animation-delay: 1.1s;
 }
 
@@ -197,12 +221,14 @@ input {
 
 .eye {
   position: absolute;
-  top: calc(72px * var(--pet-scale));
-  width: calc(24px * var(--pet-scale));
-  height: calc(31px * var(--pet-scale));
+  top: calc(68px * var(--pet-scale));
+  width: calc(22px * var(--pet-scale));
+  height: calc(30px * var(--pet-scale));
   border-radius: 999px;
-  background: #443239;
-  box-shadow: inset 0 calc(6px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.32);
+  background: #342a30;
+  box-shadow:
+    inset 0 calc(6px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.34),
+    0 0 0 calc(2px * var(--pet-scale)) rgba(75, 44, 36, 0.08);
   animation: blink 5.1s infinite;
   translate: calc(var(--look-x) * 3px) calc(var(--look-y) * 2px);
 }
@@ -218,12 +244,12 @@ input {
 .muzzle {
   position: absolute;
   left: 50%;
-  top: calc(96px * var(--pet-scale));
-  width: calc(72px * var(--pet-scale));
-  height: calc(46px * var(--pet-scale));
+  top: calc(92px * var(--pet-scale));
+  width: calc(76px * var(--pet-scale));
+  height: calc(48px * var(--pet-scale));
   transform: translateX(-50%);
-  border-radius: 50%;
-  background: rgba(255, 244, 226, 0.92);
+  border-radius: 46% 46% 54% 54%;
+  background: rgba(255, 241, 214, 0.96);
 }
 
 .muzzle::before {
@@ -235,31 +261,82 @@ input {
   height: calc(11px * var(--pet-scale));
   transform: translateX(-50%);
   border-radius: 60% 60% 70% 70%;
-  background: #bf6a75;
+  background: #9a554d;
+}
+
+.muzzle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(19px * var(--pet-scale));
+  width: calc(2px * var(--pet-scale));
+  height: calc(14px * var(--pet-scale));
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(91, 58, 55, 0.55);
 }
 
 .mouth {
   position: absolute;
   left: 50%;
-  top: calc(123px * var(--pet-scale));
-  width: calc(28px * var(--pet-scale));
+  top: calc(119px * var(--pet-scale));
+  width: calc(30px * var(--pet-scale));
   height: calc(14px * var(--pet-scale));
   transform: translateX(-50%);
-  border-bottom: calc(3px * var(--pet-scale)) solid #84545b;
+  border-bottom: calc(3px * var(--pet-scale)) solid #72504d;
   border-radius: 0 0 999px 999px;
+}
+
+.face::before,
+.face::after {
+  content: "";
+  position: absolute;
+  top: calc(105px * var(--pet-scale));
+  width: calc(54px * var(--pet-scale));
+  height: calc(28px * var(--pet-scale));
+  background:
+    linear-gradient(8deg, transparent 0 calc(48% - 1px), rgba(90, 58, 48, 0.55) 48% 52%, transparent calc(52% + 1px)),
+    linear-gradient(-7deg, transparent 0 calc(48% - 1px), rgba(90, 58, 48, 0.5) 48% 52%, transparent calc(52% + 1px)),
+    linear-gradient(20deg, transparent 0 calc(48% - 1px), rgba(90, 58, 48, 0.45) 48% 52%, transparent calc(52% + 1px));
+  opacity: 0.88;
+}
+
+.face::before {
+  left: calc(18px * var(--pet-scale));
+}
+
+.face::after {
+  right: calc(18px * var(--pet-scale));
+  transform: scaleX(-1);
 }
 
 .paw {
   position: absolute;
-  bottom: calc(105px * var(--pet-scale));
-  width: calc(50px * var(--pet-scale));
-  height: calc(70px * var(--pet-scale));
+  bottom: calc(103px * var(--pet-scale));
+  width: calc(46px * var(--pet-scale));
+  height: calc(66px * var(--pet-scale));
   border-radius: 999px;
-  background: linear-gradient(180deg, #fff0dd, #ef9b92);
-  box-shadow: inset calc(-5px * var(--pet-scale)) calc(-8px * var(--pet-scale)) 0 rgba(140, 64, 68, 0.12);
+  background: linear-gradient(180deg, #fff0d8 0%, #f0a34d 56%, #d8702c 100%);
+  box-shadow: inset calc(-5px * var(--pet-scale)) calc(-8px * var(--pet-scale)) 0 rgba(103, 48, 28, 0.13);
   transform-origin: 50% 22%;
   z-index: 7;
   transition: bottom 120ms ease;
+}
+
+.paw::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(8px * var(--pet-scale));
+  width: calc(22px * var(--pet-scale));
+  height: calc(10px * var(--pet-scale));
+  transform: translateX(-50%);
+  border-radius: 999px 999px 60% 60%;
+  background:
+    radial-gradient(circle at 24% 16%, rgba(126, 62, 48, 0.34) 0 16%, transparent 17%),
+    radial-gradient(circle at 50% 10%, rgba(126, 62, 48, 0.34) 0 16%, transparent 17%),
+    radial-gradient(circle at 76% 16%, rgba(126, 62, 48, 0.34) 0 16%, transparent 17%),
+    rgba(255, 230, 210, 0.45);
 }
 
 .paw-left {
@@ -276,16 +353,32 @@ input {
 
 .tail {
   position: absolute;
-  right: calc(16px * var(--pet-scale));
-  bottom: calc(98px * var(--pet-scale));
-  width: calc(120px * var(--pet-scale));
-  height: calc(45px * var(--pet-scale));
-  border-radius: 999px;
-  background: linear-gradient(90deg, #e99187, #f6c5ae);
-  transform-origin: 12% 50%;
-  transform: rotate(-26deg);
+  right: calc(-2px * var(--pet-scale));
+  bottom: calc(108px * var(--pet-scale));
+  width: calc(112px * var(--pet-scale));
+  height: calc(112px * var(--pet-scale));
+  box-sizing: border-box;
+  border: calc(18px * var(--pet-scale)) solid #df7c2f;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  background: none;
+  transform-origin: 16% 84%;
+  transform: rotate(25deg);
   animation: tail-swish 4.4s ease-in-out infinite;
   z-index: 1;
+}
+
+.tail::after {
+  content: "";
+  position: absolute;
+  right: calc(-10px * var(--pet-scale));
+  top: calc(7px * var(--pet-scale));
+  width: calc(28px * var(--pet-scale));
+  height: calc(18px * var(--pet-scale));
+  border-radius: 999px;
+  background: #c96428;
+  transform: rotate(38deg);
 }
 
 .keyboard-prop {
@@ -294,7 +387,7 @@ input {
   bottom: calc(24px * var(--pet-scale));
   width: calc(252px * var(--pet-scale));
   height: calc(82px * var(--pet-scale));
-  transform: translateX(-50%) perspective(210px) rotateX(14deg);
+  transform: translateX(-50%) perspective(230px) rotateX(-10deg);
   display: flex;
   flex-direction: column;
   gap: calc(4px * var(--pet-scale));
@@ -304,7 +397,7 @@ input {
   border-radius: calc(12px * var(--pet-scale));
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
-    linear-gradient(180deg, #3d4350 0%, #202530 52%, #141821 100%);
+    linear-gradient(180deg, #151922 0%, #242a35 42%, #3f4655 100%);
   box-shadow:
     inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.18),
     inset 0 calc(-5px * var(--pet-scale)) 0 rgba(0, 0, 0, 0.18),
@@ -319,6 +412,18 @@ input {
   height: calc(2px * var(--pet-scale));
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.2);
+}
+
+.keyboard-prop::after {
+  content: "";
+  position: absolute;
+  left: calc(12px * var(--pet-scale));
+  right: calc(12px * var(--pet-scale));
+  bottom: calc(5px * var(--pet-scale));
+  height: calc(5px * var(--pet-scale));
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 calc(5px * var(--pet-scale)) calc(9px * var(--pet-scale)) rgba(0, 0, 0, 0.22);
 }
 
 .keyboard-row {
@@ -372,7 +477,7 @@ input {
   letter-spacing: 0;
   text-overflow: clip;
   white-space: nowrap;
-  transform: translateY(calc(-1px * var(--pet-scale)));
+  transform: rotate(180deg) translateY(calc(1px * var(--pet-scale)));
 }
 
 .keycap-mod i {
@@ -456,11 +561,11 @@ input {
   animation: paw-strike-right 155ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
 }
 
-.mood-typing.tap-left .keyboard-prop .keycap-left {
+.mood-typing.tap-left .keyboard-prop .keycap-left.keycap-tap {
   animation: key-press-left 155ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
 }
 
-.mood-typing.tap-right .keyboard-prop .keycap-right {
+.mood-typing.tap-right .keyboard-prop .keycap-right.keycap-tap {
   animation: key-press-right 155ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
 }
 

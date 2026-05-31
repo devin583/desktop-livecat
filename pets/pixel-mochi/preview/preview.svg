@@ -1,22 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="384" height="416" viewBox="0 0 384 416">
 <rect width="384" height="416" rx="28" fill="#fffaf0"/>
 <g transform="translate(96 80)">
-<ellipse cx="96" cy="178" rx="58" ry="12" fill="#2f2430" opacity=".16"/>
-<path d="M130 116 C170 106 177 142 143 151" fill="none" stroke="#ef9d91" stroke-width="18" stroke-linecap="round"/>
-<ellipse cx="96" cy="109" rx="52" ry="58" fill="#ffd8bf"/>
-<ellipse cx="96" cy="63" rx="58" ry="48" fill="#ffd8bf"/>
-<path d="M54 33 L72 9 L86 33" fill="#ef9d91"/>
-<path d="M106 33 L120 9 L138 33" fill="#ef9d91"/>
-<ellipse cx="76" cy="62" rx="8" ry="18" fill="#2f2430"/>
-<ellipse cx="116" cy="62" rx="8" ry="18" fill="#2f2430"/>
-<ellipse cx="96" cy="96" rx="24" ry="18" fill="#fff6dd"/>
-<path d="M86 108 Q96 116 106 108" fill="none" stroke="#4d3541" stroke-width="4" stroke-linecap="round"/>
-<rect x="42" y="147" width="108" height="28" rx="8" fill="#2f2430"/>
-<rect x="53" y="152" width="17" height="17" rx="4" fill="#fff1dd" transform="translate(0 0)"/><rect x="76" y="152" width="17" height="17" rx="4" fill="#fff1dd" transform="translate(0 0)"/><rect x="99" y="152" width="17" height="17" rx="4" fill="#fff1dd" transform="translate(0 0)"/><rect x="122" y="152" width="17" height="17" rx="4" fill="#fff1dd" transform="translate(0 0)"/>
-<ellipse cx="66" cy="127" rx="15" ry="23" fill="#fff6dd" transform="rotate(6 66 127)"/>
-<ellipse cx="126" cy="127" rx="15" ry="23" fill="#fff6dd" transform="rotate(-6 126 127)"/>
+<ellipse cx="96" cy="180" rx="62" ry="12" fill="#202631" opacity=".16"/>
+<path d="M130 114 C171 102 178 143 141 153" fill="none" stroke="#d8742d" stroke-width="16" stroke-linecap="round"/>
+<ellipse cx="96" cy="109" rx="50" ry="56" fill="#f3a547"/>
+<ellipse cx="96" cy="63" rx="54" ry="46" fill="#f3a547"/>
+<ellipse cx="96" cy="123" rx="28" ry="34" fill="#fff1d5" opacity=".9"/>
+<path d="M54 32 L70 3 L86 35Z" fill="#d8742d"/>
+<path d="M106 35 L122 3 L138 32Z" fill="#d8742d"/>
+<path d="M63 32 L70 15 L78 34Z" fill="#ffd0b5"/>
+<path d="M114 34 L122 15 L130 32Z" fill="#ffd0b5"/>
+<path d="M76 21 L83 45M96 15 V51M116 21 L109 45" stroke="#9f5128" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+<ellipse cx="76" cy="62" rx="8" ry="18" fill="#202631"/>
+<ellipse cx="116" cy="62" rx="8" ry="18" fill="#202631"/>
+<ellipse cx="96" cy="96" rx="25" ry="18" fill="#fff1d5"/>
+<path d="M70 98 H43M72 105 H46M122 98 H149M120 105 H146" stroke="#3f2c33" stroke-width="3" stroke-linecap="round" opacity=".75"/>
+<path d="M86 108 Q96 116 106 108" fill="none" stroke="#3f2c33" stroke-width="4" stroke-linecap="round"/>
+<path d="M38 145H154L163 177H29Z" fill="#202631"/>
+<path d="M45 150H147L152 171H40Z" fill="#343b48" opacity=".9"/>
+<rect x="48" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/><rect x="62" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/><rect x="76" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/><rect x="90" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/><rect x="104" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/><rect x="118" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/><rect x="132" y="149" width="10" height="8" rx="2" fill="#fff0d7" opacity=".92"/>
+<rect x="55" y="160" width="11" height="8" rx="2" fill="#fff0d7"/><rect x="69" y="160" width="11" height="8" rx="2" fill="#fff0d7"/><rect x="83" y="160" width="11" height="8" rx="2" fill="#fff0d7"/><rect x="97" y="160" width="11" height="8" rx="2" fill="#fff0d7"/><rect x="111" y="160" width="11" height="8" rx="2" fill="#fff0d7"/><rect x="125" y="160" width="11" height="8" rx="2" fill="#fff0d7"/>
+<rect x="70" y="170" width="52" height="7" rx="3" fill="#fff0d7" opacity=".95"/>
+<ellipse cx="66" cy="125" rx="14" ry="23" fill="#fff1d5" transform="rotate(5 66 125)"/>
+<ellipse cx="126" cy="125" rx="14" ry="23" fill="#fff1d5" transform="rotate(-5 126 125)"/>
 
 </g>
 
-<text x="192" y="382" text-anchor="middle" font-family="Arial" font-size="24" fill="#4d3541">Pixel Mochi</text>
+<text x="192" y="382" text-anchor="middle" font-family="Arial" font-size="24" fill="#3f2c33">Mochi Tabby</text>
 </svg>

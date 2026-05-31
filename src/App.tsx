@@ -102,6 +102,7 @@ type DesktopKeyboardKey = {
   side: "left" | "right" | "space";
   size?: "mod" | "space";
   home?: boolean;
+  tap?: boolean;
 };
 
 const desktopKeyboardRows: DesktopKeyboardKey[][] = [
@@ -121,10 +122,10 @@ const desktopKeyboardRows: DesktopKeyboardKey[][] = [
     { label: "A", side: "left" },
     { label: "S", side: "left" },
     { label: "D", side: "left" },
-    { label: "F", side: "left", home: true },
-    { label: "G", side: "left" },
-    { label: "H", side: "right" },
-    { label: "J", side: "right", home: true },
+    { label: "F", side: "left", home: true, tap: true },
+    { label: "G", side: "left", tap: true },
+    { label: "H", side: "right", tap: true },
+    { label: "J", side: "right", home: true, tap: true },
     { label: "K", side: "right" },
     { label: "L", side: "right" },
   ],
@@ -693,6 +694,7 @@ function App() {
                           `keycap-${keycap.side}`,
                           keycap.size ? `keycap-${keycap.size}` : "",
                           keycap.home ? "keycap-home" : "",
+                          keycap.tap ? "keycap-tap" : "",
                         ]
                           .filter(Boolean)
                           .join(" ")}
