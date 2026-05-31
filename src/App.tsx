@@ -97,6 +97,46 @@ const pomodoroPresets = [
   { id: "90-20-30" as const, label: "90/20/30", focus: 90, break: 20, longBreak: 30 },
 ];
 
+type DesktopKeyboardKey = {
+  label: string;
+  side: "left" | "right" | "space";
+  size?: "mod" | "space";
+  home?: boolean;
+};
+
+const desktopKeyboardRows: DesktopKeyboardKey[][] = [
+  [
+    { label: "Q", side: "left" },
+    { label: "W", side: "left" },
+    { label: "E", side: "left" },
+    { label: "R", side: "left" },
+    { label: "T", side: "left" },
+    { label: "Y", side: "right" },
+    { label: "U", side: "right" },
+    { label: "I", side: "right" },
+    { label: "O", side: "right" },
+    { label: "P", side: "right" },
+  ],
+  [
+    { label: "A", side: "left" },
+    { label: "S", side: "left" },
+    { label: "D", side: "left" },
+    { label: "F", side: "left", home: true },
+    { label: "G", side: "left" },
+    { label: "H", side: "right" },
+    { label: "J", side: "right", home: true },
+    { label: "K", side: "right" },
+    { label: "L", side: "right" },
+  ],
+  [
+    { label: "Ctrl", side: "left", size: "mod" },
+    { label: "Alt", side: "left", size: "mod" },
+    { label: "", side: "space", size: "space" },
+    { label: "Alt", side: "right", size: "mod" },
+    { label: "Ctrl", side: "right", size: "mod" },
+  ],
+];
+
 const copy = {
   "zh-CN": {
     appStage: "Desktop LiveCat 舞台",
@@ -626,33 +666,49 @@ function App() {
               pet={selectedPet}
             />
           ) : (
-          <div className="cat" style={{ ["--typing-rate" as string]: typingRate }}>
-            <div className="tail" />
-            <div className="body">
-              <div className="chest" />
-            </div>
-            <div className="paw paw-left" />
-            <div className="paw paw-right" />
-            <div className="head">
-              <div className="ear ear-left" />
-              <div className="ear ear-right" />
-              <div className="face">
-                <div className="eye eye-left" />
-                <div className="eye eye-right" />
-                <div className="muzzle" />
-                <div className="mouth" />
+            <div className="cat" style={{ ["--typing-rate" as string]: typingRate }}>
+              <div className="tail" />
+              <div className="body">
+                <div className="chest" />
+              </div>
+              <div className="paw paw-left" />
+              <div className="paw paw-right" />
+              <div className="head">
+                <div className="ear ear-left" />
+                <div className="ear ear-right" />
+                <div className="face">
+                  <div className="eye eye-left" />
+                  <div className="eye eye-right" />
+                  <div className="muzzle" />
+                  <div className="mouth" />
+                </div>
+              </div>
+              <div className="keyboard-prop" aria-hidden="true">
+                {desktopKeyboardRows.map((row, rowIndex) => (
+                  <div className={`keyboard-row keyboard-row-${rowIndex + 1}`} key={rowIndex}>
+                    {row.map((keycap, keyIndex) => (
+                      <span
+                        className={[
+                          "keycap",
+                          `keycap-${keycap.side}`,
+                          keycap.size ? `keycap-${keycap.size}` : "",
+                          keycap.home ? "keycap-home" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        key={`${keycap.label}-${keyIndex}`}
+                      >
+                        <i>{keycap.label}</i>
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div className="timer-note">
+                <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
+                <small>{modeLabel(state.pomodoro.mode, state.language)}</small>
               </div>
             </div>
-            <div className="keyboard-prop">
-              {Array.from({ length: 10 }, (_, index) => (
-                <span key={index} />
-              ))}
-            </div>
-            <div className="timer-note">
-              <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
-              <small>{modeLabel(state.pomodoro.mode, state.language)}</small>
-            </div>
-          </div>
           )}
         </div>
 

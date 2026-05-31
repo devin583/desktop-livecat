@@ -53,7 +53,9 @@ Cell: `192 x 208`.
 | 7 | `sleepy` | slow blink or low-energy idle |
 | 8 | `failed` / `dragged` | surprise, squashed, or recovery pose |
 
-The keyboard effect should be pose-driven. Do not rely on moving a paw layer
+The keyboard effect should be pose-driven. Draw a recognizable computer
+keyboard, not a row of plain blocks: include row offsets, keycap separation, a
+spacebar, and left/right home-key clusters. Do not rely on moving a paw layer
 with CSS; the left and right strike frames need to be visibly different in the
 sheet.
 

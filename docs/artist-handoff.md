@@ -30,8 +30,11 @@ Cubism and dropped into `pets/<pet-id>/`.
 - Keep hidden overlap art. Ears, paws, tail, head, eyelids, and muzzle need
   extra painted area under neighboring parts.
 - Do not merge left and right eyes, ears, paws, eyelids, brows, or irises.
-- Keep keyboard body separate from keys. The two home keys under the paws should
-  be separate layers.
+- Draw the prop as a readable computer keyboard, not generic toy blocks. Include
+  row offsets, distinct keycaps, a spacebar, and small F/J home-key marks when
+  scale permits.
+- Keep keyboard body separate from keys. The two home-key clusters under the
+  paws should be separate layers.
 - Use stable names after first handoff. Renaming layers breaks Cubism re-import.
 
 ## Minimum Parts

@@ -291,32 +291,121 @@ input {
 .keyboard-prop {
   position: absolute;
   left: 50%;
-  bottom: calc(31px * var(--pet-scale));
-  width: calc(218px * var(--pet-scale));
-  height: calc(58px * var(--pet-scale));
-  transform: translateX(-50%) perspective(180px) rotateX(16deg);
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: calc(5px * var(--pet-scale));
-  padding: calc(9px * var(--pet-scale));
+  bottom: calc(24px * var(--pet-scale));
+  width: calc(252px * var(--pet-scale));
+  height: calc(82px * var(--pet-scale));
+  transform: translateX(-50%) perspective(210px) rotateX(14deg);
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--pet-scale));
+  padding: calc(9px * var(--pet-scale)) calc(12px * var(--pet-scale)) calc(12px * var(--pet-scale));
   box-sizing: border-box;
-  border-radius: calc(13px * var(--pet-scale));
-  background: linear-gradient(180deg, #60586a, #302a39);
-  box-shadow: 0 calc(10px * var(--pet-scale)) calc(18px * var(--pet-scale)) rgba(48, 35, 45, 0.28);
+  border: calc(1px * var(--pet-scale)) solid rgba(255, 255, 255, 0.18);
+  border-radius: calc(12px * var(--pet-scale));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
+    linear-gradient(180deg, #3d4350 0%, #202530 52%, #141821 100%);
+  box-shadow:
+    inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.18),
+    inset 0 calc(-5px * var(--pet-scale)) 0 rgba(0, 0, 0, 0.18),
+    0 calc(12px * var(--pet-scale)) calc(18px * var(--pet-scale)) rgba(28, 25, 31, 0.34);
   z-index: 4;
 }
 
-.keyboard-prop span {
+.keyboard-prop::before {
+  content: "";
+  position: absolute;
+  inset: calc(4px * var(--pet-scale)) calc(12px * var(--pet-scale)) auto;
+  height: calc(2px * var(--pet-scale));
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.keyboard-row {
+  display: grid;
+  gap: calc(4px * var(--pet-scale));
+  min-height: 0;
+}
+
+.keyboard-row-1 {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  flex: 1;
+}
+
+.keyboard-row-2 {
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  flex: 1;
+  margin-inline: calc(9px * var(--pet-scale));
+}
+
+.keyboard-row-3 {
+  grid-template-columns: 1.05fr 1.05fr 4.2fr 1.05fr 1.05fr;
+  flex: 1.12;
+}
+
+.keycap {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  place-items: center;
   border-radius: calc(5px * var(--pet-scale));
-  background: linear-gradient(180deg, #fff6e7, #e7d6ca);
-  box-shadow: 0 calc(3px * var(--pet-scale)) 0 #bda99f;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.12) 18%, transparent 19%),
+    linear-gradient(180deg, #fbf3e4 0%, #e8dac7 68%, #c9b6a5 100%);
+  color: #3f3941;
+  box-shadow:
+    inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.82),
+    0 calc(3px * var(--pet-scale)) 0 #8f8180,
+    0 calc(4px * var(--pet-scale)) calc(4px * var(--pet-scale)) rgba(0, 0, 0, 0.18);
   transform-origin: center bottom;
   transition: filter 90ms ease, transform 90ms ease, box-shadow 90ms ease;
 }
 
-.keyboard-prop span:nth-child(5),
-.keyboard-prop span:nth-child(6) {
-  background: linear-gradient(180deg, #fffbe9, #f0dcb4);
+.keycap i {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  font-size: calc(8px * var(--pet-scale));
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  text-overflow: clip;
+  white-space: nowrap;
+  transform: translateY(calc(-1px * var(--pet-scale)));
+}
+
+.keycap-mod i {
+  font-size: calc(6px * var(--pet-scale));
+  font-weight: 800;
+}
+
+.keycap-space {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.1) 18%, transparent 19%),
+    linear-gradient(180deg, #fff8e9 0%, #eadbc4 70%, #c4ad9c 100%);
+}
+
+.keycap-space i {
+  display: none;
+}
+
+.keycap-space::after {
+  content: "";
+  width: 54%;
+  height: calc(2px * var(--pet-scale));
+  border-radius: 999px;
+  background: rgba(71, 62, 65, 0.28);
+}
+
+.keycap-home::after {
+  content: "";
+  position: absolute;
+  bottom: calc(3px * var(--pet-scale));
+  width: calc(8px * var(--pet-scale));
+  height: calc(1.5px * var(--pet-scale));
+  border-radius: 999px;
+  background: rgba(66, 55, 58, 0.38);
 }
 
 .timer-note {
@@ -367,19 +456,11 @@ input {
   animation: paw-strike-right 155ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
 }
 
-.mood-typing.tap-left .keyboard-prop span:nth-child(1),
-.mood-typing.tap-left .keyboard-prop span:nth-child(2),
-.mood-typing.tap-left .keyboard-prop span:nth-child(3),
-.mood-typing.tap-left .keyboard-prop span:nth-child(4),
-.mood-typing.tap-left .keyboard-prop span:nth-child(5) {
+.mood-typing.tap-left .keyboard-prop .keycap-left {
   animation: key-press-left 155ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
 }
 
-.mood-typing.tap-right .keyboard-prop span:nth-child(6),
-.mood-typing.tap-right .keyboard-prop span:nth-child(7),
-.mood-typing.tap-right .keyboard-prop span:nth-child(8),
-.mood-typing.tap-right .keyboard-prop span:nth-child(9),
-.mood-typing.tap-right .keyboard-prop span:nth-child(10) {
+.mood-typing.tap-right .keyboard-prop .keycap-right {
   animation: key-press-right 155ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
 }
 
@@ -436,7 +517,7 @@ input {
 .low-power .eye,
 .low-power .paw,
 .low-power .spritesheet-pet,
-.low-power .keyboard-prop span {
+.low-power .keycap {
   animation-duration: 9s;
 }
 
@@ -848,13 +929,19 @@ input {
   0%,
   100% {
     transform: translateY(0);
-    box-shadow: 0 calc(3px * var(--pet-scale)) 0 #bda99f;
+    box-shadow:
+      inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.82),
+      0 calc(3px * var(--pet-scale)) 0 #8f8180,
+      0 calc(4px * var(--pet-scale)) calc(4px * var(--pet-scale)) rgba(0, 0, 0, 0.18);
     filter: brightness(1);
   }
   55% {
-    transform: translateY(calc(4px * var(--pet-scale)));
-    box-shadow: 0 0 0 #bda99f;
-    filter: brightness(calc(1.1 + var(--typing-rate) * 0.32));
+    transform: translateY(calc(3px * var(--pet-scale))) scaleY(0.94);
+    box-shadow:
+      inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.72),
+      0 calc(1px * var(--pet-scale)) 0 #8f8180,
+      0 calc(2px * var(--pet-scale)) calc(3px * var(--pet-scale)) rgba(0, 0, 0, 0.22);
+    filter: brightness(calc(1.08 + var(--typing-rate) * 0.28)) saturate(1.08);
   }
 }
 
@@ -862,13 +949,19 @@ input {
   0%,
   100% {
     transform: translateY(0);
-    box-shadow: 0 calc(3px * var(--pet-scale)) 0 #bda99f;
+    box-shadow:
+      inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.82),
+      0 calc(3px * var(--pet-scale)) 0 #8f8180,
+      0 calc(4px * var(--pet-scale)) calc(4px * var(--pet-scale)) rgba(0, 0, 0, 0.18);
     filter: brightness(1);
   }
   55% {
-    transform: translateY(calc(4px * var(--pet-scale)));
-    box-shadow: 0 0 0 #bda99f;
-    filter: brightness(calc(1.1 + var(--typing-rate) * 0.32));
+    transform: translateY(calc(3px * var(--pet-scale))) scaleY(0.94);
+    box-shadow:
+      inset 0 calc(1px * var(--pet-scale)) 0 rgba(255, 255, 255, 0.72),
+      0 calc(1px * var(--pet-scale)) 0 #8f8180,
+      0 calc(2px * var(--pet-scale)) calc(3px * var(--pet-scale)) rgba(0, 0, 0, 0.22);
+    filter: brightness(calc(1.08 + var(--typing-rate) * 0.28)) saturate(1.08);
   }
 }
 

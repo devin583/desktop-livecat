@@ -3,9 +3,12 @@
 ## Character direction
 
 - Original small cat named Mochi Prototype.
-- Round face, short legs, soft tail, compact body, sitting beside a miniature keyboard.
+- Round face, short legs, soft tail, compact body, sitting beside a miniature
+  computer keyboard with recognizable key rows, spacebar, and home-key area.
 - Large readable eyes, simple muzzle, independent ear and tail movement.
-- Palette: warm peach, cream, muted rose, dark plum keyboard. Avoid direct resemblance to Pusheen, Neko Atsume, Hello Kitty, Chi's Sweet Home, or any protected character.
+- Palette: warm peach, cream, muted rose, dark graphite keyboard body, and warm
+  cream keycaps. Avoid direct resemblance to Pusheen, Neko Atsume, Hello Kitty,
+  Chi's Sweet Home, or any protected character.
 
 ## Required Live2D parts
 
@@ -13,7 +16,8 @@
 - Eyes: left/right white, iris, highlight, eyelid, lower lid.
 - Body: torso, chest patch, left/right front paws, left/right back paws.
 - Tail: at least three deformable sections for secondary motion.
-- Prop: keyboard body and individual key layers for paw-tapping feedback.
+- Prop: keyboard body, row-group key layers, spacebar, and individual home-key
+  layers for paw-tapping feedback.
 
 ## Generated source kit
 
