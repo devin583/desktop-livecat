@@ -45,7 +45,7 @@ export const initialPomodoro: PomodoroState = {
 };
 
 export const initialState: AppState = {
-  selectedPetId: "pixel-mochi",
+  selectedPetId: "orange-tabby-keyboard",
   language: "zh-CN",
   scale: 0.92,
   controlsOpen: false,
@@ -72,6 +72,10 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
       ...(input?.pomodoro ?? {}),
     },
   };
+
+  if (next.selectedPetId === "pixel-mochi") {
+    next.selectedPetId = initialState.selectedPetId;
+  }
 
   const day = todayKey();
   if (next.pomodoro.day !== day) {

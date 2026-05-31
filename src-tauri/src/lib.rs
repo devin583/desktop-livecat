@@ -1067,7 +1067,7 @@ fn reveal_path(path: &Path) -> Result<(), String> {
 
 fn default_state() -> Value {
     json!({
-        "selectedPetId": "pixel-mochi",
+        "selectedPetId": "orange-tabby-keyboard",
         "language": "zh-CN",
         "scale": 0.92,
         "controlsOpen": false,

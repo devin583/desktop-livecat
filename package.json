@@ -1,7 +1,7 @@
 {
   "name": "desktop-livecat",
   "private": true,
-  "version": "0.6.3",
+  "version": "0.6.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
     "generate:spritesheet-assets": "node scripts/generate-spritesheet-assets.mjs",
+    "import:incoming": "node scripts/import-incoming-spritesheets.mjs",
     "download:webview2-fixed": "node scripts/download-webview2-fixed-runtime.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
@@ -32,6 +33,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "pngjs": "^7.0.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
   }

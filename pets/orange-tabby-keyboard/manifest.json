@@ -1,0 +1,456 @@
+{
+  "id": "orange-tabby-keyboard",
+  "name": "Orange Tabby Keyboard",
+  "version": "0.1.0",
+  "artist": "User supplied via ChatGPT Image",
+  "description": "Orange tabby keyboard cat spritesheet from the supplied ChatGPT image grid, cleaned into a local transparent resource pack.",
+  "preview": "preview/preview.png",
+  "renderMode": "spritesheet",
+  "tags": [
+    "spritesheet",
+    "keyboard",
+    "cat",
+    "pomodoro",
+    "offline",
+    "user-supplied"
+  ],
+  "persona": {
+    "name": "Orange Tabby Keyboard",
+    "species": "orange tabby cat",
+    "style": "warm orange tabby cartoon keyboard cat spritesheet",
+    "personality": "curious, expressive, energetic, and typing-focused",
+    "palette": [
+      "#b77a38",
+      "#5f3c20",
+      "#f5d1a0",
+      "#222930"
+    ],
+    "accessories": [
+      "computer keyboard"
+    ]
+  },
+  "spritesheet": {
+    "image": "spritesheet/avatar.png",
+    "columns": 7,
+    "rows": 9,
+    "frameWidth": 169,
+    "frameHeight": 148,
+    "statesFile": "spritesheet/states.json",
+    "states": {
+      "idle": {
+        "frames": [
+          {
+            "row": 0,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 0,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 0,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 0,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 0,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 0,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 0,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "tap_left": {
+        "frames": [
+          {
+            "row": 1,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 1,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 1,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 1,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 1,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 1,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 1,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": null,
+        "fallback": "typing"
+      },
+      "tap_right": {
+        "frames": [
+          {
+            "row": 2,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 2,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 2,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 2,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 2,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 2,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 2,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": null,
+        "fallback": "typing"
+      },
+      "typing": {
+        "frames": [
+          {
+            "row": 3,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 3,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 3,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 3,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 3,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 3,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 3,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "focus": {
+        "frames": [
+          {
+            "row": 4,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 4,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 4,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 4,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 4,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 4,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 4,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "break": {
+        "frames": [
+          {
+            "row": 5,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 5,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 5,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 5,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 5,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 5,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 5,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "happy": {
+        "frames": [
+          {
+            "row": 6,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 6,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 6,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 6,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 6,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 6,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 6,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "sleepy": {
+        "frames": [
+          {
+            "row": 7,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 7,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 7,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 7,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 7,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 7,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 7,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "failed": {
+        "frames": [
+          {
+            "row": 8,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": null,
+        "fallback": "idle"
+      },
+      "dragged": {
+        "frames": [
+          {
+            "row": 8,
+            "column": 0,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 1,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 2,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 3,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 4,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 5,
+            "durationMs": 115
+          },
+          {
+            "row": 8,
+            "column": 6,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      }
+    }
+  },
+  "privacy": {
+    "keyboardSync": "rhythm-only",
+    "storesKeyValues": false
+  },
+  "artistWorkflow": {
+    "status": "source-ready",
+    "brief": "artist/spritesheet-handoff.md",
+    "checklist": "artist/artist-checklist.md",
+    "primarySource": "source/original-grid.png",
+    "preferredDeliverable": "Transparent PNG/WebP spritesheet or 7 x 9 animation grid"
+  }
+}
