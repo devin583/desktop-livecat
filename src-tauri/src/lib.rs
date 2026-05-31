@@ -20,6 +20,12 @@ struct PetPack {
     version: String,
     artist: String,
     description: String,
+    artist_checklist: Option<String>,
+    artist_status: String,
+    has_artist_checklist: bool,
+    has_live2d_model: bool,
+    has_parameter_spec: bool,
+    has_source_assets: bool,
     live2d_model: Option<String>,
     preview: Option<String>,
     source: String,
@@ -126,6 +132,19 @@ fn reveal_resources(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn reveal_pet_pack(app: AppHandle, pet_id: String) -> Result<String, String> {
+    for root in pet_roots(&app) {
+        let candidate = root.join(&pet_id);
+        if candidate.join("manifest.json").is_file() {
+            reveal_path(&candidate)?;
+            return Ok(candidate.to_string_lossy().into_owned());
+        }
+    }
+
+    Err(format!("Pet pack not found: {pet_id}"))
+}
+
+#[tauri::command]
 fn set_tray_status(app: AppHandle, tooltip: String) -> Result<(), String> {
     let Some(tray) = app.tray_by_id("main") else {
         return Ok(());
@@ -178,6 +197,13 @@ fn collect_pet_packs(root: &Path, packs: &mut Vec<PetPack>) {
         if !path.is_dir() {
             continue;
         }
+        if path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with('_'))
+        {
+            continue;
+        }
 
         let manifest_path = path.join("manifest.json");
         let Ok(contents) = fs::read_to_string(&manifest_path) else {
@@ -198,6 +224,17 @@ fn collect_pet_packs(root: &Path, packs: &mut Vec<PetPack>) {
         let live2d_model = manifest
             .get("live2d")
             .and_then(|live2d| manifest_string(live2d, "modelJson"));
+        let parameter_spec = manifest
+            .get("live2d")
+            .and_then(|live2d| manifest_string(live2d, "parameterSpec"));
+        let source_layer_map = manifest
+            .get("live2d")
+            .and_then(|live2d| manifest_string(live2d, "sourceLayerMap"));
+        let artist_workflow = manifest.get("artistWorkflow");
+        let artist_checklist = artist_workflow.and_then(|workflow| manifest_string(workflow, "checklist"));
+        let artist_status = artist_workflow
+            .and_then(|workflow| manifest_string(workflow, "status"))
+            .unwrap_or_else(|| "missing".into());
 
         packs.push(PetPack {
             id,
@@ -205,6 +242,21 @@ fn collect_pet_packs(root: &Path, packs: &mut Vec<PetPack>) {
             version: manifest_string(&manifest, "version").unwrap_or_else(|| "0.0.0".into()),
             artist: manifest_string(&manifest, "artist").unwrap_or_else(|| "Unknown".into()),
             description: manifest_string(&manifest, "description").unwrap_or_default(),
+            artist_checklist: artist_checklist.clone(),
+            artist_status,
+            has_artist_checklist: artist_checklist
+                .as_ref()
+                .is_some_and(|file| path.join(file).is_file()),
+            has_live2d_model: live2d_model
+                .as_ref()
+                .is_some_and(|file| path.join(file).is_file()),
+            has_parameter_spec: parameter_spec
+                .as_ref()
+                .is_some_and(|file| path.join(file).is_file()),
+            has_source_assets: source_layer_map
+                .as_ref()
+                .is_some_and(|file| path.join(file).is_file())
+                || path.join("source").is_dir(),
             live2d_model,
             preview: manifest_string(&manifest, "preview"),
             source: path.to_string_lossy().into_owned(),
@@ -309,13 +361,25 @@ fn default_state() -> Value {
         "scale": 1.0,
         "clickThrough": false,
         "alwaysOnTop": true,
+        "lowPower": false,
+        "keyboardSyncEnabled": true,
         "pomodoro": {
             "mode": "focus",
+            "presetId": "25-5-15",
             "focusMinutes": 25,
             "breakMinutes": 5,
+            "longBreakMinutes": 15,
+            "longBreakEvery": 4,
+            "longBreakEnabled": true,
+            "autoFlow": "manual",
             "remainingSeconds": 1500,
             "running": false,
             "completedToday": 0,
+            "focusSecondsToday": 0,
+            "breakSecondsToday": 0,
+            "focusSessionsInCycle": 0,
+            "currentTask": "",
+            "lastCompletedTask": "",
             "day": ""
         }
     })
@@ -435,6 +499,7 @@ pub fn run() {
             enable_keyboard_sync,
             runtime_info,
             reveal_resources,
+            reveal_pet_pack,
             set_tray_status
         ])
         .run(tauri::generate_context!())

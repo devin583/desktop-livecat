@@ -4,14 +4,15 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.5 status
+## Current v0.5.1 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
 - Copyable `pets/` resource pack contract.
+- Illustrator handoff workflow with a template pack, checklist, and source/rigging docs.
 - Animated original cat fallback with breathing, blinking, ear/tail secondary
   motion, pointer-following eyes, paws, keyboard prop, keyboard rhythm sync, and
-  Pomodoro states.
+  upgraded Pomodoro states.
 - Rust persistence into portable `data/state.json` when possible.
 - Windows keyboard rhythm bridge prefers Raw Input and falls back to a low-level
   hook only if Raw Input registration fails. It emits timing pulses only; it
@@ -40,6 +41,7 @@ npm run dev
 ```bash
 npm run tauri:build
 npm run package:portable
+npm run verify:portable
 ```
 
 `npm run tauri:build` intentionally uses `tauri build --no-bundle` so the default
@@ -67,9 +69,26 @@ machine:
 See [docs/resource-pack.md](docs/resource-pack.md) and
 [docs/distribution.md](docs/distribution.md).
 
+## Illustrator workflow
+
+Give illustrators [docs/artist-handoff.md](docs/artist-handoff.md) and copy
+`pets/_template/` to a new pet id. They only need to provide the PSD, preview,
+asset brief, and checklist. Engineering handles `manifest.json`, Live2D binding,
+validation, and release packaging.
+
+```bash
+ARTIST_ASSET_CHECK=1 npm run validate:pets
+```
+
 ## Research and design
 
 - [docs/research.md](docs/research.md)
+- [docs/artist-handoff.md](docs/artist-handoff.md)
+- [docs/live2d-rigging-handoff.md](docs/live2d-rigging-handoff.md)
 - [docs/live2d-art-brief.md](docs/live2d-art-brief.md)
+- [docs/live2d-tooling.md](docs/live2d-tooling.md)
 - [docs/live2d-ai-generation-research.md](docs/live2d-ai-generation-research.md)
 - [docs/keyboard-sync.md](docs/keyboard-sync.md)
+- [docs/win11-qa.md](docs/win11-qa.md)
+- [docs/troubleshooting.md](docs/troubleshooting.md)
+- [docs/roadmap.md](docs/roadmap.md)

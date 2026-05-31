@@ -3,6 +3,7 @@ export type Live2DRuntimeProbe = {
   modelAvailable: boolean;
   runtimeAvailable: boolean;
   reason: string;
+  status: "sdk-missing" | "model-missing" | "model-ready" | "fallback-active";
 };
 
 export type Live2DParameterFrame = {
@@ -30,6 +31,7 @@ export async function probeLive2DRuntime(modelUrl: string | null): Promise<Live2
       modelAvailable: false,
       runtimeAvailable,
       reason: "No Live2D model path is configured for this resource pack.",
+      status: "model-missing",
     };
   }
 
@@ -39,6 +41,7 @@ export async function probeLive2DRuntime(modelUrl: string | null): Promise<Live2
       modelAvailable: false,
       runtimeAvailable,
       reason: "Live2D Cubism SDK runtime is not present in public/vendor/live2d.",
+      status: "sdk-missing",
     };
   }
 
@@ -49,6 +52,7 @@ export async function probeLive2DRuntime(modelUrl: string | null): Promise<Live2
       modelAvailable: response.ok,
       runtimeAvailable,
       reason: response.ok ? "Live2D model manifest is reachable." : "Live2D model manifest is missing.",
+      status: response.ok ? "model-ready" : "model-missing",
     };
   } catch {
     return {
@@ -56,6 +60,7 @@ export async function probeLive2DRuntime(modelUrl: string | null): Promise<Live2
       modelAvailable: false,
       runtimeAvailable,
       reason: "Live2D model manifest could not be fetched.",
+      status: "fallback-active",
     };
   }
 }
@@ -64,21 +69,22 @@ export function buildLive2DParameters(input: {
   lookX: number;
   lookY: number;
   typingRate: number;
-  mood: "idle" | "typing" | "focus" | "break" | "dragged";
+  mood: "idle" | "typing" | "focus" | "focusEnding" | "break" | "longBreak" | "paused" | "dragged";
   now: number;
 }): Live2DParameterFrame {
   const breath = (Math.sin(input.now / 680) + 1) / 2;
   const typing = input.mood === "typing" ? input.typingRate : 0;
   const alternating = Math.sin(input.now / Math.max(120, 240 - typing * 120));
-  const breakStretch = input.mood === "break" ? 0.45 : 0;
+  const breakStretch = input.mood === "break" ? 0.45 : input.mood === "longBreak" ? 0.7 : 0;
   const dragged = input.mood === "dragged" ? 0.65 : 0;
+  const focusEnding = input.mood === "focusEnding" ? 0.3 : 0;
 
   return {
     ParamAngleX: clamp(input.lookX * 22 + dragged * 8, -30, 30),
-    ParamAngleY: clamp(-input.lookY * 16 - breakStretch * 4, -30, 30),
-    ParamBodyAngleX: clamp(input.lookX * 8 - dragged * 10, -15, 15),
-    ParamEyeLOpen: input.mood === "focus" ? 0.78 : 1,
-    ParamEyeROpen: input.mood === "focus" ? 0.78 : 1,
+    ParamAngleY: clamp(-input.lookY * 16 - breakStretch * 4 + focusEnding * 3, -30, 30),
+    ParamBodyAngleX: clamp(input.lookX * 8 - dragged * 10 + focusEnding * 2, -15, 15),
+    ParamEyeLOpen: input.mood === "focus" || input.mood === "focusEnding" ? 0.78 - focusEnding * 0.18 : 1,
+    ParamEyeROpen: input.mood === "focus" || input.mood === "focusEnding" ? 0.78 - focusEnding * 0.18 : 1,
     ParamBreath: breath,
     ParamArmLA: clamp(typing * Math.max(0, alternating) + breakStretch, 0, 1),
     ParamArmRA: clamp(typing * Math.max(0, -alternating) + breakStretch * 0.35, 0, 1),

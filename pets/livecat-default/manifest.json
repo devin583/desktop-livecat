@@ -6,6 +6,13 @@
   "description": "Original round-faced keyboard cat prototype with AI concept art, Live2D source layer plan, motion specs, and Cubism model slot.",
   "preview": "preview/livecat-ai-concept.png",
   "tags": ["round", "keyboard", "pomodoro", "live2d-ready", "ai-source", "layered"],
+  "artistWorkflow": {
+    "status": "source-ready",
+    "brief": "artist/asset-brief.md",
+    "checklist": "artist/artist-checklist.md",
+    "primarySource": "source/livecat-layers.svg",
+    "preferredDeliverable": "PSD, RGB, 8bit/channel, sRGB"
+  },
   "live2d": {
     "modelJson": "model/livecat.model3.json",
     "sdk": "Live2D Cubism SDK for Web",

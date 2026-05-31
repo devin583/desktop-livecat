@@ -12,8 +12,15 @@ const full = path.join(out, `desktop-livecat-${platformSuffix}-full-offline`);
 const exeCandidates = [
   path.join(root, "src-tauri", "target", "release", "desktop-livecat.exe"),
   path.join(root, "src-tauri", "target", "release", "desktop-livecat"),
-  path.join(root, "src-tauri", "target", "release", "bundle", "nsis", "Desktop LiveCat_0.5.0_x64-setup.exe"),
 ];
+
+function cleanOutput() {
+  fs.mkdirSync(out, { recursive: true });
+  for (const target of [standard, full]) {
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(`${target}.zip`, { force: true });
+  }
+}
 
 function copyDir(from, to) {
   if (!fs.existsSync(from)) return;
@@ -72,6 +79,7 @@ function zipFolder(folder) {
   return zipPath;
 }
 
+cleanOutput();
 copyStandard(standard);
 const written = [zipFolder(standard)];
 

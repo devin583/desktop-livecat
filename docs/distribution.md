@@ -23,6 +23,7 @@
 - Push a `v*` tag to run `.github/workflows/windows-release.yml`.
 - The workflow builds on `windows-latest`, validates resource packs, builds Tauri, creates portable zip archives, uploads artifacts, and attaches zip files to a tagged GitHub Release.
 - The standard package is always produced. The full-offline package is produced after the workflow resolves and expands the official Fixed Version Runtime CAB.
+- `npm run verify:portable` checks archive contents before upload.
 
 ## Data migration
 

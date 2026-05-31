@@ -1,0 +1,27 @@
+{
+  "id": "replace-with-pet-id",
+  "name": "Replace With Pet Name",
+  "version": "0.1.0",
+  "artist": "Artist Name",
+  "description": "Short original character description.",
+  "preview": "preview/preview.svg",
+  "tags": ["artist-template", "live2d-ready"],
+  "artistWorkflow": {
+    "status": "source-ready",
+    "brief": "artist/asset-brief.md",
+    "checklist": "artist/artist-checklist.md",
+    "primarySource": "artist/source.psd",
+    "preferredDeliverable": "PSD, RGB, 8bit/channel, sRGB"
+  },
+  "live2d": {
+    "modelJson": "model/livecat.model3.json",
+    "parameterSpec": "model/livecat-parameter-spec.json",
+    "sourceLayerMap": "source/livecat-layer-map.json"
+  },
+  "motions": {},
+  "expressions": {},
+  "privacy": {
+    "keyboardSync": "rhythm-only",
+    "storesKeyValues": false
+  }
+}

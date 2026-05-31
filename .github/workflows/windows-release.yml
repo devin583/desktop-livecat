@@ -1,5 +1,8 @@
 name: windows-release
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     tags:
@@ -25,7 +28,10 @@ jobs:
         run: npm ci
 
       - name: Validate resource packs
-        run: npm run validate:pets
+        shell: pwsh
+        run: |
+          npm run validate:pets
+          npm run validate:artist
 
       - name: Build Tauri app
         run: npm run tauri:build
@@ -46,6 +52,7 @@ jobs:
         shell: pwsh
         run: |
           npm run package:portable
+          npm run verify:portable
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v5

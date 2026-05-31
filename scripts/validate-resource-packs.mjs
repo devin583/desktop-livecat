@@ -3,7 +3,8 @@ import { join, normalize, relative } from "node:path";
 
 const root = process.cwd();
 const petsRoot = join(root, "pets");
-const strict = process.env.STRICT_PET_ASSETS === "1";
+const strict = process.env.STRICT_PET_ASSETS === "1" || process.argv.includes("--strict");
+const artistAssetCheck = process.env.ARTIST_ASSET_CHECK === "1" || process.argv.includes("--artist");
 const errors = [];
 const warnings = [];
 
@@ -12,6 +13,7 @@ if (!existsSync(petsRoot)) {
 } else {
   for (const entry of readdirSync(petsRoot, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
+    if (entry.name.startsWith("_")) continue;
     validatePack(join(petsRoot, entry.name), entry.name);
   }
 }
@@ -27,7 +29,11 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Validated resource packs${strict ? " in strict mode" : ""}.`);
+console.log(
+  `Validated resource packs${strict ? " in strict mode" : ""}${
+    artistAssetCheck ? " with artist asset checks" : ""
+  }.`,
+);
 
 function validatePack(packDir, folderName) {
   const manifestPath = join(packDir, "manifest.json");
@@ -94,6 +100,7 @@ function validatePack(packDir, folderName) {
   }
 
   validateLayerMap(packDir, folderName, manifest.live2d?.sourceLayerMap);
+  validateArtistWorkflow(packDir, folderName, manifest.artistWorkflow, manifest.live2d?.sourceLayerMap);
 }
 
 function validateNamedPathMap(packDir, folderName, value, label, options) {
@@ -161,6 +168,41 @@ function validateLayerMap(packDir, folderName, layerMapPath) {
     ) {
       fail(`${folderName}: layer "${item.id}" must have a positive bbox.`);
     }
+  }
+}
+
+function validateArtistWorkflow(packDir, folderName, workflow, sourceLayerMapPath) {
+  if (workflow !== undefined && (!workflow || typeof workflow !== "object" || Array.isArray(workflow))) {
+    fail(`${folderName}: manifest.artistWorkflow must be an object when present.`);
+    return;
+  }
+
+  const required = artistAssetCheck;
+  if (!workflow) {
+    if (required) fail(`${folderName}: manifest.artistWorkflow is required for artist asset checks.`);
+    return;
+  }
+
+  if (!isNonEmptyString(workflow.status)) {
+    fail(`${folderName}: artistWorkflow.status must be a non-empty string.`);
+  } else if (!["missing", "source-ready", "psd-ready", "rigging-ready", "runtime-ready"].includes(workflow.status)) {
+    fail(`${folderName}: artistWorkflow.status has an unsupported value: ${workflow.status}`);
+  }
+
+  for (const [field, label] of [
+    ["brief", "artistWorkflow.brief"],
+    ["checklist", "artistWorkflow.checklist"],
+    ["primarySource", "artistWorkflow.primarySource"],
+  ]) {
+    if (workflow[field] !== undefined) {
+      validatePath(packDir, folderName, workflow[field], label, { required: true });
+    } else if (required) {
+      fail(`${folderName}: ${label} is required for artist asset checks.`);
+    }
+  }
+
+  if (required && !isNonEmptyString(sourceLayerMapPath) && !existsSync(join(packDir, "source"))) {
+    fail(`${folderName}: source assets or live2d.sourceLayerMap are required for artist asset checks.`);
   }
 }
 

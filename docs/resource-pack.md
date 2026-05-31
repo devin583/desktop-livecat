@@ -5,6 +5,7 @@ Desktop LiveCat uses copyable offline resource packs:
 ```text
 pets/<pet-id>/
   manifest.json
+  artist/
   model/
   motions/
   expressions/
@@ -28,6 +29,10 @@ Optional fields:
 
 - `preview`: preview image path.
 - `tags`: searchable labels.
+- `artistWorkflow.status`: `missing`, `source-ready`, `psd-ready`, `rigging-ready`, or `runtime-ready`.
+- `artistWorkflow.brief`: path to artist notes.
+- `artistWorkflow.checklist`: path to the completed artist checklist.
+- `artistWorkflow.primarySource`: path to the PSD, SVG source, or layer package.
 - `motions`: named motion paths.
 - `expressions`: named expression paths.
 - `live2d.parameterSpec`: optional path to a project-local parameter plan.
@@ -35,6 +40,9 @@ Optional fields:
 - `privacy.keyboardSync`: expected keyboard sync policy.
 
 ## Live2D source assets
+
+`artist/` contains illustrator-owned handoff files: PSD, preview, checklist, and
+brief. The illustrator does not need AI tools or code access.
 
 `source/` and `design/` are pre-Cubism production assets. They may contain SVG
 source layers, layer maps, CSV review tables, prompt packs, and concept images.
@@ -46,6 +54,12 @@ Run the resource validator before packaging:
 
 ```bash
 npm run validate:pets
+```
+
+For checking illustrator handoff completeness without requiring a Cubism export:
+
+```bash
+ARTIST_ASSET_CHECK=1 npm run validate:pets
 ```
 
 For release-grade checks that require the Cubism export to exist:
