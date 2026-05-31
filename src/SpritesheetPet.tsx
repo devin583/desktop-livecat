@@ -27,7 +27,9 @@ export function SpritesheetPet({ animationState, className, lowPower, pet }: Spr
   );
 
   useEffect(() => {
-    const frames = stateSpec.frames.length ? stateSpec.frames : [{ row: 0, column: 0 }];
+    let frames = stateSpec.frames.length ? stateSpec.frames : [{ row: 0, column: 0 }];
+    let loopStartIndex = stateSpec.loopStartIndex;
+    let playingFallback = false;
     let cancelled = false;
     let timeout = 0;
     let index = 0;
@@ -40,7 +42,21 @@ export function SpritesheetPet({ animationState, className, lowPower, pet }: Spr
         if (cancelled) return;
         const nextIndex = index + 1;
         if (nextIndex >= frames.length) {
-          index = stateSpec.loopStartIndex ?? 0;
+          if (loopStartIndex === null) {
+            if (!playingFallback && stateSpec.fallback) {
+              const fallbackSpec = resolveAnimationState(sprite, stateSpec.fallback);
+              frames = fallbackSpec.frames.length ? fallbackSpec.frames : defaultIdle().frames;
+              loopStartIndex = fallbackSpec.loopStartIndex;
+              playingFallback = true;
+              index = 0;
+            } else {
+              index = frames.length - 1;
+              setFrame(frames[index]);
+              return;
+            }
+          } else {
+            index = loopStartIndex ?? 0;
+          }
         } else {
           index = nextIndex;
         }
@@ -54,7 +70,7 @@ export function SpritesheetPet({ animationState, className, lowPower, pet }: Spr
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [lowPower, stateSpec]);
+  }, [lowPower, sprite, stateSpec]);
 
   if (!sprite) return null;
 
@@ -102,7 +118,9 @@ function resolveState(spec: PetSpritesheetStateSpec | undefined | null) {
         durationMs: frame.durationMs,
       })),
     loopStartIndex:
-      spec.loopStartIndex === null || spec.loopStartIndex === undefined
+      spec.loopStartIndex === null
+        ? null
+        : spec.loopStartIndex === undefined
         ? 0
         : Math.max(0, Math.floor(spec.loopStartIndex)),
     fallback: spec.fallback,

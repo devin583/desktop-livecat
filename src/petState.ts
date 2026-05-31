@@ -45,7 +45,7 @@ export const initialPomodoro: PomodoroState = {
 };
 
 export const initialState: AppState = {
-  selectedPetId: fallbackPet.id,
+  selectedPetId: "pixel-mochi",
   language: "zh-CN",
   scale: 0.92,
   controlsOpen: false,

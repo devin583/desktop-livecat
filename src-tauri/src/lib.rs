@@ -290,7 +290,7 @@ fn read_pet_pack(path: &Path) -> Option<PetPack> {
     let source_layer_map = manifest
         .get("live2d")
         .and_then(|live2d| manifest_string(live2d, "sourceLayerMap"));
-    let spritesheet = manifest.get("spritesheet").cloned();
+    let spritesheet = hydrate_spritesheet(path, manifest.get("spritesheet").cloned());
     let spritesheet_image = spritesheet
         .as_ref()
         .and_then(|sheet| manifest_string(sheet, "image"));
@@ -368,6 +368,41 @@ fn copy_manifest_pack(source: &Path, root: &Path) -> Result<PathBuf, String> {
         .map_err(|error| error.to_string())?;
     }
     Ok(target)
+}
+
+fn hydrate_spritesheet(pack_dir: &Path, spritesheet: Option<Value>) -> Option<Value> {
+    let mut sheet = spritesheet?;
+    let Some(states_file) = manifest_string(&sheet, "statesFile") else {
+        return Some(sheet);
+    };
+    let states_path = pack_dir.join(states_file);
+    let file_states = fs::read_to_string(states_path)
+        .ok()
+        .and_then(|contents| serde_json::from_str::<Value>(&contents).ok());
+    let Some(file_states) = file_states else {
+        return Some(sheet);
+    };
+    if !file_states.is_object() {
+        return Some(sheet);
+    }
+    let Some(sheet_object) = sheet.as_object_mut() else {
+        return Some(sheet);
+    };
+
+    let mut states = file_states;
+    if let (Some(states_object), Some(inline_object)) = (
+        states.as_object_mut(),
+        sheet_object
+            .get("states")
+            .and_then(|value| value.as_object()),
+    ) {
+        for (name, state) in inline_object {
+            states_object.insert(name.clone(), state.clone());
+        }
+    }
+
+    sheet_object.insert("states".into(), states);
+    Some(sheet)
 }
 
 fn install_single_spritesheet_image(source: &Path, root: &Path) -> Result<PathBuf, String> {
@@ -765,24 +800,39 @@ fn palette_from_prompt(prompt: &str) -> [String; 4] {
 
 fn default_spritesheet_states() -> Value {
     json!({
-        "idle": state_frames(0, 6, 0, 0),
-        "tap_left": state_frames(1, 8, 0, 0),
-        "tap_right": state_frames(2, 8, 0, 0),
-        "typing": state_frames(3, 8, 0, 0),
-        "focus": state_frames(4, 6, 0, 0),
-        "break": state_frames(5, 6, 0, 0),
-        "happy": state_frames(6, 6, 0, 0),
-        "sleepy": state_frames(7, 6, 0, 0),
-        "failed": state_frames(8, 6, 0, 0),
-        "dragged": state_frames(8, 6, 0, 0)
+        "idle": state_frames(0, 6, 0, Some(0), None),
+        "tap_left": state_frames(1, 5, 0, None, Some("typing")),
+        "tap_right": state_frames(2, 5, 0, None, Some("typing")),
+        "typing": state_frames(3, 8, 0, Some(0), None),
+        "focus": state_frames(4, 6, 0, Some(0), None),
+        "break": state_frames(5, 6, 0, Some(0), None),
+        "happy": state_frames(6, 6, 0, Some(0), None),
+        "sleepy": state_frames(7, 6, 0, Some(0), None),
+        "failed": state_frames(8, 6, 0, None, Some("idle")),
+        "dragged": state_frames(8, 6, 0, Some(0), None)
     })
 }
 
-fn state_frames(row: u32, count: u32, start: u32, loop_start_index: u32) -> Value {
+fn state_frames(
+    row: u32,
+    count: u32,
+    start: u32,
+    loop_start_index: Option<u32>,
+    fallback: Option<&str>,
+) -> Value {
     let frames = (0..count)
         .map(|index| json!({ "row": row, "column": start + index, "durationMs": if index + 1 == count { 240 } else { 120 } }))
         .collect::<Vec<_>>();
-    json!({ "frames": frames, "loopStartIndex": loop_start_index })
+    let mut state = serde_json::Map::new();
+    state.insert("frames".into(), Value::Array(frames));
+    state.insert(
+        "loopStartIndex".into(),
+        loop_start_index.map_or(Value::Null, |index| json!(index)),
+    );
+    if let Some(fallback) = fallback {
+        state.insert("fallback".into(), json!(fallback));
+    }
+    Value::Object(state)
 }
 
 fn render_spritesheet_svg(name: &str, palette: &[String; 4]) -> String {
@@ -1017,7 +1067,7 @@ fn reveal_path(path: &Path) -> Result<(), String> {
 
 fn default_state() -> Value {
     json!({
-        "selectedPetId": "livecat-default",
+        "selectedPetId": "pixel-mochi",
         "language": "zh-CN",
         "scale": 0.92,
         "controlsOpen": false,

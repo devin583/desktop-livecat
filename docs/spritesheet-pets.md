@@ -87,6 +87,9 @@ sheet.
 ```
 
 `idle` is required. Other states may be omitted; the app falls back to `idle`.
+Use `"loopStartIndex": null` for one-shot actions such as `tap_left`,
+`tap_right`, or `failed`; add `"fallback": "typing"` or `"fallback": "idle"`
+to define the loop that should take over after the one-shot finishes.
 
 ## Installer
 

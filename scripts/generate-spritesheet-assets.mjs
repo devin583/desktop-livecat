@@ -5,14 +5,14 @@ const root = process.cwd();
 const frame = { width: 192, height: 208, columns: 8, rows: 9 };
 const states = {
   idle: stateFrames(0, 6),
-  tap_left: stateFrames(1, 8),
-  tap_right: stateFrames(2, 8),
+  tap_left: stateFrames(1, 5, { loopStartIndex: null, fallback: "typing" }),
+  tap_right: stateFrames(2, 5, { loopStartIndex: null, fallback: "typing" }),
   typing: stateFrames(3, 8),
   focus: stateFrames(4, 6),
   break: stateFrames(5, 6),
   happy: stateFrames(6, 6),
   sleepy: stateFrames(7, 6),
-  failed: stateFrames(8, 6),
+  failed: stateFrames(8, 6, { loopStartIndex: null, fallback: "idle" }),
   dragged: stateFrames(8, 6),
 };
 
@@ -59,7 +59,7 @@ function writePixelMochi() {
       {
         id: "pixel-mochi",
         name: "Pixel Mochi",
-        version: "0.6.0",
+        version: "0.6.1",
         artist: "Desktop LiveCat",
         description:
           "Built-in 8 x 9 spritesheet cat sample for Codex-style custom pets, BongoCat-like typing taps, Pomodoro focus, and break states.",
@@ -161,15 +161,17 @@ function ensurePackDirs(pack) {
   }
 }
 
-function stateFrames(row, count) {
-  return {
+function stateFrames(row, count, options = {}) {
+  const spec = {
     frames: Array.from({ length: count }, (_, index) => ({
       row,
       column: index,
       durationMs: index + 1 === count ? 220 : 110,
     })),
-    loopStartIndex: 0,
+    loopStartIndex: options.loopStartIndex === undefined ? 0 : options.loopStartIndex,
   };
+  if (options.fallback) spec.fallback = options.fallback;
+  return spec;
 }
 
 function renderSpritesheetSvg(title) {

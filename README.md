@@ -4,7 +4,7 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.6.0 status
+## Current v0.6.1 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.

@@ -1,7 +1,7 @@
 {
   "id": "pixel-mochi",
   "name": "Pixel Mochi",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "artist": "Desktop LiveCat",
   "description": "Built-in 8 x 9 spritesheet cat sample for Codex-style custom pets, BongoCat-like typing taps, Pomodoro focus, and break states.",
   "preview": "preview/preview.svg",
@@ -97,25 +97,11 @@
           {
             "row": 1,
             "column": 4,
-            "durationMs": 110
-          },
-          {
-            "row": 1,
-            "column": 5,
-            "durationMs": 110
-          },
-          {
-            "row": 1,
-            "column": 6,
-            "durationMs": 110
-          },
-          {
-            "row": 1,
-            "column": 7,
             "durationMs": 220
           }
         ],
-        "loopStartIndex": 0
+        "loopStartIndex": null,
+        "fallback": "typing"
       },
       "tap_right": {
         "frames": [
@@ -142,25 +128,11 @@
           {
             "row": 2,
             "column": 4,
-            "durationMs": 110
-          },
-          {
-            "row": 2,
-            "column": 5,
-            "durationMs": 110
-          },
-          {
-            "row": 2,
-            "column": 6,
-            "durationMs": 110
-          },
-          {
-            "row": 2,
-            "column": 7,
             "durationMs": 220
           }
         ],
-        "loopStartIndex": 0
+        "loopStartIndex": null,
+        "fallback": "typing"
       },
       "typing": {
         "frames": [
@@ -380,7 +352,8 @@
             "durationMs": 220
           }
         ],
-        "loopStartIndex": 0
+        "loopStartIndex": null,
+        "fallback": "idle"
       },
       "dragged": {
         "frames": [
