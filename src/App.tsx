@@ -16,12 +16,14 @@ import {
   Gauge,
   Info,
   Keyboard,
+  Languages,
   MousePointer2,
   Pause,
   Play,
   ScrollText,
   RefreshCw,
   RotateCcw,
+  Settings,
   SkipForward,
   TimerReset,
 } from "lucide-react";
@@ -39,6 +41,7 @@ import {
 import { safeInvoke } from "./tauriBridge";
 import type {
   AppState,
+  AppLanguage,
   KeyboardStatus,
   PetMood,
   PetPack,
@@ -90,14 +93,105 @@ const pomodoroPresets = [
   { id: "90-20-30" as const, label: "90/20/30", focus: 90, break: 20, longBreak: 30 },
 ];
 
-function modeLabel(mode: PomodoroMode) {
-  if (mode === "focus") return "Focus";
-  if (mode === "longBreak") return "Long break";
-  return "Break";
+const copy = {
+  "zh-CN": {
+    appStage: "Desktop LiveCat 舞台",
+    artistChecklist: "画师检查清单",
+    binding: "绑定中",
+    break: "休息",
+    clickThrough: "预览点击穿透 10 秒",
+    controls: "设置",
+    currentPet: "打开当前角色",
+    disabledKeyboard: "键盘节奏同步已关闭。",
+    focus: "专注",
+    keyboard: "键盘节奏",
+    keyboardBrowser:
+      "当前使用焦点窗口兜底监听；Windows 原生桥接启动后会切到全局节奏监听。",
+    keyboardNative: "Windows 键盘节奏桥接已启用，只发送节奏脉冲，不保存按键内容。",
+    language: "切换语言",
+    live2d: "Live2D",
+    longBreak: "长休息",
+    lowPower: "低功耗",
+    manual: "手动",
+    autoBreak: "休息自动",
+    autoNext: "全自动",
+    noChecklist: "没有画师清单",
+    openResources: "打开资源目录",
+    pauseTimer: "暂停计时",
+    petPack: "角色包",
+    reloadPets: "重新加载角色",
+    resetTimer: "重置计时",
+    resourceStatus: "资源状态",
+    scale: "角色缩放",
+    skipTimer: "跳过计时",
+    startTimer: "开始计时",
+    task: "任务",
+    top: "置顶",
+  },
+  "en-US": {
+    appStage: "Desktop LiveCat stage",
+    artistChecklist: "Artist checklist",
+    binding: "Binding",
+    break: "Break",
+    clickThrough: "Preview click-through for 10 seconds",
+    controls: "Settings",
+    currentPet: "Open current pet",
+    disabledKeyboard: "Keyboard rhythm sync is disabled.",
+    focus: "Focus",
+    keyboard: "Keyboard rhythm",
+    keyboardBrowser:
+      "Keyboard rhythm uses focused-window fallback until the native bridge is active.",
+    keyboardNative:
+      "Windows keyboard rhythm bridge is active. It emits timing pulses only and never stores key values.",
+    language: "Switch language",
+    live2d: "Live2D",
+    longBreak: "Long break",
+    lowPower: "Low power",
+    manual: "manual",
+    autoBreak: "break",
+    autoNext: "next",
+    noChecklist: "No artist checklist",
+    openResources: "Open resources",
+    pauseTimer: "Pause timer",
+    petPack: "Pet pack",
+    reloadPets: "Reload pets",
+    resetTimer: "Reset timer",
+    resourceStatus: "Resource status",
+    scale: "Pet scale",
+    skipTimer: "Skip timer",
+    startTimer: "Start timer",
+    task: "Task",
+    top: "Toggle always on top",
+  },
+} satisfies Record<AppLanguage, Record<string, string>>;
+
+function modeLabel(mode: PomodoroMode, language: AppLanguage) {
+  const t = copy[language];
+  if (mode === "focus") return t.focus;
+  if (mode === "longBreak") return t.longBreak;
+  return t.break;
 }
 
 function minutesFromSeconds(seconds: number) {
   return Math.floor(seconds / 60);
+}
+
+function keyboardMessage(status: KeyboardStatus, language: AppLanguage) {
+  const t = copy[language];
+  if (status.backend === "disabled") return t.disabledKeyboard;
+  if (status.backend.startsWith("windows")) return t.keyboardNative;
+  return t.keyboardBrowser;
+}
+
+function artistStatusLabel(status: PetPack["artist_status"], language: AppLanguage) {
+  if (language === "en-US") return status;
+  return {
+    missing: "缺失",
+    "source-ready": "源文件就绪",
+    "psd-ready": "PSD 就绪",
+    "rigging-ready": "绑定就绪",
+    "runtime-ready": "运行就绪",
+  }[status];
 }
 
 function App() {
@@ -117,10 +211,12 @@ function App() {
   });
   const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInfo | null>(null);
   const [lastTypingPulse, setLastTypingPulse] = useState(0);
+  const [lastTapSide, setLastTapSide] = useState<"left" | "right">("left");
   const [typingRate, setTypingRate] = useState(0);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [dragged, setDragged] = useState(false);
   const pulsesRef = useRef<number[]>([]);
+  const t = copy[state.language];
 
   const selectedPet = useMemo(
     () => pets.find((pet) => pet.id === state.selectedPetId) ?? pets[0] ?? fallbackPet,
@@ -132,6 +228,7 @@ function App() {
     pulsesRef.current = [...pulsesRef.current.filter((at) => now - at < 2600), now];
     setTypingRate(Math.min(1, pulsesRef.current.length / 16));
     setLastTypingPulse(now);
+    setLastTapSide((side) => (side === "left" ? "right" : "left"));
     setKeyboardStatus((current) =>
       source === current.backend ? current : { ...current, backend: source },
     );
@@ -248,9 +345,11 @@ function App() {
   }, [state.alwaysOnTop]);
 
   useEffect(() => {
-    const label = `${modeLabel(state.pomodoro.mode)} ${secondsToClock(state.pomodoro.remainingSeconds)}`;
+    const label = `${modeLabel(state.pomodoro.mode, state.language)} ${secondsToClock(
+      state.pomodoro.remainingSeconds,
+    )}`;
     void safeInvoke("set_tray_status", { tooltip: `Desktop LiveCat - ${label}` });
-  }, [state.pomodoro.mode, state.pomodoro.remainingSeconds]);
+  }, [state.language, state.pomodoro.mode, state.pomodoro.remainingSeconds]);
 
   const setClickThroughPreview = () => {
     setState((current) => ({ ...current, clickThrough: true }));
@@ -304,6 +403,9 @@ function App() {
       listen("tray://timer-reset", () => pomodoroAction("reset")),
       listen("tray://timer-skip", () => pomodoroAction("skip")),
       listen("tray://reload-pets", refreshPets),
+      listen("tray://toggle-controls", () => {
+        setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }));
+      }),
       listen("tray://click-through-off", () => {
         setState((current) => ({ ...current, clickThrough: false }));
       }),
@@ -373,6 +475,7 @@ function App() {
   };
 
   const isTyping = Date.now() - lastTypingPulse < 1200;
+  const activeTapSide = Date.now() - lastTypingPulse < 170 ? lastTapSide : null;
   const focusEnding =
     state.pomodoro.running &&
     state.pomodoro.mode === "focus" &&
@@ -406,10 +509,12 @@ function App() {
     >
       <section
         className={`pet-stage mood-${petMood} renderer-${live2dProbe.renderer} ${
+          state.controlsOpen ? "controls-open" : ""
+        } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
         }`}
         data-tauri-drag-region
-        aria-label="Desktop LiveCat stage"
+        aria-label={t.appStage}
         onPointerMove={updateLook}
         onPointerDown={() => setDragged(true)}
         onPointerUp={() => setDragged(false)}
@@ -425,15 +530,16 @@ function App() {
             mood={petMood}
             onProbe={setLive2dProbe}
             pet={selectedPet}
+            tapSide={activeTapSide}
             typingRate={typingRate}
           />
           <div className="cat" style={{ ["--typing-rate" as string]: typingRate }}>
             <div className="tail" />
             <div className="body">
               <div className="chest" />
-              <div className="paw paw-left" />
-              <div className="paw paw-right" />
             </div>
+            <div className="paw paw-left" />
+            <div className="paw paw-right" />
             <div className="head">
               <div className="ear ear-left" />
               <div className="ear ear-right" />
@@ -445,19 +551,28 @@ function App() {
               </div>
             </div>
             <div className="keyboard-prop">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
+              {Array.from({ length: 10 }, (_, index) => (
+                <span key={index} />
+              ))}
             </div>
             <div className="timer-note">
               <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
-              <small>{modeLabel(state.pomodoro.mode)}</small>
+              <small>{modeLabel(state.pomodoro.mode, state.language)}</small>
             </div>
           </div>
         </div>
+
+        <button
+          type="button"
+          className={`settings-toggle ${state.controlsOpen ? "active" : ""}`}
+          aria-label={t.controls}
+          title={t.controls}
+          onClick={() =>
+            setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }))
+          }
+        >
+          <Settings size={16} />
+        </button>
 
         <aside className="control-strip">
           <select
@@ -465,7 +580,7 @@ function App() {
             onChange={(event) =>
               setState((current) => ({ ...current, selectedPetId: event.target.value }))
             }
-            aria-label="Pet pack"
+            aria-label={t.petPack}
           >
             {pets.map((pet) => (
               <option key={pet.id} value={pet.id}>
@@ -480,16 +595,16 @@ function App() {
               <b>{selectedPet.version}</b>
             </div>
             <div>
-              <span>{selectedPet.has_live2d_model ? "Live2D" : "Binding"}</span>
-              <b>{selectedPet.artist_status}</b>
+              <span>{selectedPet.has_live2d_model ? t.live2d : t.binding}</span>
+              <b>{artistStatusLabel(selectedPet.artist_status, state.language)}</b>
             </div>
           </div>
 
           <div className="icon-row">
             <button
               type="button"
-              aria-label="Toggle always on top"
-              title="Toggle always on top"
+              aria-label={t.top}
+              title={t.top}
               className={state.alwaysOnTop ? "active" : ""}
               onClick={() =>
                 setState((current) => ({ ...current, alwaysOnTop: !current.alwaysOnTop }))
@@ -499,8 +614,8 @@ function App() {
             </button>
             <button
               type="button"
-              aria-label="Preview click-through"
-              title="Preview click-through for 10 seconds"
+              aria-label={t.clickThrough}
+              title={t.clickThrough}
               className={state.clickThrough ? "active" : ""}
               onClick={setClickThroughPreview}
             >
@@ -508,8 +623,8 @@ function App() {
             </button>
             <button
               type="button"
-              aria-label="Keyboard rhythm"
-              title={keyboardStatus.message}
+              aria-label={t.keyboard}
+              title={keyboardMessage(keyboardStatus, state.language)}
               className={isTyping ? "active" : ""}
               onClick={() =>
                 setState((current) => ({
@@ -523,20 +638,20 @@ function App() {
           </div>
 
           <div className="icon-row">
-            <button type="button" aria-label="Reload pets" title="Reload pets" onClick={refreshPets}>
+            <button type="button" aria-label={t.reloadPets} title={t.reloadPets} onClick={refreshPets}>
               <RefreshCw size={16} />
             </button>
             <button
               type="button"
-              aria-label="Open resources"
-              title={runtimeInfo?.petRoots.join("\n") || "Open resources"}
+              aria-label={t.openResources}
+              title={runtimeInfo?.petRoots.join("\n") || t.openResources}
               onClick={revealResources}
             >
               <FolderOpen size={16} />
             </button>
             <button
               type="button"
-              aria-label="Open current pet"
+              aria-label={t.currentPet}
               title={selectedPet.source}
               onClick={revealCurrentPet}
             >
@@ -547,28 +662,45 @@ function App() {
           <div className="icon-row">
             <button
               type="button"
-              aria-label="Low power"
-              title="Low power"
+              aria-label={t.lowPower}
+              title={t.lowPower}
               className={state.lowPower ? "active" : ""}
               onClick={() => setState((current) => ({ ...current, lowPower: !current.lowPower }))}
             >
               <Gauge size={16} />
             </button>
-            <button type="button" aria-label="Resource status" title={live2dProbe.reason}>
+            <button type="button" aria-label={t.resourceStatus} title={live2dProbe.reason}>
               <Info size={16} />
             </button>
             <button
               type="button"
-              aria-label="Artist checklist"
-              title={selectedPet.artist_checklist ?? "No artist checklist"}
+              aria-label={t.artistChecklist}
+              title={selectedPet.artist_checklist ?? t.noChecklist}
               className={selectedPet.has_artist_checklist ? "active" : ""}
             >
               <BadgeCheck size={16} />
             </button>
           </div>
 
+          <div className="icon-row">
+            <button
+              type="button"
+              aria-label={t.language}
+              title={t.language}
+              onClick={() =>
+                setState((current) => ({
+                  ...current,
+                  language: current.language === "zh-CN" ? "en-US" : "zh-CN",
+                }))
+              }
+            >
+              <Languages size={16} />
+              <span>{state.language === "zh-CN" ? "中" : "EN"}</span>
+            </button>
+          </div>
+
           <input
-            aria-label="Pet scale"
+            aria-label={t.scale}
             type="range"
             min="0.72"
             max="1.25"
@@ -582,15 +714,15 @@ function App() {
           <div className="timer-controls">
             <button
               type="button"
-              aria-label={state.pomodoro.running ? "Pause timer" : "Start timer"}
+              aria-label={state.pomodoro.running ? t.pauseTimer : t.startTimer}
               onClick={() => pomodoroAction("toggle")}
             >
               {state.pomodoro.running ? <Pause size={16} /> : <Play size={16} />}
             </button>
-            <button type="button" aria-label="Reset timer" onClick={() => pomodoroAction("reset")}>
+            <button type="button" aria-label={t.resetTimer} onClick={() => pomodoroAction("reset")}>
               <RotateCcw size={16} />
             </button>
-            <button type="button" aria-label="Skip timer" onClick={() => pomodoroAction("skip")}>
+            <button type="button" aria-label={t.skipTimer} onClick={() => pomodoroAction("skip")}>
               <SkipForward size={16} />
             </button>
           </div>
@@ -611,7 +743,7 @@ function App() {
 
           <div className="duration-row">
             <input
-              aria-label="Focus minutes"
+              aria-label={t.focus}
               type="number"
               min="1"
               max="180"
@@ -619,7 +751,7 @@ function App() {
               onChange={(event) => setDuration("focusMinutes", Number(event.currentTarget.value))}
             />
             <input
-              aria-label="Break minutes"
+              aria-label={t.break}
               type="number"
               min="1"
               max="90"
@@ -627,7 +759,7 @@ function App() {
               onChange={(event) => setDuration("breakMinutes", Number(event.currentTarget.value))}
             />
             <input
-              aria-label="Long break minutes"
+              aria-label={t.longBreak}
               type="number"
               min="1"
               max="120"
@@ -640,7 +772,7 @@ function App() {
 
           <div className="duration-row">
             <input
-              aria-label="Task label"
+              aria-label={t.task}
               type="text"
               maxLength={80}
               value={state.pomodoro.currentTask}
@@ -652,7 +784,7 @@ function App() {
               }
             />
             <input
-              aria-label="Long break every"
+              aria-label={t.longBreak}
               type="number"
               min="2"
               max="12"
@@ -687,7 +819,7 @@ function App() {
                   }))
                 }
               />
-              LB
+              {state.language === "zh-CN" ? "长休" : "LB"}
             </label>
             <select
               aria-label="Timer auto flow"
@@ -702,9 +834,9 @@ function App() {
                 }))
               }
             >
-              <option value="manual">manual</option>
-              <option value="autoBreak">break</option>
-              <option value="autoNext">next</option>
+              <option value="manual">{t.manual}</option>
+              <option value="autoBreak">{t.autoBreak}</option>
+              <option value="autoNext">{t.autoNext}</option>
             </select>
           </div>
 

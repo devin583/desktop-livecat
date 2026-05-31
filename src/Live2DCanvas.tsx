@@ -13,10 +13,11 @@ type Live2DCanvasProps = {
   mood: PetMood;
   onProbe: (probe: Live2DRuntimeProbe) => void;
   pet: PetPack;
+  tapSide: "left" | "right" | null;
   typingRate: number;
 };
 
-export function Live2DCanvas({ look, mood, onProbe, pet, typingRate }: Live2DCanvasProps) {
+export function Live2DCanvas({ look, mood, onProbe, pet, tapSide, typingRate }: Live2DCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<Live2DParameterFrame | null>(null);
   const modelUrl = useMemo(() => buildModelUrl(pet), [pet]);
@@ -39,6 +40,7 @@ export function Live2DCanvas({ look, mood, onProbe, pet, typingRate }: Live2DCan
         lookY: look.y,
         mood,
         now: performance.now(),
+        tapSide,
         typingRate,
       });
       drawDiagnosticFrame(canvasRef.current, frameRef.current);
@@ -46,7 +48,7 @@ export function Live2DCanvas({ look, mood, onProbe, pet, typingRate }: Live2DCan
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [look.x, look.y, mood, typingRate]);
+  }, [look.x, look.y, mood, tapSide, typingRate]);
 
   return (
     <canvas

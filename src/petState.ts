@@ -42,7 +42,9 @@ export const initialPomodoro: PomodoroState = {
 
 export const initialState: AppState = {
   selectedPetId: fallbackPet.id,
-  scale: 1,
+  language: "zh-CN",
+  scale: 0.92,
+  controlsOpen: false,
   clickThrough: false,
   alwaysOnTop: true,
   lowPower: false,
@@ -85,8 +87,12 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   if (!["manual", "autoBreak", "autoNext"].includes(next.pomodoro.autoFlow)) {
     next.pomodoro.autoFlow = "manual";
   }
+  if (!["zh-CN", "en-US"].includes(next.language)) {
+    next.language = "zh-CN";
+  }
 
   next.scale = Math.min(1.4, Math.max(0.65, Number(next.scale) || 1));
+  next.controlsOpen = Boolean(next.controlsOpen);
   next.pomodoro.focusMinutes = clampMinutes(next.pomodoro.focusMinutes, 1, 180, 25);
   next.pomodoro.breakMinutes = clampMinutes(next.pomodoro.breakMinutes, 1, 90, 5);
   next.pomodoro.longBreakMinutes = clampMinutes(next.pomodoro.longBreakMinutes, 1, 120, 15);

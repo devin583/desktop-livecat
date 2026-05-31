@@ -30,6 +30,8 @@ export type PomodoroMode = "focus" | "break" | "longBreak";
 
 export type PomodoroAutoFlow = "manual" | "autoBreak" | "autoNext";
 
+export type AppLanguage = "zh-CN" | "en-US";
+
 export type PomodoroState = {
   mode: PomodoroMode;
   presetId: "25-5-15" | "50-10-20" | "90-20-30" | "custom";
@@ -52,7 +54,9 @@ export type PomodoroState = {
 
 export type AppState = {
   selectedPetId: string;
+  language: AppLanguage;
   scale: number;
+  controlsOpen: boolean;
   clickThrough: boolean;
   alwaysOnTop: boolean;
   lowPower: boolean;

@@ -358,7 +358,9 @@ fn reveal_path(path: &Path) -> Result<(), String> {
 fn default_state() -> Value {
     json!({
         "selectedPetId": "livecat-default",
-        "scale": 1.0,
+        "language": "zh-CN",
+        "scale": 0.92,
+        "controlsOpen": false,
         "clickThrough": false,
         "alwaysOnTop": true,
         "lowPower": false,
@@ -392,6 +394,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let timer_reset = MenuItem::with_id(app, "timer_reset", "Reset timer", true, None::<&str>)?;
     let timer_skip = MenuItem::with_id(app, "timer_skip", "Skip timer", true, None::<&str>)?;
     let reload_pets = MenuItem::with_id(app, "reload_pets", "Reload pets", true, None::<&str>)?;
+    let toggle_controls = MenuItem::with_id(app, "toggle_controls", "Toggle controls", true, None::<&str>)?;
     let open_resources = MenuItem::with_id(app, "open_resources", "Open resources", true, None::<&str>)?;
     let click_through_off =
         MenuItem::with_id(app, "click_through_off", "Disable click-through", true, None::<&str>)?;
@@ -405,6 +408,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             &timer_reset,
             &timer_skip,
             &reload_pets,
+            &toggle_controls,
             &open_resources,
             &click_through_off,
             &quit,
@@ -439,6 +443,9 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             "reload_pets" => {
                 let _ = app.emit("tray://reload-pets", ());
             }
+            "toggle_controls" => {
+                let _ = app.emit("tray://toggle-controls", ());
+            }
             "open_resources" => {
                 let root = writable_pet_root(app);
                 let _ = fs::create_dir_all(&root);
@@ -472,6 +479,7 @@ fn place_initial_pet(app: &AppHandle) {
     let Ok(size) = window.outer_size() else {
         return;
     };
+    let _ = window.set_shadow(false);
 
     let work = monitor.work_area();
     let x = work.position.x + work.size.width as i32 - size.width as i32 - 28;

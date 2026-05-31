@@ -15,6 +15,10 @@ export type Live2DParameterFrame = {
   ParamBreath: number;
   ParamArmLA: number;
   ParamArmRA: number;
+  ParamKeyboardPressL: number;
+  ParamKeyboardPressR: number;
+  ParamPawLTap: number;
+  ParamPawRTap: number;
 };
 
 declare global {
@@ -69,6 +73,7 @@ export function buildLive2DParameters(input: {
   lookX: number;
   lookY: number;
   typingRate: number;
+  tapSide: "left" | "right" | null;
   mood: "idle" | "typing" | "focus" | "focusEnding" | "break" | "longBreak" | "paused" | "dragged";
   now: number;
 }): Live2DParameterFrame {
@@ -78,6 +83,8 @@ export function buildLive2DParameters(input: {
   const breakStretch = input.mood === "break" ? 0.45 : input.mood === "longBreak" ? 0.7 : 0;
   const dragged = input.mood === "dragged" ? 0.65 : 0;
   const focusEnding = input.mood === "focusEnding" ? 0.3 : 0;
+  const leftTap = input.tapSide === "left" ? 1 : 0;
+  const rightTap = input.tapSide === "right" ? 1 : 0;
 
   return {
     ParamAngleX: clamp(input.lookX * 22 + dragged * 8, -30, 30),
@@ -86,8 +93,12 @@ export function buildLive2DParameters(input: {
     ParamEyeLOpen: input.mood === "focus" || input.mood === "focusEnding" ? 0.78 - focusEnding * 0.18 : 1,
     ParamEyeROpen: input.mood === "focus" || input.mood === "focusEnding" ? 0.78 - focusEnding * 0.18 : 1,
     ParamBreath: breath,
-    ParamArmLA: clamp(typing * Math.max(0, alternating) + breakStretch, 0, 1),
-    ParamArmRA: clamp(typing * Math.max(0, -alternating) + breakStretch * 0.35, 0, 1),
+    ParamArmLA: clamp(leftTap || typing * Math.max(0, alternating) + breakStretch, 0, 1),
+    ParamArmRA: clamp(rightTap || typing * Math.max(0, -alternating) + breakStretch * 0.35, 0, 1),
+    ParamKeyboardPressL: leftTap,
+    ParamKeyboardPressR: rightTap,
+    ParamPawLTap: leftTap,
+    ParamPawRTap: rightTap,
   };
 }
 

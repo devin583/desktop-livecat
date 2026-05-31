@@ -4,15 +4,19 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.5.1 status
+## Current v0.5.2 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
+- Default pet-first view with a collapsible settings panel, so the desktop pet
+  does not boot into a large control overlay.
+- Chinese and English UI toggle.
 - Copyable `pets/` resource pack contract.
 - Illustrator handoff workflow with a template pack, checklist, and source/rigging docs.
 - Animated original cat fallback with breathing, blinking, ear/tail secondary
   motion, pointer-following eyes, paws, keyboard prop, keyboard rhythm sync, and
-  upgraded Pomodoro states.
+  upgraded Pomodoro states. Keyboard sync now uses a sharper alternating paw
+  strike inspired by BongoCat-style left/right hand presses.
 - Rust persistence into portable `data/state.json` when possible.
 - Windows keyboard rhythm bridge prefers Raw Input and falls back to a low-level
   hook only if Raw Input registration fails. It emits timing pulses only; it

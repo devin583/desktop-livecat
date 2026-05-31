@@ -1,6 +1,6 @@
 [package]
 name = "desktop-livecat"
-version = "0.5.1"
+version = "0.5.2"
 description = "A portable Win11-first Live2D desktop cat."
 authors = ["Dubhe"]
 edition = "2021"
