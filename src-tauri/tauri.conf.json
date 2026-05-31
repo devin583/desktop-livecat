@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Desktop LiveCat",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "identifier": "com.dubhe.desktoplivecat",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -41,6 +41,7 @@
       "../docs/live2d-tooling.md",
       "../docs/roadmap.md",
       "../docs/resource-pack.md",
+      "../docs/spritesheet-pets.md",
       "../docs/troubleshooting.md",
       "../docs/win11-qa.md"
     ],

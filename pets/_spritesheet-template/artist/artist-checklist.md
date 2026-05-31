@@ -1,0 +1,7 @@
+- [ ] Every cell has the same canvas size and alignment.
+- [ ] Idle loops without a visible jump.
+- [ ] tap_left and tap_right clearly press different key groups.
+- [ ] typing alternates left/right and does not look like sliding.
+- [ ] focus and break are readable at small desktop size.
+- [ ] failed/dragged has a recovery-friendly pose.
+- [ ] Preview is legible at 384 x 416.

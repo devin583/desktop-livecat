@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="416" viewBox="0 0 384 416">
+<rect width="384" height="416" rx="28" fill="#fffaf0"/>
+<rect x="48" y="48" width="288" height="252" fill="none" stroke="#c7b8ad" stroke-width="4"/>
+<path d="M48 132H336M48 216H336M144 48V300M240 48V300" stroke="#c7b8ad" stroke-width="3"/>
+<text x="192" y="350" text-anchor="middle" font-family="Arial" font-size="24" fill="#6a535b">8 x 9 spritesheet</text>
+</svg>

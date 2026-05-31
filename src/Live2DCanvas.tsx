@@ -65,7 +65,8 @@ export function Live2DCanvas({ look, mood, onProbe, pet, tapSide, typingRate }: 
 function buildModelUrl(pet: PetPack) {
   if (!pet.live2d_model) return null;
   if (pet.source.includes("/") || pet.source.includes("\\")) {
-    return convertFileSrc(`${pet.source}/${pet.live2d_model}`);
+    const sourceRoot = pet.source.replace(/[\\/]+$/, "");
+    return convertFileSrc(`${sourceRoot}/${pet.live2d_model}`);
   }
   return `/pets/${pet.id}/${pet.live2d_model}`;
 }

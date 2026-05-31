@@ -20,7 +20,9 @@ import {
   MousePointer2,
   Pause,
   Play,
+  Plus,
   ScrollText,
+  Sparkles,
   RefreshCw,
   RotateCcw,
   Settings,
@@ -28,6 +30,7 @@ import {
   TimerReset,
 } from "lucide-react";
 import { Live2DCanvas } from "./Live2DCanvas";
+import { SpritesheetPet } from "./SpritesheetPet";
 import type { Live2DRuntimeProbe } from "./live2dRuntime";
 import {
   fallbackPet,
@@ -43,6 +46,7 @@ import type {
   AppState,
   AppLanguage,
   KeyboardStatus,
+  PetAnimationState,
   PetMood,
   PetPack,
   PomodoroMode,
@@ -111,12 +115,15 @@ const copy = {
     language: "切换语言",
     live2d: "Live2D",
     longBreak: "长休息",
+    makeDraft: "根据描述创建本地草案",
     lowPower: "低功耗",
     manual: "手动",
     autoBreak: "休息自动",
     autoNext: "全自动",
     noChecklist: "没有画师清单",
     openResources: "打开资源目录",
+    installPet: "安装本地资源包",
+    installPlaceholder: "路径或描述",
     pauseTimer: "暂停计时",
     petPack: "角色包",
     reloadPets: "重新加载角色",
@@ -146,12 +153,15 @@ const copy = {
     language: "Switch language",
     live2d: "Live2D",
     longBreak: "Long break",
+    makeDraft: "Create local draft from description",
     lowPower: "Low power",
     manual: "manual",
     autoBreak: "break",
     autoNext: "next",
     noChecklist: "No artist checklist",
     openResources: "Open resources",
+    installPet: "Install local pet pack",
+    installPlaceholder: "Path or prompt",
     pauseTimer: "Pause timer",
     petPack: "Pet pack",
     reloadPets: "Reload pets",
@@ -194,6 +204,39 @@ function artistStatusLabel(status: PetPack["artist_status"], language: AppLangua
   }[status];
 }
 
+function activityStateFromMood(
+  mood: PetMood,
+  tapSide: "left" | "right" | null,
+): PetAnimationState {
+  if (mood === "typing" && tapSide === "left") return "tap_left";
+  if (mood === "typing" && tapSide === "right") return "tap_right";
+  if (mood === "typing") return "typing";
+  if (mood === "focus" || mood === "focusEnding") return "focus";
+  if (mood === "break" || mood === "longBreak") return "break";
+  if (mood === "dragged") return "dragged";
+  return "idle";
+}
+
+function shouldRenderSpritesheet(pet: PetPack, activityState: PetAnimationState) {
+  if (!pet.has_spritesheet || !pet.spritesheet) return false;
+  if (pet.render_mode === "spritesheet") return true;
+  if (pet.render_mode === "hybrid") {
+    return activityState !== "idle" || !pet.has_live2d_model;
+  }
+  return false;
+}
+
+function rendererLabel(pet: PetPack, language: AppLanguage) {
+  if (language === "en-US") {
+    if (pet.render_mode === "spritesheet") return "Spritesheet";
+    if (pet.render_mode === "hybrid") return "Hybrid";
+    return "Live2D";
+  }
+  if (pet.render_mode === "spritesheet") return "帧动画";
+  if (pet.render_mode === "hybrid") return "混合";
+  return "Live2D";
+}
+
 function App() {
   const [state, setState] = usePersistedState();
   const [pets, setPets] = useState<PetPack[]>([fallbackPet]);
@@ -215,6 +258,8 @@ function App() {
   const [typingRate, setTypingRate] = useState(0);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [dragged, setDragged] = useState(false);
+  const [installInput, setInstallInput] = useState("");
+  const [installStatus, setInstallStatus] = useState("");
   const pulsesRef = useRef<number[]>([]);
   const t = copy[state.language];
 
@@ -244,8 +289,9 @@ function App() {
   }, []);
 
   const refreshPets = useCallback(() => {
-    safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
+    return safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
       if (loaded?.length) setPets(loaded);
+      return loaded ?? null;
     });
   }, []);
 
@@ -464,6 +510,38 @@ function App() {
     void safeInvoke<string>("reveal_pet_pack", { petId: selectedPet.id }).then(() => refreshPets());
   };
 
+  const installLocalPet = () => {
+    const sourcePath = installInput.trim();
+    if (!sourcePath) return;
+    setInstallStatus(state.language === "zh-CN" ? "安装中" : "Installing");
+    void safeInvoke<PetPack>("install_pet_from_path", { sourcePath }).then((pet) => {
+      if (!pet) {
+        setInstallStatus(state.language === "zh-CN" ? "安装失败" : "Install failed");
+        return;
+      }
+      setInstallStatus(state.language === "zh-CN" ? "已安装" : "Installed");
+      void refreshPets().then(() => {
+        setState((current) => ({ ...current, selectedPetId: pet.id }));
+      });
+    });
+  };
+
+  const createDraftPet = () => {
+    const prompt = installInput.trim();
+    if (!prompt) return;
+    setInstallStatus(state.language === "zh-CN" ? "创建中" : "Creating");
+    void safeInvoke<PetPack>("create_spritesheet_draft", { prompt }).then((pet) => {
+      if (!pet) {
+        setInstallStatus(state.language === "zh-CN" ? "创建失败" : "Create failed");
+        return;
+      }
+      setInstallStatus(state.language === "zh-CN" ? "草案已创建" : "Draft created");
+      void refreshPets().then(() => {
+        setState((current) => ({ ...current, selectedPetId: pet.id }));
+      });
+    });
+  };
+
   const updateLook = (event: PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
@@ -495,6 +573,12 @@ function App() {
         : state.pomodoro.remainingSeconds !== resetPomodoroDuration(state.pomodoro)
           ? "paused"
           : "idle";
+  const activityState = activityStateFromMood(petMood, activeTapSide);
+  const showSpritesheet = shouldRenderSpritesheet(selectedPet, activityState);
+  const showLive2DCanvas = selectedPet.render_mode !== "spritesheet";
+  const resourceStatusTitle = selectedPet.has_spritesheet
+    ? `${rendererLabel(selectedPet, state.language)}: ${selectedPet.spritesheet?.image ?? ""}`
+    : live2dProbe.reason;
 
   return (
     <main
@@ -508,7 +592,7 @@ function App() {
       }
     >
       <section
-        className={`pet-stage mood-${petMood} renderer-${live2dProbe.renderer} ${
+        className={`pet-stage mood-${petMood} renderer-${showSpritesheet ? "spritesheet" : live2dProbe.renderer} ${
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
@@ -525,14 +609,23 @@ function App() {
         }}
       >
         <div className="live2d-layer" data-tauri-drag-region>
-          <Live2DCanvas
-            look={look}
-            mood={petMood}
-            onProbe={setLive2dProbe}
-            pet={selectedPet}
-            tapSide={activeTapSide}
-            typingRate={typingRate}
-          />
+          {showLive2DCanvas && (
+            <Live2DCanvas
+              look={look}
+              mood={petMood}
+              onProbe={setLive2dProbe}
+              pet={selectedPet}
+              tapSide={activeTapSide}
+              typingRate={typingRate}
+            />
+          )}
+          {showSpritesheet ? (
+            <SpritesheetPet
+              animationState={activityState}
+              lowPower={state.lowPower}
+              pet={selectedPet}
+            />
+          ) : (
           <div className="cat" style={{ ["--typing-rate" as string]: typingRate }}>
             <div className="tail" />
             <div className="body">
@@ -560,6 +653,7 @@ function App() {
               <small>{modeLabel(state.pomodoro.mode, state.language)}</small>
             </div>
           </div>
+          )}
         </div>
 
         <button
@@ -595,7 +689,7 @@ function App() {
               <b>{selectedPet.version}</b>
             </div>
             <div>
-              <span>{selectedPet.has_live2d_model ? t.live2d : t.binding}</span>
+              <span>{rendererLabel(selectedPet, state.language)}</span>
               <b>{artistStatusLabel(selectedPet.artist_status, state.language)}</b>
             </div>
           </div>
@@ -669,7 +763,7 @@ function App() {
             >
               <Gauge size={16} />
             </button>
-            <button type="button" aria-label={t.resourceStatus} title={live2dProbe.reason}>
+            <button type="button" aria-label={t.resourceStatus} title={resourceStatusTitle}>
               <Info size={16} />
             </button>
             <button
@@ -698,6 +792,34 @@ function App() {
               <span>{state.language === "zh-CN" ? "中" : "EN"}</span>
             </button>
           </div>
+
+          <div className="install-row">
+            <input
+              aria-label={t.installPlaceholder}
+              type="text"
+              maxLength={180}
+              placeholder={t.installPlaceholder}
+              value={installInput}
+              onChange={(event) => setInstallInput(event.currentTarget.value)}
+            />
+            <button
+              type="button"
+              aria-label={t.installPet}
+              title={t.installPet}
+              onClick={installLocalPet}
+            >
+              <Plus size={15} />
+            </button>
+            <button
+              type="button"
+              aria-label={t.makeDraft}
+              title={t.makeDraft}
+              onClick={createDraftPet}
+            >
+              <Sparkles size={15} />
+            </button>
+          </div>
+          {installStatus ? <div className="install-status">{installStatus}</div> : null}
 
           <input
             aria-label={t.scale}

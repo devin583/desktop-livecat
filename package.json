@@ -1,7 +1,7 @@
 {
   "name": "desktop-livecat",
   "private": true,
-  "version": "0.5.2",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,7 @@
     "check": "npm run validate:pets && npm run build",
     "preview": "vite preview",
     "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
+    "generate:spritesheet-assets": "node scripts/generate-spritesheet-assets.mjs",
     "download:webview2-fixed": "node scripts/download-webview2-fixed-runtime.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",

@@ -11,6 +11,7 @@ pets/<pet-id>/
   expressions/
   audio/
   preview/
+  spritesheet/
   source/
   design/
 ```
@@ -23,12 +24,30 @@ Required fields:
 - `name`: display name.
 - `version`: pack version.
 - `artist`: asset owner or author.
+- `renderMode`: `live2d`, `spritesheet`, or `hybrid`.
+
+For `live2d` and `hybrid` packs:
+
 - `live2d.modelJson`: path to the Cubism `.model3.json` file relative to the pack root.
+
+For `spritesheet` and `hybrid` packs:
+
+- `spritesheet.image`: path to a PNG/WebP/JPG/SVG spritesheet.
+- `spritesheet.columns`: default `8`.
+- `spritesheet.rows`: default `9`.
+- `spritesheet.frameWidth`: default `192`.
+- `spritesheet.frameHeight`: default `208`.
+- `spritesheet.states`: state-to-frame mapping. `idle` is the required safe fallback.
 
 Optional fields:
 
 - `preview`: preview image path.
 - `tags`: searchable labels.
+- `persona.name`: display identity used by custom-pet creation.
+- `persona.species`: species or object type.
+- `persona.style`: art direction notes.
+- `persona.personality`: behavior notes.
+- `persona.palette`: color tokens for the artist or draft generator.
 - `artistWorkflow.status`: `missing`, `source-ready`, `psd-ready`, `rigging-ready`, or `runtime-ready`.
 - `artistWorkflow.brief`: path to artist notes.
 - `artistWorkflow.checklist`: path to the completed artist checklist.
@@ -38,6 +57,30 @@ Optional fields:
 - `live2d.parameterSpec`: optional path to a project-local parameter plan.
 - `live2d.sourceLayerMap`: optional path to the source-layer map used before Cubism export.
 - `privacy.keyboardSync`: expected keyboard sync policy.
+
+## Spritesheet runtime
+
+The default custom-pet template is an 8 x 9 grid. Rows map to these states:
+
+| Row | State | Use |
+| --- | --- | --- |
+| 0 | `idle` | breathing, blink, natural loop |
+| 1 | `tap_left` | left paw key strike |
+| 2 | `tap_right` | right paw key strike |
+| 3 | `typing` | sustained alternating typing |
+| 4 | `focus` | Pomodoro focus loop |
+| 5 | `break` | Pomodoro break loop |
+| 6 | `happy` | completion or positive command |
+| 7 | `sleepy` | low-energy idle |
+| 8 | `failed` / `dragged` | failure, surprise, drag recovery |
+
+The renderer uses CSS `background-position` frame playback, so the image must
+keep each pose aligned inside its cell. Missing non-idle states are allowed;
+runtime falls back to `idle`.
+
+Single image imports are treated as inert spritesheet packs. The app creates a
+manifest and artist handoff around the image, then the artist can replace it
+with a full 8 x 9 sheet later.
 
 ## Live2D source assets
 

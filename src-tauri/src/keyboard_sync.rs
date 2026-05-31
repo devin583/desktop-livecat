@@ -43,11 +43,11 @@ mod platform {
 #[cfg(windows)]
 mod platform {
     use super::*;
-    use std::{ffi::c_void, mem::size_of, ptr};
     use std::sync::{
         atomic::{AtomicBool, Ordering},
         OnceLock,
     };
+    use std::{ffi::c_void, mem::size_of, ptr};
     use tauri::Emitter;
     use windows_sys::Win32::{
         Devices::HumanInterfaceDevice::{HID_USAGE_GENERIC_KEYBOARD, HID_USAGE_PAGE_GENERIC},
@@ -56,7 +56,7 @@ mod platform {
         UI::{
             Input::{
                 GetRawInputData, RegisterRawInputDevices, HRAWINPUT, RAWINPUT, RAWINPUTDEVICE,
-                RAWINPUTHEADER, RID_INPUT, RIDEV_INPUTSINK, RIM_TYPEKEYBOARD,
+                RAWINPUTHEADER, RIDEV_INPUTSINK, RID_INPUT, RIM_TYPEKEYBOARD,
             },
             WindowsAndMessaging::{
                 CallNextHookEx, CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW,

@@ -77,6 +77,41 @@ input {
   animation: cat-breathe 3.8s ease-in-out infinite;
 }
 
+.spritesheet-pet {
+  --sprite-image: none;
+  --sprite-background-size: 800% 900%;
+  --sprite-position: 0% 0%;
+  --sprite-aspect: 192 / 208;
+  position: relative;
+  width: calc(292px * var(--pet-scale));
+  max-width: calc(100vw - 24px);
+  aspect-ratio: var(--sprite-aspect);
+  align-self: end;
+  margin-bottom: calc(22px * var(--pet-scale));
+  background-image: var(--sprite-image);
+  background-repeat: no-repeat;
+  background-position: var(--sprite-position);
+  background-size: var(--sprite-background-size);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 18px 18px rgba(43, 34, 42, 0.24));
+  transform-origin: bottom center;
+  animation: sprite-breathe 3.2s ease-in-out infinite;
+}
+
+.mood-dragged .spritesheet-pet {
+  animation: sprite-dragged 0.7s ease-in-out infinite;
+}
+
+.mood-focus .spritesheet-pet,
+.mood-focusEnding .spritesheet-pet {
+  animation-duration: 5.6s;
+}
+
+.mood-break .spritesheet-pet,
+.mood-longBreak .spritesheet-pet {
+  animation: sprite-break 3.6s ease-in-out infinite;
+}
+
 .body {
   position: absolute;
   left: 50%;
@@ -400,6 +435,7 @@ input {
 .low-power .ear,
 .low-power .eye,
 .low-power .paw,
+.low-power .spritesheet-pet,
 .low-power .keyboard-prop span {
   animation-duration: 9s;
 }
@@ -514,6 +550,35 @@ input {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.install-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px 30px;
+  gap: 6px;
+}
+
+.install-row input {
+  min-width: 0;
+  height: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgba(83, 62, 69, 0.14);
+  border-radius: 7px;
+  background: #fffaf0;
+  color: #4c3a42;
+  padding: 0 7px;
+  font-size: 11px;
+}
+
+.install-status {
+  min-width: 0;
+  padding: 5px 6px;
+  border-radius: 7px;
+  background: rgba(255, 250, 240, 0.72);
+  color: #60454a;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .icon-row:has(button:only-child) {
   grid-template-columns: 1fr;
 }
@@ -616,6 +681,36 @@ input {
   }
   50% {
     transform: translateY(3px) scaleY(0.988);
+  }
+}
+
+@keyframes sprite-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(3px) scaleY(0.99);
+  }
+}
+
+@keyframes sprite-break {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scaleY(1);
+  }
+  50% {
+    transform: translateY(8px) rotate(-1deg) scaleY(0.96);
+  }
+}
+
+@keyframes sprite-dragged {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg) scaleX(1.03) scaleY(0.96);
+  }
+  50% {
+    transform: translateY(5px) rotate(2deg) scaleX(0.98) scaleY(1.03);
   }
 }
 

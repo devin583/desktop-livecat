@@ -4,15 +4,21 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.5.2 status
+## Current v0.6.0 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
 - Default pet-first view with a collapsible settings panel, so the desktop pet
   does not boot into a large control overlay.
 - Chinese and English UI toggle.
-- Copyable `pets/` resource pack contract.
+- Copyable `pets/` resource pack contract with `live2d`, `spritesheet`, and `hybrid`
+  render modes.
 - Illustrator handoff workflow with a template pack, checklist, and source/rigging docs.
+- Built-in `pixel-mochi` spritesheet pet and `pets/_spritesheet-template/`
+  artist handoff for 8 x 9 custom pets.
+- Local custom-pet installer for pet folders, zip packages, and single image
+  spritesheets. The optional draft creator turns a prompt into a fully local
+  static resource pack without requiring network access at runtime.
 - Animated original cat fallback with breathing, blinking, ear/tail secondary
   motion, pointer-following eyes, paws, keyboard prop, keyboard rhythm sync, and
   upgraded Pomodoro states. Keyboard sync now uses a sharper alternating paw
@@ -71,14 +77,15 @@ machine:
 - `data/`
 
 See [docs/resource-pack.md](docs/resource-pack.md) and
-[docs/distribution.md](docs/distribution.md).
+[docs/spritesheet-pets.md](docs/spritesheet-pets.md).
 
 ## Illustrator workflow
 
 Give illustrators [docs/artist-handoff.md](docs/artist-handoff.md) and copy
-`pets/_template/` to a new pet id. They only need to provide the PSD, preview,
-asset brief, and checklist. Engineering handles `manifest.json`, Live2D binding,
-validation, and release packaging.
+`pets/_template/` for Live2D or `pets/_spritesheet-template/` for fast custom
+spritesheet pets. For spritesheet pets the illustrator only needs to fill an
+8 x 9 grid, export PNG/WebP/SVG, and update the preview. Engineering handles
+validation, packaging, and optional Live2D binding.
 
 ```bash
 ARTIST_ASSET_CHECK=1 npm run validate:pets
@@ -93,6 +100,7 @@ ARTIST_ASSET_CHECK=1 npm run validate:pets
 - [docs/live2d-tooling.md](docs/live2d-tooling.md)
 - [docs/live2d-ai-generation-research.md](docs/live2d-ai-generation-research.md)
 - [docs/keyboard-sync.md](docs/keyboard-sync.md)
+- [docs/spritesheet-pets.md](docs/spritesheet-pets.md)
 - [docs/win11-qa.md](docs/win11-qa.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/roadmap.md](docs/roadmap.md)

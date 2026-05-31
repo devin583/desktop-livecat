@@ -1,0 +1,433 @@
+{
+  "id": "pixel-mochi",
+  "name": "Pixel Mochi",
+  "version": "0.6.0",
+  "artist": "Desktop LiveCat",
+  "description": "Built-in 8 x 9 spritesheet cat sample for Codex-style custom pets, BongoCat-like typing taps, Pomodoro focus, and break states.",
+  "preview": "preview/preview.svg",
+  "renderMode": "spritesheet",
+  "tags": [
+    "spritesheet",
+    "keyboard",
+    "pomodoro",
+    "offline",
+    "template"
+  ],
+  "persona": {
+    "name": "Pixel Mochi",
+    "species": "cat",
+    "style": "rounded desktop spritesheet",
+    "personality": "focused, soft, and reactive to keyboard rhythm",
+    "palette": [
+      "#ffd8bf",
+      "#ef9d91",
+      "#2f2430",
+      "#fff6dd"
+    ],
+    "accessories": [
+      "mini keyboard",
+      "timer note"
+    ]
+  },
+  "spritesheet": {
+    "image": "spritesheet/avatar.svg",
+    "columns": 8,
+    "rows": 9,
+    "frameWidth": 192,
+    "frameHeight": 208,
+    "statesFile": "spritesheet/states.json",
+    "states": {
+      "idle": {
+        "frames": [
+          {
+            "row": 0,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 0,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 0,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 0,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 0,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 0,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "tap_left": {
+        "frames": [
+          {
+            "row": 1,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 5,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 6,
+            "durationMs": 110
+          },
+          {
+            "row": 1,
+            "column": 7,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "tap_right": {
+        "frames": [
+          {
+            "row": 2,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 5,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 6,
+            "durationMs": 110
+          },
+          {
+            "row": 2,
+            "column": 7,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "typing": {
+        "frames": [
+          {
+            "row": 3,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 5,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 6,
+            "durationMs": 110
+          },
+          {
+            "row": 3,
+            "column": 7,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "focus": {
+        "frames": [
+          {
+            "row": 4,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 4,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 4,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 4,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 4,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 4,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "break": {
+        "frames": [
+          {
+            "row": 5,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 5,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 5,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 5,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 5,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 5,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "happy": {
+        "frames": [
+          {
+            "row": 6,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 6,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 6,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 6,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 6,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 6,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "sleepy": {
+        "frames": [
+          {
+            "row": 7,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 7,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 7,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 7,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 7,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 7,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "failed": {
+        "frames": [
+          {
+            "row": 8,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      },
+      "dragged": {
+        "frames": [
+          {
+            "row": 8,
+            "column": 0,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 1,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 2,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 3,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 4,
+            "durationMs": 110
+          },
+          {
+            "row": 8,
+            "column": 5,
+            "durationMs": 220
+          }
+        ],
+        "loopStartIndex": 0
+      }
+    }
+  },
+  "privacy": {
+    "keyboardSync": "rhythm-only",
+    "storesKeyValues": false
+  },
+  "artistWorkflow": {
+    "status": "source-ready",
+    "brief": "artist/spritesheet-handoff.md",
+    "checklist": "artist/artist-checklist.md",
+    "primarySource": "spritesheet/avatar.svg",
+    "preferredDeliverable": "PNG/WebP/SVG spritesheet, 8 x 9 cells, 192 x 208 each"
+  }
+}
