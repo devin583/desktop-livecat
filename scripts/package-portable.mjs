@@ -42,7 +42,12 @@ function copyStandard(target) {
   }
   fs.copyFileSync(exe, path.join(target, path.basename(exe)));
   copyDir(path.join(root, "pets"), path.join(target, "pets"));
-  fs.mkdirSync(path.join(target, "data"), { recursive: true });
+  const dataDir = path.join(target, "data");
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dataDir, "README.txt"),
+    "Desktop LiveCat stores portable offline settings in this folder.\n",
+  );
   fs.copyFileSync(path.join(root, "docs", "distribution.md"), path.join(target, "README-portable.md"));
 }
 
