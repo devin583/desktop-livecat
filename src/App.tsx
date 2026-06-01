@@ -432,6 +432,7 @@ function App() {
     backend: "browser-focus-fallback",
     message: "Keyboard rhythm uses focused-window fallback until the native bridge is active.",
   });
+  const [failedSpritePetIds, setFailedSpritePetIds] = useState<Set<string>>(() => new Set());
   const [live2dProbe, setLive2dProbe] = useState<Live2DRuntimeProbe>({
     renderer: "fallback-css",
     modelAvailable: false,
@@ -475,6 +476,7 @@ function App() {
     todaySummary.durationSeconds,
     state.pomodoro.focusSecondsToday,
   );
+  const spriteAssetFailed = failedSpritePetIds.has(selectedPet.id);
 
   const registerPulse = useCallback((source = "browser-focus-fallback") => {
     const now = Date.now();
@@ -485,6 +487,25 @@ function App() {
     setKeyboardStatus((current) =>
       source === current.backend ? current : { ...current, backend: source },
     );
+  }, []);
+
+  const handleSpriteAssetError = useCallback((petId: string, imageUrl: string) => {
+    console.warn(`Spritesheet asset failed to load for ${petId}: ${imageUrl}`);
+    setFailedSpritePetIds((current) => {
+      if (current.has(petId)) return current;
+      const next = new Set(current);
+      next.add(petId);
+      return next;
+    });
+  }, []);
+
+  const handleSpriteAssetLoad = useCallback((petId: string) => {
+    setFailedSpritePetIds((current) => {
+      if (!current.has(petId)) return current;
+      const next = new Set(current);
+      next.delete(petId);
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -1105,11 +1126,17 @@ function App() {
           ? "paused"
           : "idle";
   const activityState = activityStateFromMood(petMood, activeTapSide);
-  const showSpritesheet = shouldRenderSpritesheet(selectedPet, activityState);
+  const showSpritesheet = !spriteAssetFailed && shouldRenderSpritesheet(selectedPet, activityState);
   const showLive2DCanvas = selectedPet.render_mode !== "spritesheet";
-  const resourceStatusTitle = selectedPet.has_spritesheet
-    ? `${rendererLabel(selectedPet, state.language)}: ${selectedPet.spritesheet?.image ?? ""}`
-    : live2dProbe.reason;
+  const resourceStatusTitle = spriteAssetFailed
+    ? state.language === "zh-CN"
+      ? `帧动画图片加载失败，已退回内置猫：${selectedPet.spritesheet?.image ?? ""}`
+      : `Spritesheet image failed; built-in cat fallback is active: ${
+          selectedPet.spritesheet?.image ?? ""
+        }`
+    : selectedPet.has_spritesheet
+      ? `${rendererLabel(selectedPet, state.language)}: ${selectedPet.spritesheet?.image ?? ""}`
+      : live2dProbe.reason;
 
   return (
     <main
@@ -1154,6 +1181,8 @@ function App() {
             <SpritesheetPet
               animationState={activityState}
               lowPower={state.lowPower}
+              onAssetError={handleSpriteAssetError}
+              onAssetLoad={handleSpriteAssetLoad}
               pet={selectedPet}
             />
           ) : (

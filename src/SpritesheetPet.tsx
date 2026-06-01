@@ -11,12 +11,21 @@ type SpritesheetPetProps = {
   animationState: PetAnimationState;
   className?: string;
   lowPower: boolean;
+  onAssetError?: (petId: string, imageUrl: string) => void;
+  onAssetLoad?: (petId: string) => void;
   pet: PetPack;
 };
 
 const defaultFrameDurationMs = 140;
 
-export function SpritesheetPet({ animationState, className, lowPower, pet }: SpritesheetPetProps) {
+export function SpritesheetPet({
+  animationState,
+  className,
+  lowPower,
+  onAssetError,
+  onAssetLoad,
+  pet,
+}: SpritesheetPetProps) {
   const sprite = pet.spritesheet;
   const [frame, setFrame] = useState<PetSpritesheetFrame>(() =>
     firstFrame(resolveState(sprite?.states.idle)),
@@ -79,8 +88,8 @@ export function SpritesheetPet({ animationState, className, lowPower, pet }: Spr
   const rows = Math.max(1, sprite.rows);
   const column = clampFrameIndex(frame.column, columns);
   const row = clampFrameIndex(frame.row, rows);
-  const x = columns === 1 ? 0 : (column / (columns - 1)) * 100;
-  const y = rows === 1 ? 0 : (row / (rows - 1)) * 100;
+  const x = (column / columns) * -100;
+  const y = (row / rows) * -100;
 
   return (
     <div
@@ -89,13 +98,24 @@ export function SpritesheetPet({ animationState, className, lowPower, pet }: Spr
       role="img"
       style={
         {
-          "--sprite-image": `url("${imageUrl}")`,
-          "--sprite-background-size": `${columns * 100}% ${rows * 100}%`,
-          "--sprite-position": `${x}% ${y}%`,
           "--sprite-aspect": `${sprite.frameWidth} / ${sprite.frameHeight}`,
+          "--sprite-sheet-width": `${columns * 100}%`,
+          "--sprite-sheet-height": `${rows * 100}%`,
+          "--sprite-x": `${x}%`,
+          "--sprite-y": `${y}%`,
         } as CSSProperties
       }
-    />
+    >
+      <img
+        alt=""
+        aria-hidden="true"
+        className="spritesheet-image"
+        draggable={false}
+        src={imageUrl}
+        onError={() => onAssetError?.(pet.id, imageUrl)}
+        onLoad={() => onAssetLoad?.(pet.id)}
+      />
+    </div>
   );
 }
 

@@ -78,24 +78,35 @@ input {
 }
 
 .spritesheet-pet {
-  --sprite-image: none;
-  --sprite-background-size: 800% 900%;
-  --sprite-position: 0% 0%;
   --sprite-aspect: 192 / 208;
+  --sprite-sheet-width: 800%;
+  --sprite-sheet-height: 900%;
+  --sprite-x: 0%;
+  --sprite-y: 0%;
   position: relative;
   width: calc(292px * var(--pet-scale));
   max-width: calc(100vw - 24px);
   aspect-ratio: var(--sprite-aspect);
   align-self: end;
   margin-bottom: calc(22px * var(--pet-scale));
-  background-image: var(--sprite-image);
-  background-repeat: no-repeat;
-  background-position: var(--sprite-position);
-  background-size: var(--sprite-background-size);
-  image-rendering: pixelated;
+  overflow: hidden;
   filter: drop-shadow(0 18px 18px rgba(43, 34, 42, 0.24));
   transform-origin: bottom center;
   animation: sprite-breathe 3.2s ease-in-out infinite;
+}
+
+.spritesheet-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--sprite-sheet-width);
+  height: var(--sprite-sheet-height);
+  max-width: none;
+  transform: translate(var(--sprite-x), var(--sprite-y));
+  transform-origin: top left;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
 }
 
 .mood-dragged .spritesheet-pet {
