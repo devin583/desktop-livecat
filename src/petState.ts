@@ -98,7 +98,11 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     },
   };
 
-  if (next.selectedPetId === "pixel-mochi") {
+  if (
+    next.selectedPetId === "pixel-mochi" ||
+    next.selectedPetId === "livecat-default" ||
+    next.selectedPetId.startsWith("_")
+  ) {
     next.selectedPetId = initialState.selectedPetId;
   }
 

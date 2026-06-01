@@ -11,6 +11,8 @@ import { listen } from "@tauri-apps/api/event";
 import {
   BadgeCheck,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   Coffee,
   Eye,
@@ -190,6 +192,8 @@ const copy = {
     installPlaceholder: "路径或描述",
     pauseTimer: "暂停计时",
     petPack: "角色包",
+    petNext: "下一个角色",
+    petPrevious: "上一个角色",
     reloadPets: "重新加载角色",
     resetTimer: "重置计时",
     resourceStatus: "资源状态",
@@ -248,6 +252,8 @@ const copy = {
     installPlaceholder: "Path or prompt",
     pauseTimer: "Pause timer",
     petPack: "Pet pack",
+    petNext: "Next pet",
+    petPrevious: "Previous pet",
     reloadPets: "Reload pets",
     resetTimer: "Reset timer",
     resourceStatus: "Resource status",
@@ -424,6 +430,29 @@ function rendererLabel(pet: PetPack, language: AppLanguage) {
   return "Live2D";
 }
 
+function isSelectablePet(pet: PetPack) {
+  if (pet.id.startsWith("_")) return false;
+  if (pet.id === "livecat-default" && !pet.has_live2d_model && !pet.has_spritesheet) return false;
+  if (pet.id === "replace-with-pet-id" || pet.id === "your-pet-id") return false;
+  return pet.has_spritesheet || pet.has_live2d_model;
+}
+
+function petSortScore(pet: PetPack) {
+  if (pet.id === initialState.selectedPetId) return 0;
+  if (pet.id === "gray-british-keyboard") return 1;
+  if (pet.has_spritesheet) return 10;
+  if (pet.has_live2d_model) return 20;
+  return 99;
+}
+
+function orderPets(pets: PetPack[]) {
+  return [...pets].sort(
+    (left, right) =>
+      petSortScore(left) - petSortScore(right) ||
+      left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
+  );
+}
+
 function App() {
   const [state, setState] = usePersistedState();
   const [pets, setPets] = useState<PetPack[]>([fallbackPet]);
@@ -451,9 +480,19 @@ function App() {
   const pulsesRef = useRef<number[]>([]);
   const t = copy[state.language];
 
+  const selectablePets = useMemo(() => orderPets(pets.filter(isSelectablePet)), [pets]);
+  const pickerPets = selectablePets.length ? selectablePets : [fallbackPet];
   const selectedPet = useMemo(
-    () => pets.find((pet) => pet.id === state.selectedPetId) ?? pets[0] ?? fallbackPet,
-    [pets, state.selectedPetId],
+    () =>
+      selectablePets.find((pet) => pet.id === state.selectedPetId) ??
+      selectablePets.find((pet) => pet.id === initialState.selectedPetId) ??
+      selectablePets[0] ??
+      fallbackPet,
+    [selectablePets, state.selectedPetId],
+  );
+  const selectedPetIndex = Math.max(
+    0,
+    selectablePets.findIndex((pet) => pet.id === selectedPet.id),
   );
   const todaySummary = useMemo(
     () => summarizeFocusRecords(state.pomodoro.records, 1),
@@ -508,9 +547,30 @@ function App() {
     });
   }, []);
 
+  const selectPetByIndex = useCallback(
+    (index: number) => {
+      if (!selectablePets.length) return;
+      const wrappedIndex = (index + selectablePets.length) % selectablePets.length;
+      const pet = selectablePets[wrappedIndex];
+      setState((current) => ({ ...current, selectedPetId: pet.id }));
+    },
+    [selectablePets, setState],
+  );
+  const selectNextPet = useCallback(() => {
+    selectPetByIndex(selectedPetIndex + 1);
+  }, [selectPetByIndex, selectedPetIndex]);
+
   useEffect(() => {
     safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
-      if (loaded?.length) setPets(loaded);
+      if (!loaded?.length) return;
+      const orderedPets = orderPets(loaded);
+      setPets(orderedPets);
+      const selectable = orderedPets.filter(isSelectablePet);
+      setState((current) => {
+        if (selectable.some((pet) => pet.id === current.selectedPetId)) return current;
+        const fallback = selectable.find((pet) => pet.id === initialState.selectedPetId) ?? selectable[0];
+        return fallback ? { ...current, selectedPetId: fallback.id } : current;
+      });
     });
     safeInvoke<RuntimeInfo>("runtime_info").then((info) => {
       if (info) setRuntimeInfo(info);
@@ -519,7 +579,7 @@ function App() {
 
   const refreshPets = useCallback(() => {
     return safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
-      if (loaded?.length) setPets(loaded);
+      if (loaded?.length) setPets(orderPets(loaded));
       return loaded ?? null;
     });
   }, []);
@@ -669,6 +729,10 @@ function App() {
   useEffect(() => {
     void safeInvoke("set_pet_always_on_top", { enabled: state.alwaysOnTop });
   }, [state.alwaysOnTop]);
+
+  useEffect(() => {
+    void safeInvoke("set_tray_language", { language: state.language });
+  }, [state.language]);
 
   useEffect(() => {
     const label = `${timerStageLabel} ${secondsToClock(state.pomodoro.remainingSeconds)}`;
@@ -985,6 +1049,7 @@ function App() {
       listen("tray://timer-reset", () => pomodoroAction("reset")),
       listen("tray://timer-skip", () => pomodoroAction("skip")),
       listen("tray://reload-pets", refreshPets),
+      listen("tray://next-pet", selectNextPet),
       listen("tray://toggle-controls", () => {
         setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }));
       }),
@@ -997,7 +1062,7 @@ function App() {
         unlisteners.forEach((unlisten) => unlisten());
       });
     };
-  }, [refreshPets]);
+  }, [refreshPets, selectNextPet]);
 
   const selectPreset = (preset: (typeof pomodoroPresets)[number]) => {
     setState((current) => ({
@@ -1246,19 +1311,40 @@ function App() {
         </button>
 
         <aside className="control-strip">
-          <select
-            value={selectedPet.id}
-            onChange={(event) =>
-              setState((current) => ({ ...current, selectedPetId: event.target.value }))
-            }
-            aria-label={t.petPack}
-          >
-            {pets.map((pet) => (
-              <option key={pet.id} value={pet.id}>
-                {pet.name}
-              </option>
-            ))}
-          </select>
+          <div className="pet-picker">
+            <button
+              type="button"
+              aria-label={t.petPrevious}
+              title={t.petPrevious}
+              disabled={selectablePets.length <= 1}
+              onClick={() => selectPetByIndex(selectedPetIndex - 1)}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <select
+              value={selectedPet.id}
+              onChange={(event) =>
+                setState((current) => ({ ...current, selectedPetId: event.target.value }))
+              }
+              aria-label={t.petPack}
+              title={t.petPack}
+            >
+              {pickerPets.map((pet) => (
+                <option key={pet.id} value={pet.id}>
+                  {pet.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              aria-label={t.petNext}
+              title={t.petNext}
+              disabled={selectablePets.length <= 1}
+              onClick={() => selectPetByIndex(selectedPetIndex + 1)}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
 
           <div className="pet-meta" title={selectedPet.description || selectedPet.name}>
             <div>

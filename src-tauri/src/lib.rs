@@ -1107,37 +1107,85 @@ fn default_state() -> Value {
     })
 }
 
-fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
-    let hide = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
+#[derive(Clone, Copy)]
+struct TrayLabels {
+    show: &'static str,
+    hide: &'static str,
+    timer_toggle: &'static str,
+    timer_reset: &'static str,
+    timer_skip: &'static str,
+    next_pet: &'static str,
+    reload_pets: &'static str,
+    toggle_controls: &'static str,
+    open_resources: &'static str,
+    click_through_off: &'static str,
+    quit: &'static str,
+}
+
+fn tray_labels(language: &str) -> TrayLabels {
+    if language == "en-US" {
+        return TrayLabels {
+            show: "Show",
+            hide: "Hide",
+            timer_toggle: "Start / pause timer",
+            timer_reset: "Reset timer",
+            timer_skip: "Skip timer",
+            next_pet: "Next pet",
+            reload_pets: "Reload pets",
+            toggle_controls: "Toggle controls",
+            open_resources: "Open resources",
+            click_through_off: "Disable click-through",
+            quit: "Quit",
+        };
+    }
+
+    TrayLabels {
+        show: "显示",
+        hide: "隐藏",
+        timer_toggle: "开始 / 暂停计时",
+        timer_reset: "重置计时",
+        timer_skip: "跳过计时",
+        next_pet: "切换角色",
+        reload_pets: "重新加载角色",
+        toggle_controls: "显示 / 隐藏设置",
+        open_resources: "打开资源目录",
+        click_through_off: "关闭点击穿透",
+        quit: "退出",
+    }
+}
+
+fn tray_menu(app: &AppHandle, labels: TrayLabels) -> tauri::Result<Menu<tauri::Wry>> {
+    let show = MenuItem::with_id(app, "show", labels.show, true, None::<&str>)?;
+    let hide = MenuItem::with_id(app, "hide", labels.hide, true, None::<&str>)?;
     let timer_toggle = MenuItem::with_id(
         app,
         "timer_toggle",
-        "Start / pause timer",
+        labels.timer_toggle,
         true,
         None::<&str>,
     )?;
-    let timer_reset = MenuItem::with_id(app, "timer_reset", "Reset timer", true, None::<&str>)?;
-    let timer_skip = MenuItem::with_id(app, "timer_skip", "Skip timer", true, None::<&str>)?;
-    let reload_pets = MenuItem::with_id(app, "reload_pets", "Reload pets", true, None::<&str>)?;
+    let timer_reset = MenuItem::with_id(app, "timer_reset", labels.timer_reset, true, None::<&str>)?;
+    let timer_skip = MenuItem::with_id(app, "timer_skip", labels.timer_skip, true, None::<&str>)?;
+    let next_pet = MenuItem::with_id(app, "next_pet", labels.next_pet, true, None::<&str>)?;
+    let reload_pets = MenuItem::with_id(app, "reload_pets", labels.reload_pets, true, None::<&str>)?;
     let toggle_controls = MenuItem::with_id(
         app,
         "toggle_controls",
-        "Toggle controls",
+        labels.toggle_controls,
         true,
         None::<&str>,
     )?;
     let open_resources =
-        MenuItem::with_id(app, "open_resources", "Open resources", true, None::<&str>)?;
+        MenuItem::with_id(app, "open_resources", labels.open_resources, true, None::<&str>)?;
     let click_through_off = MenuItem::with_id(
         app,
         "click_through_off",
-        "Disable click-through",
+        labels.click_through_off,
         true,
         None::<&str>,
     )?;
-    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(
+    let quit = MenuItem::with_id(app, "quit", labels.quit, true, None::<&str>)?;
+    Menu::with_items(
         app,
         &[
             &show,
@@ -1145,13 +1193,18 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             &timer_toggle,
             &timer_reset,
             &timer_skip,
+            &next_pet,
             &reload_pets,
             &toggle_controls,
             &open_resources,
             &click_through_off,
             &quit,
         ],
-    )?;
+    )
+}
+
+fn build_tray(app: &AppHandle) -> tauri::Result<()> {
+    let menu = tray_menu(app, tray_labels("zh-CN"))?;
 
     let mut tray = TrayIconBuilder::with_id("main")
         .tooltip("Desktop LiveCat")
@@ -1177,6 +1230,9 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             }
             "timer_skip" => {
                 let _ = app.emit("tray://timer-skip", ());
+            }
+            "next_pet" => {
+                let _ = app.emit("tray://next-pet", ());
             }
             "reload_pets" => {
                 let _ = app.emit("tray://reload-pets", ());
@@ -1204,6 +1260,15 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     }
 
     tray.build(app)?;
+    Ok(())
+}
+
+#[tauri::command]
+fn set_tray_language(app: AppHandle, language: String) -> Result<(), String> {
+    let menu = tray_menu(&app, tray_labels(&language)).map_err(|error| error.to_string())?;
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_menu(Some(menu)).map_err(|error| error.to_string())?;
+    }
     Ok(())
 }
 
@@ -1254,6 +1319,7 @@ pub fn run() {
             reveal_pet_pack,
             install_pet_from_path,
             create_spritesheet_draft,
+            set_tray_language,
             set_tray_status
         ])
         .run(tauri::generate_context!())

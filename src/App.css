@@ -56,7 +56,7 @@ input {
 }
 
 .controls-open .live2d-layer {
-  transform: translateX(calc(-82px * var(--pet-scale))) scale(0.9);
+  transform: translateX(calc(-142px * var(--pet-scale))) scale(0.82);
 }
 
 .live2d-canvas {
@@ -685,7 +685,7 @@ input {
 }
 
 .settings-toggle.active {
-  right: 208px;
+  right: 276px;
   background: #ffd6c4;
 }
 
@@ -693,15 +693,21 @@ input {
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 176px;
+  width: 246px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100% - 24px);
   display: grid;
-  gap: 8px;
-  padding: 9px;
+  gap: 7px;
+  padding: 10px;
   border-radius: 8px;
   background: rgba(255, 248, 237, 0.86);
   border: 1px solid rgba(83, 62, 69, 0.12);
   box-shadow: 0 10px 24px rgba(63, 43, 50, 0.13);
   backdrop-filter: blur(14px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   opacity: 0;
   pointer-events: none;
   transform: translateX(10px) scale(0.98);
@@ -723,18 +729,27 @@ input {
   width: 100%;
 }
 
+.pet-picker {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  gap: 6px;
+  align-items: center;
+}
+
 .control-strip select {
-  height: 28px;
+  min-width: 0;
+  height: 32px;
   border: 1px solid rgba(83, 62, 69, 0.16);
   border-radius: 6px;
   background: #fffaf0;
   color: #42323a;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .pet-meta {
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  padding: 2px 1px;
   color: #5a4650;
   font-size: 10px;
 }
@@ -995,7 +1010,7 @@ input {
 
 .control-strip button {
   min-width: 0;
-  height: 30px;
+  height: 32px;
   display: inline-grid;
   place-items: center;
   grid-auto-flow: column;
@@ -1020,7 +1035,7 @@ input {
 }
 
 .preset-row button {
-  font-size: 10px;
+  font-size: 9px;
 }
 
 @keyframes cat-breathe {
