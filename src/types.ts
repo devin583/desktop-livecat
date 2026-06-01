@@ -20,7 +20,14 @@ export type PetAnimationState =
   | "happy"
   | "sleepy"
   | "failed"
-  | "dragged";
+  | "dragged"
+  | "watching_mouse"
+  | "petting"
+  | "feeding"
+  | "playing"
+  | "cleaning"
+  | "praised"
+  | "attention_call";
 
 export type PetActivityState = PetAnimationState;
 
@@ -96,6 +103,8 @@ export type FocusTimerMode = "pomo" | "stopwatch";
 
 export type FocusPanelTab = "timer" | "stats" | "records";
 
+export type ControlPanelTab = "pet" | "interact" | "focus" | "settings";
+
 export type FocusRecord = {
   id: string;
   taskTitle: string;
@@ -153,6 +162,7 @@ export type PomodoroState = {
 export type AppState = {
   selectedPetId: string;
   language: AppLanguage;
+  controlPanelTab: ControlPanelTab;
   scale: number;
   controlsOpen: boolean;
   clickThrough: boolean;
@@ -190,4 +200,11 @@ export type PetMood =
   | "longBreak"
   | "happy"
   | "paused"
-  | "dragged";
+  | "dragged"
+  | "watching_mouse"
+  | "petting"
+  | "feeding"
+  | "playing"
+  | "cleaning"
+  | "praised"
+  | "attention_call";

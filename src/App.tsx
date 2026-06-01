@@ -11,14 +11,20 @@ import { listen } from "@tauri-apps/api/event";
 import {
   BadgeCheck,
   BarChart3,
+  BrushCleaning,
+  Cat,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
   Coffee,
   Eye,
+  Fish,
   FolderOpen,
   Gauge,
+  HandHeart,
+  Heart,
   Info,
+  Joystick,
   Keyboard,
   Languages,
   ListChecks,
@@ -27,6 +33,8 @@ import {
   Play,
   Plus,
   ScrollText,
+  Settings2,
+  Smile,
   Sparkles,
   RefreshCw,
   RotateCcw,
@@ -53,6 +61,7 @@ import { safeInvoke } from "./tauriBridge";
 import type {
   AppState,
   AppLanguage,
+  ControlPanelTab,
   FocusPanelTab,
   FocusRecord,
   FocusTimerMode,
@@ -157,6 +166,28 @@ const copy = {
     break: "休息",
     clickThrough: "预览点击穿透 10 秒",
     controls: "设置",
+    controlPet: "角色",
+    controlInteract: "互动",
+    controlFocus: "专注",
+    controlSettings: "设置",
+    statusIdle: "猫咪空闲",
+    statusTyping: "正在打字",
+    statusWatching: "看着你",
+    statusPetting: "正在被摸",
+    statusFeeding: "吃点东西",
+    statusPlaying: "玩一会儿",
+    statusCleaning: "整理毛毛",
+    statusPraised: "被夸了",
+    statusAttention: "休息提醒",
+    interactPet: "抚摸",
+    interactFeed: "喂食",
+    interactPlay: "玩耍",
+    interactClean: "整理",
+    interactPraise: "夸奖",
+    interactCall: "提醒休息",
+    interactHint: "互动会短暂触发动作，不会打断工作。",
+    compactStatus: "状态",
+    advancedTimer: "高级计时设置",
     currentPet: "打开当前角色",
     disabledKeyboard: "键盘节奏同步已关闭。",
     doneRest: "完成休息",
@@ -217,6 +248,28 @@ const copy = {
     break: "Break",
     clickThrough: "Preview click-through for 10 seconds",
     controls: "Settings",
+    controlPet: "Pet",
+    controlInteract: "Interact",
+    controlFocus: "Focus",
+    controlSettings: "Settings",
+    statusIdle: "Idle cat",
+    statusTyping: "Typing",
+    statusWatching: "Watching",
+    statusPetting: "Petting",
+    statusFeeding: "Feeding",
+    statusPlaying: "Playing",
+    statusCleaning: "Grooming",
+    statusPraised: "Praised",
+    statusAttention: "Break nudge",
+    interactPet: "Pet",
+    interactFeed: "Feed",
+    interactPlay: "Play",
+    interactClean: "Groom",
+    interactPraise: "Praise",
+    interactCall: "Break nudge",
+    interactHint: "Interactions play short motions and stay out of the way.",
+    compactStatus: "Status",
+    advancedTimer: "Advanced timer",
     currentPet: "Open current pet",
     disabledKeyboard: "Keyboard rhythm sync is disabled.",
     doneRest: "Done, rest",
@@ -409,6 +462,13 @@ function activityStateFromMood(
   if (mood === "break" || mood === "longBreak") return "break";
   if (mood === "happy") return "happy";
   if (mood === "dragged") return "dragged";
+  if (mood === "watching_mouse") return "watching_mouse";
+  if (mood === "petting") return "petting";
+  if (mood === "feeding") return "feeding";
+  if (mood === "playing") return "playing";
+  if (mood === "cleaning") return "cleaning";
+  if (mood === "praised") return "praised";
+  if (mood === "attention_call") return "attention_call";
   return "idle";
 }
 
@@ -430,6 +490,21 @@ function rendererLabel(pet: PetPack, language: AppLanguage) {
   if (pet.render_mode === "spritesheet") return "帧动画";
   if (pet.render_mode === "hybrid") return "混合";
   return "Live2D";
+}
+
+function moodStatusLabel(mood: PetMood, language: AppLanguage) {
+  const t = copy[language];
+  if (mood === "typing") return t.statusTyping;
+  if (mood === "watching_mouse") return t.statusWatching;
+  if (mood === "petting") return t.statusPetting;
+  if (mood === "feeding") return t.statusFeeding;
+  if (mood === "playing") return t.statusPlaying;
+  if (mood === "cleaning") return t.statusCleaning;
+  if (mood === "praised" || mood === "happy") return t.statusPraised;
+  if (mood === "attention_call" || mood === "focusEnding") return t.statusAttention;
+  if (mood === "focus") return modeLabel("focus", language);
+  if (mood === "break" || mood === "longBreak") return modeLabel("break", language);
+  return t.statusIdle;
 }
 
 function petOriginLabel(pet: PetPack, language: AppLanguage) {
@@ -466,6 +541,26 @@ function orderPets(pets: PetPack[]) {
   );
 }
 
+type InteractionMood = Extract<
+  PetMood,
+  "petting" | "feeding" | "playing" | "cleaning" | "praised" | "attention_call"
+>;
+
+type ActiveInteraction = {
+  mood: InteractionMood;
+  prop: "fish" | "wand" | "brush" | "heart" | "bell" | null;
+  until: number;
+};
+
+const interactionDurationMs: Record<InteractionMood, number> = {
+  petting: 3200,
+  feeding: 4600,
+  playing: 4800,
+  cleaning: 3600,
+  praised: 2800,
+  attention_call: 4200,
+};
+
 function App() {
   const [state, setState] = usePersistedState();
   const [pets, setPets] = useState<PetPack[]>([fallbackPet]);
@@ -487,10 +582,15 @@ function App() {
   const [lastTapSide, setLastTapSide] = useState<"left" | "right">("left");
   const [typingRate, setTypingRate] = useState(0);
   const [look, setLook] = useState({ x: 0, y: 0 });
+  const [lastMouseActivity, setLastMouseActivity] = useState(0);
+  const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
   const [dragged, setDragged] = useState(false);
   const [installInput, setInstallInput] = useState("");
   const [installStatus, setInstallStatus] = useState("");
   const pulsesRef = useRef<number[]>([]);
+  const lookThrottleRef = useRef(0);
+  const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
+  const interactionTimeoutRef = useRef<number | null>(null);
   const t = copy[state.language];
 
   const selectablePets = useMemo(() => orderPets(pets.filter(isSelectablePet)), [pets]);
@@ -637,6 +737,15 @@ function App() {
     }, 220);
     return () => window.clearInterval(interval);
   }, [lastTypingPulse]);
+
+  useEffect(() => {
+    if (!lastMouseActivity) return undefined;
+    const timeout = window.setTimeout(() => {
+      setLook({ x: 0, y: 0 });
+      setLastMouseActivity(0);
+    }, 1500);
+    return () => window.clearTimeout(timeout);
+  }, [lastMouseActivity]);
 
   useEffect(() => {
     if (!state.pomodoro.running) return;
@@ -1169,18 +1278,62 @@ function App() {
     });
   };
 
+  const triggerInteraction = useCallback((mood: InteractionMood, prop: ActiveInteraction["prop"]) => {
+    if (interactionTimeoutRef.current) {
+      window.clearTimeout(interactionTimeoutRef.current);
+    }
+    setActiveInteraction({
+      mood,
+      prop,
+      until: Date.now() + interactionDurationMs[mood],
+    });
+    interactionTimeoutRef.current = window.setTimeout(() => {
+      setActiveInteraction(null);
+      interactionTimeoutRef.current = null;
+    }, interactionDurationMs[mood]);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
+    },
+    [],
+  );
+
   const updateLook = (event: PointerEvent<HTMLElement>) => {
+    const now = Date.now();
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
-    setLook({
-      x: Math.max(-1, Math.min(1, x)),
-      y: Math.max(-1, Math.min(1, y)),
-    });
+    const boundedX = Math.max(-1, Math.min(1, x));
+    const boundedY = Math.max(-1, Math.min(1, y));
+    const throttleMs = state.lowPower || document.hidden ? 110 : 34;
+    if (now - lookThrottleRef.current >= throttleMs) {
+      lookThrottleRef.current = now;
+      setLastMouseActivity(now);
+      setLook({
+        x: boundedX,
+        y: boundedY,
+      });
+    }
+
+    if (!state.lowPower && boundedY > -0.35 && boundedY < 0.42 && Math.abs(boundedX) < 0.62) {
+      const previous = pettingRef.current;
+      const fresh = now - previous.at < 900;
+      const dx = fresh ? boundedX - previous.x : 0;
+      const dy = fresh ? boundedY - previous.y : 0;
+      const distance = (fresh ? previous.distance : 0) + Math.hypot(dx, dy);
+      pettingRef.current = { at: now, x: boundedX, y: boundedY, distance };
+      if (distance > 0.55 && activeInteraction?.mood !== "petting") {
+        pettingRef.current.distance = 0;
+        triggerInteraction("petting", "heart");
+      }
+    }
   };
 
   const isTyping = Date.now() - lastTypingPulse < 1200;
   const activeTapSide = Date.now() - lastTypingPulse < 220 ? lastTapSide : null;
+  const watchingMouse = !state.lowPower && Date.now() - lastMouseActivity < 1500;
   const focusEnding =
     state.pomodoro.running &&
     state.pomodoro.focusMode === "pomo" &&
@@ -1188,6 +1341,8 @@ function App() {
     state.pomodoro.remainingSeconds <= 60;
   const petMood: PetMood = dragged
     ? "dragged"
+    : activeInteraction && activeInteraction.until > Date.now()
+    ? activeInteraction.mood
     : isTyping
     ? "typing"
     : state.pomodoro.completionReview
@@ -1200,8 +1355,10 @@ function App() {
         ? "longBreak"
         : state.pomodoro.mode === "break"
         ? "break"
-        : state.pomodoro.remainingSeconds !== resetPomodoroDuration(state.pomodoro)
+    : state.pomodoro.remainingSeconds !== resetPomodoroDuration(state.pomodoro)
           ? "paused"
+          : watchingMouse
+            ? "watching_mouse"
           : "idle";
   const activityState = activityStateFromMood(petMood, activeTapSide);
   const showSpritesheet = !spriteAssetFailed && shouldRenderSpritesheet(selectedPet, activityState);
@@ -1309,6 +1466,24 @@ function App() {
               </div>
             </div>
           )}
+          {activeInteraction?.prop ? (
+            <div className={`interaction-prop prop-${activeInteraction.prop}`} aria-hidden="true">
+              {activeInteraction.prop === "fish"
+                ? "><>"
+                : activeInteraction.prop === "wand"
+                  ? "*"
+                  : activeInteraction.prop === "brush"
+                    ? "///"
+                    : activeInteraction.prop === "bell"
+                      ? "!"
+                      : "love"}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="status-capsule" title={`${t.compactStatus}: ${moodStatusLabel(petMood, state.language)}`}>
+          <span>{moodStatusLabel(petMood, state.language)}</span>
+          <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
         </div>
 
         <button
@@ -1324,6 +1499,33 @@ function App() {
         </button>
 
         <aside className="control-strip">
+          <div className="control-tabs" role="tablist" aria-label={t.controls}>
+            {[
+              ["pet", Cat, t.controlPet],
+              ["interact", HandHeart, t.controlInteract],
+              ["focus", TimerReset, t.controlFocus],
+              ["settings", Settings2, t.controlSettings],
+            ].map(([tab, Icon, label]) => {
+              const typedTab = tab as ControlPanelTab;
+              const TabIcon = Icon as typeof Cat;
+              return (
+                <button
+                  key={typedTab}
+                  type="button"
+                  className={state.controlPanelTab === typedTab ? "active" : ""}
+                  aria-label={label as string}
+                  title={label as string}
+                  onClick={() => setState((current) => ({ ...current, controlPanelTab: typedTab }))}
+                >
+                  <TabIcon size={15} />
+                  <span>{label as string}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {state.controlPanelTab === "pet" ? (
+            <>
           <div className="pet-picker-header">
             <span>{t.petPack}</span>
             <b title={t.petPosition}>
@@ -1375,7 +1577,11 @@ function App() {
               <b>{artistStatusLabel(selectedPet.artist_status, state.language)}</b>
             </div>
           </div>
+            </>
+          ) : null}
 
+          {state.controlPanelTab === "settings" ? (
+            <>
           <div className="icon-row">
             <button
               type="button"
@@ -1514,7 +1720,67 @@ function App() {
               setState((current) => ({ ...current, scale: Number(event.target.value) }))
             }
           />
+            </>
+          ) : null}
 
+          {state.controlPanelTab === "interact" ? (
+            <div className="interaction-panel">
+              <div className="interaction-hint">{t.interactHint}</div>
+              <div className="interaction-grid">
+                <button
+                  type="button"
+                  title={t.interactPet}
+                  onClick={() => triggerInteraction("petting", "heart")}
+                >
+                  <HandHeart size={16} />
+                  <span>{t.interactPet}</span>
+                </button>
+                <button
+                  type="button"
+                  title={t.interactFeed}
+                  onClick={() => triggerInteraction("feeding", "fish")}
+                >
+                  <Fish size={16} />
+                  <span>{t.interactFeed}</span>
+                </button>
+                <button
+                  type="button"
+                  title={t.interactPlay}
+                  onClick={() => triggerInteraction("playing", "wand")}
+                >
+                  <Joystick size={16} />
+                  <span>{t.interactPlay}</span>
+                </button>
+                <button
+                  type="button"
+                  title={t.interactClean}
+                  onClick={() => triggerInteraction("cleaning", "brush")}
+                >
+                  <BrushCleaning size={16} />
+                  <span>{t.interactClean}</span>
+                </button>
+                <button
+                  type="button"
+                  title={t.interactPraise}
+                  onClick={() => triggerInteraction("praised", "heart")}
+                >
+                  <Heart size={16} />
+                  <span>{t.interactPraise}</span>
+                </button>
+                <button
+                  type="button"
+                  title={t.interactCall}
+                  onClick={() => triggerInteraction("attention_call", "bell")}
+                >
+                  <Smile size={16} />
+                  <span>{t.interactCall}</span>
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {state.controlPanelTab === "focus" ? (
+            <>
           <div className="focus-tabs">
             <button
               type="button"
@@ -1835,6 +2101,8 @@ function App() {
               )}
             </div>
           )}
+            </>
+          ) : null}
         </aside>
       </section>
     </main>

@@ -72,6 +72,7 @@ export const initialPomodoro: PomodoroState = {
 export const initialState: AppState = {
   selectedPetId: "orange-tabby-keyboard",
   language: "zh-CN",
+  controlPanelTab: "interact",
   scale: 0.92,
   controlsOpen: false,
   clickThrough: false,
@@ -130,6 +131,9 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   next.pomodoro.panelTab = normalizePanelTab(next.pomodoro.panelTab) ?? "timer";
   if (!["zh-CN", "en-US"].includes(next.language)) {
     next.language = "zh-CN";
+  }
+  if (!["pet", "interact", "focus", "settings"].includes(next.controlPanelTab)) {
+    next.controlPanelTab = "interact";
   }
 
   next.scale = Math.min(1.4, Math.max(0.65, Number(next.scale) || 1));

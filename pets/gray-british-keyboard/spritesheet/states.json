@@ -306,5 +306,131 @@
       }
     ],
     "loopStartIndex": 0
+  },
+  "watching_mouse": {
+    "frames": [
+      {
+        "row": 0,
+        "column": 0,
+        "durationMs": 1600
+      },
+      {
+        "row": 0,
+        "column": 5,
+        "durationMs": 320
+      }
+    ],
+    "loopStartIndex": 0
+  },
+  "petting": {
+    "frames": [
+      {
+        "row": 6,
+        "column": 2,
+        "durationMs": 360
+      },
+      {
+        "row": 6,
+        "column": 3,
+        "durationMs": 420
+      },
+      {
+        "row": 6,
+        "column": 4,
+        "durationMs": 520
+      }
+    ],
+    "loopStartIndex": 0,
+    "fallback": "happy"
+  },
+  "feeding": {
+    "frames": [
+      {
+        "row": 3,
+        "column": 0,
+        "durationMs": 520
+      },
+      {
+        "row": 6,
+        "column": 5,
+        "durationMs": 620
+      }
+    ],
+    "loopStartIndex": 0,
+    "fallback": "happy"
+  },
+  "playing": {
+    "frames": [
+      {
+        "row": 6,
+        "column": 0,
+        "durationMs": 300
+      },
+      {
+        "row": 6,
+        "column": 1,
+        "durationMs": 260
+      },
+      {
+        "row": 6,
+        "column": 2,
+        "durationMs": 300
+      }
+    ],
+    "loopStartIndex": 0,
+    "fallback": "happy"
+  },
+  "cleaning": {
+    "frames": [
+      {
+        "row": 4,
+        "column": 0,
+        "durationMs": 700
+      },
+      {
+        "row": 4,
+        "column": 2,
+        "durationMs": 720
+      }
+    ],
+    "loopStartIndex": 0,
+    "fallback": "focus"
+  },
+  "praised": {
+    "frames": [
+      {
+        "row": 6,
+        "column": 0,
+        "durationMs": 280
+      },
+      {
+        "row": 6,
+        "column": 6,
+        "durationMs": 680
+      }
+    ],
+    "loopStartIndex": 0,
+    "fallback": "happy"
+  },
+  "attention_call": {
+    "frames": [
+      {
+        "row": 5,
+        "column": 1,
+        "durationMs": 520
+      },
+      {
+        "row": 5,
+        "column": 3,
+        "durationMs": 740
+      },
+      {
+        "row": 5,
+        "column": 4,
+        "durationMs": 900
+      }
+    ],
+    "loopStartIndex": 0,
+    "fallback": "break"
   }
 }

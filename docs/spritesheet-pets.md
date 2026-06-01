@@ -53,6 +53,12 @@ Cell: `192 x 208`.
 | 7 | `sleepy` | slow blink or low-energy idle |
 | 8 | `failed` / `dragged` | surprise, squashed, or recovery pose |
 
+Extended interaction states are also supported: `watching_mouse`, `petting`,
+`feeding`, `playing`, `cleaning`, `praised`, and `attention_call`. A pack can map
+them to dedicated frames or conservative fallbacks such as `idle`, `happy`,
+`focus`, or `break`. The runtime must never disappear just because an older pack
+does not provide these states.
+
 The keyboard effect should be pose-driven. Draw a recognizable computer
 keyboard, not a row of plain blocks: include row offsets, keycap separation, a
 spacebar, and left/right home-key clusters. Do not rely on moving a paw layer

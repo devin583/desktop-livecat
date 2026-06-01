@@ -473,14 +473,15 @@ fn hydrate_spritesheet(pack_dir: &Path, spritesheet: Option<Value>) -> Option<Va
         return Some(sheet);
     };
 
-    let mut states = file_states;
-    if let (Some(states_object), Some(inline_object)) = (
-        states.as_object_mut(),
-        sheet_object
-            .get("states")
-            .and_then(|value| value.as_object()),
-    ) {
-        for (name, state) in inline_object {
+    let mut states = sheet_object
+        .get("states")
+        .cloned()
+        .filter(|value| value.is_object())
+        .unwrap_or_else(|| serde_json::json!({}));
+    if let (Some(states_object), Some(file_object)) =
+        (states.as_object_mut(), file_states.as_object())
+    {
+        for (name, state) in file_object {
             states_object.insert(name.clone(), state.clone());
         }
     }
@@ -893,7 +894,14 @@ fn default_spritesheet_states() -> Value {
         "happy": state_frames(6, 6, 0, Some(0), None),
         "sleepy": state_frames(7, 6, 0, Some(0), None),
         "failed": state_frames(8, 6, 0, None, Some("idle")),
-        "dragged": state_frames(8, 6, 0, Some(0), None)
+        "dragged": state_frames(8, 6, 0, Some(0), None),
+        "watching_mouse": state_frames(0, 1, 0, Some(0), None),
+        "petting": state_frames(6, 2, 0, Some(0), Some("happy")),
+        "feeding": state_frames(6, 2, 2, Some(0), Some("happy")),
+        "playing": state_frames(6, 3, 0, Some(0), Some("happy")),
+        "cleaning": state_frames(4, 1, 0, Some(0), Some("focus")),
+        "praised": state_frames(6, 2, 4, Some(0), Some("happy")),
+        "attention_call": state_frames(5, 2, 0, Some(0), Some("break"))
     })
 }
 

@@ -1,3 +1,5 @@
+import type { PetMood } from "./types";
+
 export type Live2DRuntimeProbe = {
   renderer: "cubism-web-sdk" | "fallback-css";
   modelAvailable: boolean;
@@ -74,16 +76,7 @@ export function buildLive2DParameters(input: {
   lookY: number;
   typingRate: number;
   tapSide: "left" | "right" | null;
-  mood:
-    | "idle"
-    | "typing"
-    | "focus"
-    | "focusEnding"
-    | "break"
-    | "longBreak"
-    | "happy"
-    | "paused"
-    | "dragged";
+  mood: PetMood;
   now: number;
 }): Live2DParameterFrame {
   const breath = (Math.sin(input.now / 680) + 1) / 2;

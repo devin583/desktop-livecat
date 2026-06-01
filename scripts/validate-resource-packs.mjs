@@ -20,6 +20,13 @@ const animationStates = new Set([
   "sleepy",
   "failed",
   "dragged",
+  "watching_mouse",
+  "petting",
+  "feeding",
+  "playing",
+  "cleaning",
+  "praised",
+  "attention_call",
 ]);
 const imageExtensions = new Set([".png", ".webp", ".jpg", ".jpeg", ".svg"]);
 
