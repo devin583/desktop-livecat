@@ -404,7 +404,7 @@ function activityStateFromMood(
 ): PetAnimationState {
   if (mood === "typing" && tapSide === "left") return "tap_left";
   if (mood === "typing" && tapSide === "right") return "tap_right";
-  if (mood === "typing") return "typing";
+  if (mood === "typing") return "idle";
   if (mood === "focus" || mood === "focusEnding") return "focus";
   if (mood === "break" || mood === "longBreak") return "break";
   if (mood === "happy") return "happy";
@@ -1180,7 +1180,7 @@ function App() {
   };
 
   const isTyping = Date.now() - lastTypingPulse < 1200;
-  const activeTapSide = Date.now() - lastTypingPulse < 170 ? lastTapSide : null;
+  const activeTapSide = Date.now() - lastTypingPulse < 220 ? lastTapSide : null;
   const focusEnding =
     state.pomodoro.running &&
     state.pomodoro.focusMode === "pomo" &&

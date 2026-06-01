@@ -1,7 +1,7 @@
 {
   "id": "gray-british-keyboard",
   "name": "英短键盘 Gray British",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "artist": "User supplied via ChatGPT Image",
   "description": "User-supplied gray British-style keyboard cat spritesheet, cleaned into a local transparent resource pack.",
   "preview": "preview/preview.png",
@@ -447,7 +447,7 @@
     "storesKeyValues": false
   },
   "artistWorkflow": {
-    "status": "source-ready",
+    "status": "runtime-ready",
     "brief": "artist/spritesheet-handoff.md",
     "checklist": "artist/artist-checklist.md",
     "primarySource": "source/original-grid.png",

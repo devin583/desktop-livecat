@@ -4,37 +4,37 @@
       {
         "row": 0,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 3600
       },
       {
         "row": 0,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 220
       },
       {
         "row": 0,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 180
       },
       {
         "row": 0,
-        "column": 3,
-        "durationMs": 115
+        "column": 1,
+        "durationMs": 240
       },
       {
         "row": 0,
-        "column": 4,
-        "durationMs": 115
+        "column": 0,
+        "durationMs": 4200
       },
       {
         "row": 0,
         "column": 5,
-        "durationMs": 115
+        "durationMs": 320
       },
       {
         "row": 0,
         "column": 6,
-        "durationMs": 220
+        "durationMs": 1200
       }
     ],
     "loopStartIndex": 0
@@ -44,119 +44,59 @@
       {
         "row": 1,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 50
       },
       {
         "row": 1,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 55
       },
       {
         "row": 1,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 70
       },
       {
         "row": 1,
         "column": 3,
-        "durationMs": 115
-      },
-      {
-        "row": 1,
-        "column": 4,
-        "durationMs": 115
-      },
-      {
-        "row": 1,
-        "column": 5,
-        "durationMs": 115
-      },
-      {
-        "row": 1,
-        "column": 6,
-        "durationMs": 220
+        "durationMs": 120
       }
     ],
     "loopStartIndex": null,
-    "fallback": "typing"
+    "fallback": "idle"
   },
   "tap_right": {
     "frames": [
       {
         "row": 2,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 50
       },
       {
         "row": 2,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 55
       },
       {
         "row": 2,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 70
       },
       {
         "row": 2,
         "column": 3,
-        "durationMs": 115
-      },
-      {
-        "row": 2,
-        "column": 4,
-        "durationMs": 115
-      },
-      {
-        "row": 2,
-        "column": 5,
-        "durationMs": 115
-      },
-      {
-        "row": 2,
-        "column": 6,
-        "durationMs": 220
+        "durationMs": 120
       }
     ],
     "loopStartIndex": null,
-    "fallback": "typing"
+    "fallback": "idle"
   },
   "typing": {
     "frames": [
       {
         "row": 3,
         "column": 0,
-        "durationMs": 115
-      },
-      {
-        "row": 3,
-        "column": 1,
-        "durationMs": 115
-      },
-      {
-        "row": 3,
-        "column": 2,
-        "durationMs": 115
-      },
-      {
-        "row": 3,
-        "column": 3,
-        "durationMs": 115
-      },
-      {
-        "row": 3,
-        "column": 4,
-        "durationMs": 115
-      },
-      {
-        "row": 3,
-        "column": 5,
-        "durationMs": 115
-      },
-      {
-        "row": 3,
-        "column": 6,
-        "durationMs": 220
+        "durationMs": 900
       }
     ],
     "loopStartIndex": 0
@@ -166,37 +106,37 @@
       {
         "row": 4,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 1600
       },
       {
         "row": 4,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 520
       },
       {
         "row": 4,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 900
       },
       {
         "row": 4,
         "column": 3,
-        "durationMs": 115
+        "durationMs": 1400
       },
       {
         "row": 4,
         "column": 4,
-        "durationMs": 115
+        "durationMs": 650
       },
       {
         "row": 4,
         "column": 5,
-        "durationMs": 115
+        "durationMs": 1500
       },
       {
         "row": 4,
         "column": 6,
-        "durationMs": 220
+        "durationMs": 900
       }
     ],
     "loopStartIndex": 0
@@ -206,37 +146,37 @@
       {
         "row": 5,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 1300
       },
       {
         "row": 5,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 850
       },
       {
         "row": 5,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 1200
       },
       {
         "row": 5,
         "column": 3,
-        "durationMs": 115
+        "durationMs": 900
       },
       {
         "row": 5,
         "column": 4,
-        "durationMs": 115
+        "durationMs": 1600
       },
       {
         "row": 5,
         "column": 5,
-        "durationMs": 115
+        "durationMs": 1300
       },
       {
         "row": 5,
         "column": 6,
-        "durationMs": 220
+        "durationMs": 1500
       }
     ],
     "loopStartIndex": 0
@@ -246,37 +186,37 @@
       {
         "row": 6,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 360
       },
       {
         "row": 6,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 220
       },
       {
         "row": 6,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 220
       },
       {
         "row": 6,
         "column": 3,
-        "durationMs": 115
+        "durationMs": 260
       },
       {
         "row": 6,
         "column": 4,
-        "durationMs": 115
+        "durationMs": 320
       },
       {
         "row": 6,
         "column": 5,
-        "durationMs": 115
+        "durationMs": 400
       },
       {
         "row": 6,
         "column": 6,
-        "durationMs": 220
+        "durationMs": 900
       }
     ],
     "loopStartIndex": 0
@@ -286,37 +226,37 @@
       {
         "row": 7,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 1800
       },
       {
         "row": 7,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 1000
       },
       {
         "row": 7,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 1600
       },
       {
         "row": 7,
         "column": 3,
-        "durationMs": 115
+        "durationMs": 900
       },
       {
         "row": 7,
         "column": 4,
-        "durationMs": 115
+        "durationMs": 1800
       },
       {
         "row": 7,
         "column": 5,
-        "durationMs": 115
+        "durationMs": 2200
       },
       {
         "row": 7,
         "column": 6,
-        "durationMs": 220
+        "durationMs": 1600
       }
     ],
     "loopStartIndex": 0
@@ -326,37 +266,22 @@
       {
         "row": 8,
         "column": 0,
-        "durationMs": 115
+        "durationMs": 240
       },
       {
         "row": 8,
         "column": 1,
-        "durationMs": 115
+        "durationMs": 260
       },
       {
         "row": 8,
         "column": 2,
-        "durationMs": 115
+        "durationMs": 320
       },
       {
         "row": 8,
         "column": 3,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
-        "column": 4,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
-        "column": 5,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
-        "column": 6,
-        "durationMs": 220
+        "durationMs": 800
       }
     ],
     "loopStartIndex": null,
@@ -366,38 +291,18 @@
     "frames": [
       {
         "row": 8,
-        "column": 0,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
-        "column": 1,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
-        "column": 2,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
-        "column": 3,
-        "durationMs": 115
-      },
-      {
-        "row": 8,
         "column": 4,
-        "durationMs": 115
+        "durationMs": 700
       },
       {
         "row": 8,
         "column": 5,
-        "durationMs": 115
+        "durationMs": 720
       },
       {
         "row": 8,
         "column": 6,
-        "durationMs": 220
+        "durationMs": 900
       }
     ],
     "loopStartIndex": 0

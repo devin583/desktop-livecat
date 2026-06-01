@@ -92,7 +92,7 @@ input {
   overflow: hidden;
   filter: drop-shadow(0 18px 18px rgba(43, 34, 42, 0.24));
   transform-origin: bottom center;
-  animation: sprite-breathe 3.2s ease-in-out infinite;
+  animation: sprite-breathe 7.5s ease-in-out infinite;
 }
 
 .spritesheet-image {
@@ -115,7 +115,7 @@ input {
 
 .mood-focus .spritesheet-pet,
 .mood-focusEnding .spritesheet-pet {
-  animation-duration: 5.6s;
+  animation-duration: 9s;
 }
 
 .mood-break .spritesheet-pet,
@@ -1077,7 +1077,7 @@ input {
     transform: translateY(0) scaleY(1);
   }
   50% {
-    transform: translateY(3px) scaleY(0.99);
+    transform: translateY(1.5px) scaleY(0.996);
   }
 }
 
