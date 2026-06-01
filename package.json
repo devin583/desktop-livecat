@@ -1,12 +1,12 @@
 {
   "name": "desktop-livecat",
   "private": true,
-  "version": "0.7.3",
+  "version": "0.7.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "check": "npm run validate:pets && npm run build",
+    "check": "npm run validate:pets && npm run validate:runtime && npm run build",
     "preview": "vite preview",
     "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
     "generate:spritesheet-assets": "node scripts/generate-spritesheet-assets.mjs",
@@ -19,6 +19,7 @@
     "package:portable": "node scripts/package-portable.mjs",
     "verify:portable": "node scripts/verify-portable-archives.mjs",
     "validate:pets": "node scripts/validate-resource-packs.mjs",
+    "validate:runtime": "node scripts/validate-runtime-config.mjs",
     "validate:artist": "node scripts/validate-resource-packs.mjs --artist"
   },
   "dependencies": {
