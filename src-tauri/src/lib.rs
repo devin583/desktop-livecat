@@ -1,10 +1,11 @@
 mod keyboard_sync;
 
+use base64::{engine::general_purpose, Engine as _};
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
     process::Command,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -150,6 +151,24 @@ fn reveal_pet_pack(app: AppHandle, pet_id: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn read_pet_asset_data_url(
+    app: AppHandle,
+    pet_id: String,
+    relative_path: String,
+) -> Result<String, String> {
+    let pack_dir =
+        find_pet_pack_dir(&app, &pet_id).ok_or_else(|| format!("Pet pack not found: {pet_id}"))?;
+    let asset_path = resolve_pet_asset_path(&pack_dir, &relative_path)?;
+    let mime = image_mime(&asset_path)
+        .ok_or_else(|| format!("Unsupported pet asset type: {relative_path}"))?;
+    let bytes = fs::read(&asset_path).map_err(|error| error.to_string())?;
+    Ok(format!(
+        "data:{mime};base64,{}",
+        general_purpose::STANDARD.encode(bytes)
+    ))
+}
+
+#[tauri::command]
 fn install_pet_from_path(app: AppHandle, source_path: String) -> Result<PetPack, String> {
     let source = PathBuf::from(source_path.trim());
     if !source.exists() {
@@ -234,6 +253,71 @@ fn writable_pet_root(app: &AppHandle) -> PathBuf {
     }
 
     PathBuf::from("pets")
+}
+
+fn find_pet_pack_dir(app: &AppHandle, pet_id: &str) -> Option<PathBuf> {
+    for root in pet_roots(app) {
+        let direct = root.join(pet_id);
+        if direct.join("manifest.json").is_file()
+            && read_pet_pack(&direct).is_some_and(|pack| pack.id == pet_id)
+        {
+            return Some(direct);
+        }
+
+        let Ok(entries) = fs::read_dir(&root) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() || !path.join("manifest.json").is_file() {
+                continue;
+            }
+            if read_pet_pack(&path).is_some_and(|pack| pack.id == pet_id) {
+                return Some(path);
+            }
+        }
+    }
+
+    None
+}
+
+fn resolve_pet_asset_path(pack_dir: &Path, relative_path: &str) -> Result<PathBuf, String> {
+    let relative = Path::new(relative_path.trim());
+    if relative.as_os_str().is_empty() {
+        return Err("Pet asset path is empty.".into());
+    }
+    if relative
+        .components()
+        .any(|component| !matches!(component, Component::Normal(_) | Component::CurDir))
+    {
+        return Err("Pet asset path must stay inside the pet pack.".into());
+    }
+
+    let pack_root = pack_dir.canonicalize().map_err(|error| error.to_string())?;
+    let asset = pack_root
+        .join(relative)
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    if !asset.starts_with(&pack_root) {
+        return Err("Pet asset path escapes the pet pack.".into());
+    }
+
+    Ok(asset)
+}
+
+fn image_mime(path: &Path) -> Option<&'static str> {
+    match path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| extension.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("png") => Some("image/png"),
+        Some("webp") => Some("image/webp"),
+        Some("jpg") | Some("jpeg") => Some("image/jpeg"),
+        Some("svg") => Some("image/svg+xml"),
+        _ => None,
+    }
 }
 
 fn collect_pet_packs(root: &Path, packs: &mut Vec<PetPack>) {
@@ -1157,17 +1241,14 @@ fn tray_labels(language: &str) -> TrayLabels {
 fn tray_menu(app: &AppHandle, labels: TrayLabels) -> tauri::Result<Menu<tauri::Wry>> {
     let show = MenuItem::with_id(app, "show", labels.show, true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", labels.hide, true, None::<&str>)?;
-    let timer_toggle = MenuItem::with_id(
-        app,
-        "timer_toggle",
-        labels.timer_toggle,
-        true,
-        None::<&str>,
-    )?;
-    let timer_reset = MenuItem::with_id(app, "timer_reset", labels.timer_reset, true, None::<&str>)?;
+    let timer_toggle =
+        MenuItem::with_id(app, "timer_toggle", labels.timer_toggle, true, None::<&str>)?;
+    let timer_reset =
+        MenuItem::with_id(app, "timer_reset", labels.timer_reset, true, None::<&str>)?;
     let timer_skip = MenuItem::with_id(app, "timer_skip", labels.timer_skip, true, None::<&str>)?;
     let next_pet = MenuItem::with_id(app, "next_pet", labels.next_pet, true, None::<&str>)?;
-    let reload_pets = MenuItem::with_id(app, "reload_pets", labels.reload_pets, true, None::<&str>)?;
+    let reload_pets =
+        MenuItem::with_id(app, "reload_pets", labels.reload_pets, true, None::<&str>)?;
     let toggle_controls = MenuItem::with_id(
         app,
         "toggle_controls",
@@ -1175,8 +1256,13 @@ fn tray_menu(app: &AppHandle, labels: TrayLabels) -> tauri::Result<Menu<tauri::W
         true,
         None::<&str>,
     )?;
-    let open_resources =
-        MenuItem::with_id(app, "open_resources", labels.open_resources, true, None::<&str>)?;
+    let open_resources = MenuItem::with_id(
+        app,
+        "open_resources",
+        labels.open_resources,
+        true,
+        None::<&str>,
+    )?;
     let click_through_off = MenuItem::with_id(
         app,
         "click_through_off",
@@ -1267,7 +1353,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
 fn set_tray_language(app: AppHandle, language: String) -> Result<(), String> {
     let menu = tray_menu(&app, tray_labels(&language)).map_err(|error| error.to_string())?;
     if let Some(tray) = app.tray_by_id("main") {
-        tray.set_menu(Some(menu)).map_err(|error| error.to_string())?;
+        tray.set_menu(Some(menu))
+            .map_err(|error| error.to_string())?;
     }
     Ok(())
 }
@@ -1317,6 +1404,7 @@ pub fn run() {
             runtime_info,
             reveal_resources,
             reveal_pet_pack,
+            read_pet_asset_data_url,
             install_pet_from_path,
             create_spritesheet_draft,
             set_tray_language,

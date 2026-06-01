@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { safeInvoke } from "./tauriBridge";
 import type {
   PetAnimationState,
   PetPack,
@@ -27,6 +28,7 @@ export function SpritesheetPet({
   pet,
 }: SpritesheetPetProps) {
   const sprite = pet.spritesheet;
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [frame, setFrame] = useState<PetSpritesheetFrame>(() =>
     firstFrame(resolveState(sprite?.states.idle)),
   );
@@ -34,6 +36,29 @@ export function SpritesheetPet({
     () => resolveAnimationState(sprite, animationState),
     [animationState, sprite],
   );
+
+  useEffect(() => {
+    if (!sprite?.image) {
+      setImageUrl(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const fallbackUrl = resolvePackAssetUrl(pet, sprite.image);
+    setImageUrl(null);
+
+    safeInvoke<string>("read_pet_asset_data_url", {
+      petId: pet.id,
+      relativePath: sprite.image,
+    }).then((dataUrl) => {
+      if (cancelled) return;
+      setImageUrl(dataUrl ?? fallbackUrl);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pet.id, pet.source, sprite?.image]);
 
   useEffect(() => {
     let frames = stateSpec.frames.length ? stateSpec.frames : [{ row: 0, column: 0 }];
@@ -83,7 +108,6 @@ export function SpritesheetPet({
 
   if (!sprite) return null;
 
-  const imageUrl = resolvePackAssetUrl(pet, sprite.image);
   const columns = Math.max(1, sprite.columns);
   const rows = Math.max(1, sprite.rows);
   const column = clampFrameIndex(frame.column, columns);
@@ -106,15 +130,17 @@ export function SpritesheetPet({
         } as CSSProperties
       }
     >
-      <img
-        alt=""
-        aria-hidden="true"
-        className="spritesheet-image"
-        draggable={false}
-        src={imageUrl}
-        onError={() => onAssetError?.(pet.id, imageUrl)}
-        onLoad={() => onAssetLoad?.(pet.id)}
-      />
+      {imageUrl && (
+        <img
+          alt=""
+          aria-hidden="true"
+          className="spritesheet-image"
+          draggable={false}
+          src={imageUrl}
+          onError={() => onAssetError?.(pet.id, imageUrl)}
+          onLoad={() => onAssetLoad?.(pet.id)}
+        />
+      )}
     </div>
   );
 }
