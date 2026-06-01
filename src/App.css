@@ -112,6 +112,10 @@ input {
   animation: sprite-break 3.6s ease-in-out infinite;
 }
 
+.mood-happy .spritesheet-pet {
+  animation: sprite-happy 1.15s ease-in-out infinite;
+}
+
 .body {
   position: absolute;
   left: 50%;
@@ -603,6 +607,24 @@ input {
   transform: translateY(calc(5px * var(--pet-scale))) scaleY(0.45);
 }
 
+.mood-happy .cat {
+  animation: cat-happy 1.2s ease-in-out infinite;
+}
+
+.mood-happy .tail {
+  animation-duration: 1.1s;
+}
+
+.mood-happy .paw-left {
+  bottom: calc(78px * var(--pet-scale));
+  transform: rotate(-16deg);
+}
+
+.mood-happy .paw-right {
+  bottom: calc(78px * var(--pet-scale));
+  transform: rotate(16deg);
+}
+
 .mood-paused .cat {
   animation-play-state: paused;
 }
@@ -726,6 +748,11 @@ input {
 .icon-row,
 .timer-controls,
 .preset-row,
+.focus-tabs,
+.focus-mode-row,
+.review-actions,
+.focus-stat-grid,
+.records-list,
 .toggle-row,
 .stats-row {
   display: grid;
@@ -771,6 +798,14 @@ input {
 
 .timer-controls {
   grid-template-columns: repeat(3, 1fr);
+}
+
+.focus-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.focus-mode-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .preset-row {
@@ -835,6 +870,118 @@ input {
   text-align: center;
 }
 
+.review-card {
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid rgba(137, 79, 86, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 247, 231, 0.78);
+  color: #4c3a42;
+}
+
+.review-card > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.review-card b,
+.record-row b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.review-card span,
+.record-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #71545e;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.review-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.focus-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.focus-stat-grid div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  padding: 7px 5px;
+  border-radius: 7px;
+  background: rgba(255, 250, 240, 0.72);
+  color: #4c3a42;
+  text-align: center;
+}
+
+.focus-stat-grid span,
+.focus-stat-grid small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #71545e;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+.focus-stat-grid b {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.records-list {
+  gap: 5px;
+}
+
+.record-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 7px;
+  background: rgba(255, 250, 240, 0.72);
+  color: #4c3a42;
+}
+
+.record-row span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.record-row em {
+  min-width: 42px;
+  padding: 4px 5px;
+  border-radius: 999px;
+  background: rgba(255, 214, 196, 0.72);
+  color: #63424a;
+  font-size: 9px;
+  font-style: normal;
+  line-height: 1;
+  text-align: center;
+}
+
+.empty-records {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 7px;
+  background: rgba(255, 250, 240, 0.72);
+  color: #71545e;
+  font-size: 11px;
+  text-align: center;
+}
+
 .control-strip button {
   min-width: 0;
   height: 30px;
@@ -850,7 +997,12 @@ input {
   font-size: 11px;
 }
 
-.control-strip button:hover,
+.control-strip button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.control-strip button:hover:not(:disabled),
 .control-strip button.active {
   background: #ffd6c4;
   border-color: rgba(137, 79, 86, 0.28);
@@ -890,6 +1042,19 @@ input {
   }
 }
 
+@keyframes sprite-happy {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  35% {
+    transform: translateY(-8px) rotate(-1deg) scale(1.02, 0.98);
+  }
+  70% {
+    transform: translateY(-2px) rotate(1deg) scale(0.99, 1.01);
+  }
+}
+
 @keyframes sprite-dragged {
   0%,
   100% {
@@ -907,6 +1072,19 @@ input {
   }
   45% {
     transform: translateY(9px) scaleX(1.035) scaleY(0.94);
+  }
+}
+
+@keyframes cat-happy {
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1);
+  }
+  35% {
+    transform: translateY(-7px) scaleX(1.02) scaleY(0.98);
+  }
+  70% {
+    transform: translateY(-2px) scaleX(0.99) scaleY(1.01);
   }
 }
 

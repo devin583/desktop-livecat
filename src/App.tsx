@@ -10,6 +10,8 @@ import {
 import { listen } from "@tauri-apps/api/event";
 import {
   BadgeCheck,
+  BarChart3,
+  CheckCircle2,
   Coffee,
   Eye,
   FolderOpen,
@@ -17,6 +19,7 @@ import {
   Info,
   Keyboard,
   Languages,
+  ListChecks,
   MousePointer2,
   Pause,
   Play,
@@ -37,14 +40,20 @@ import {
   initialState,
   nextPomodoroMode,
   normalizeState,
+  plannedFocusSeconds,
   resetPomodoroDuration,
   secondsToClock,
   shouldAutoRunNext,
+  todayKey,
+  trimFocusRecords,
 } from "./petState";
 import { safeInvoke } from "./tauriBridge";
 import type {
   AppState,
   AppLanguage,
+  FocusPanelTab,
+  FocusRecord,
+  FocusTimerMode,
   KeyboardStatus,
   PetAnimationState,
   PetMood,
@@ -148,7 +157,17 @@ const copy = {
     controls: "设置",
     currentPet: "打开当前角色",
     disabledKeyboard: "键盘节奏同步已关闭。",
+    doneRest: "完成休息",
+    estimateMinutes: "预估分钟",
+    estimatePomos: "预估番茄",
+    finishStopwatch: "保存专注",
     focus: "专注",
+    focusDoneTitle: "专注完成",
+    focusModePomo: "番茄",
+    focusModeStopwatch: "正计时",
+    focusRecords: "记录",
+    focusStats: "统计",
+    focusTimer: "计时",
     keyboard: "键盘节奏",
     keyboardBrowser:
       "当前使用焦点窗口兜底监听；Windows 原生桥接启动后会切到全局节奏监听。",
@@ -162,7 +181,11 @@ const copy = {
     autoBreak: "休息自动",
     autoNext: "全自动",
     noChecklist: "没有画师清单",
+    noRecords: "暂无记录",
     openResources: "打开资源目录",
+    recordAdjusted: "补记",
+    recordCompleted: "完成",
+    recordIncomplete: "未完成",
     installPet: "安装本地资源包",
     installPlaceholder: "路径或描述",
     pauseTimer: "暂停计时",
@@ -171,10 +194,16 @@ const copy = {
     resetTimer: "重置计时",
     resourceStatus: "资源状态",
     scale: "角色缩放",
+    sevenDays: "7 天",
     skipTimer: "跳过计时",
+    skipBreak: "跳过休息",
     startTimer: "开始计时",
+    today: "今日",
     task: "任务",
     top: "置顶",
+    untitledTask: "未命名专注",
+    reviewContinue: "继续 +5",
+    reviewAdjust: "补记 +5",
   },
   "en-US": {
     appStage: "Desktop LiveCat stage",
@@ -185,7 +214,17 @@ const copy = {
     controls: "Settings",
     currentPet: "Open current pet",
     disabledKeyboard: "Keyboard rhythm sync is disabled.",
+    doneRest: "Done, rest",
+    estimateMinutes: "Estimated minutes",
+    estimatePomos: "Estimated pomos",
+    finishStopwatch: "Save focus",
     focus: "Focus",
+    focusDoneTitle: "Focus complete",
+    focusModePomo: "Pomo",
+    focusModeStopwatch: "Stopwatch",
+    focusRecords: "Records",
+    focusStats: "Stats",
+    focusTimer: "Timer",
     keyboard: "Keyboard rhythm",
     keyboardBrowser:
       "Keyboard rhythm uses focused-window fallback until the native bridge is active.",
@@ -200,7 +239,11 @@ const copy = {
     autoBreak: "break",
     autoNext: "next",
     noChecklist: "No artist checklist",
+    noRecords: "No records yet",
     openResources: "Open resources",
+    recordAdjusted: "adjusted",
+    recordCompleted: "done",
+    recordIncomplete: "incomplete",
     installPet: "Install local pet pack",
     installPlaceholder: "Path or prompt",
     pauseTimer: "Pause timer",
@@ -209,10 +252,16 @@ const copy = {
     resetTimer: "Reset timer",
     resourceStatus: "Resource status",
     scale: "Pet scale",
+    sevenDays: "7d",
     skipTimer: "Skip timer",
+    skipBreak: "Skip break",
     startTimer: "Start timer",
+    today: "Today",
     task: "Task",
     top: "Toggle always on top",
+    untitledTask: "Untitled focus",
+    reviewContinue: "Continue +5",
+    reviewAdjust: "Adjust +5",
   },
 } satisfies Record<AppLanguage, Record<string, string>>;
 
@@ -225,6 +274,102 @@ function modeLabel(mode: PomodoroMode, language: AppLanguage) {
 
 function minutesFromSeconds(seconds: number) {
   return Math.floor(seconds / 60);
+}
+
+type FocusSummary = {
+  completed: number;
+  durationSeconds: number;
+  plannedSeconds: number;
+  adjusted: number;
+};
+
+function compactDuration(seconds: number, language: AppLanguage) {
+  const minutes = seconds > 0 ? Math.max(1, Math.round(seconds / 60)) : 0;
+  if (minutes < 60) return language === "zh-CN" ? `${minutes} 分` : `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (!rest) return language === "zh-CN" ? `${hours} 小时` : `${hours}h`;
+  return language === "zh-CN" ? `${hours} 小时 ${rest} 分` : `${hours}h ${rest}m`;
+}
+
+function recordTimeLabel(record: FocusRecord) {
+  const date = new Date(record.endedAt);
+  if (!Number.isFinite(date.getTime())) return "";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function summarizeFocusRecords(records: FocusRecord[], dayCount: number): FocusSummary {
+  const cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - Math.max(0, dayCount - 1));
+  const cutoffTime = cutoff.getTime();
+
+  return records.reduce<FocusSummary>(
+    (summary, record) => {
+      const endedAt = Date.parse(record.endedAt);
+      if (!Number.isFinite(endedAt) || endedAt < cutoffTime) return summary;
+      return {
+        completed: summary.completed + (record.completed ? 1 : 0),
+        durationSeconds: summary.durationSeconds + record.durationSeconds,
+        plannedSeconds: summary.plannedSeconds + record.plannedSeconds,
+        adjusted: summary.adjusted + (record.manuallyAdjusted ? 1 : 0),
+      };
+    },
+    { completed: 0, durationSeconds: 0, plannedSeconds: 0, adjusted: 0 },
+  );
+}
+
+function createRecordId() {
+  return `focus-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createFocusRecord(
+  pomodoro: AppState["pomodoro"],
+  options: {
+    now: Date;
+    durationSeconds: number;
+    plannedSeconds?: number;
+    completed: boolean;
+    manuallyAdjusted?: boolean;
+  },
+): FocusRecord {
+  const durationSeconds = Math.max(0, Math.floor(options.durationSeconds));
+  const endedAt = options.now.toISOString();
+  const startedAt =
+    pomodoro.activeStartedAt ??
+    new Date(options.now.getTime() - durationSeconds * 1000).toISOString();
+  return {
+    id: createRecordId(),
+    taskTitle: pomodoro.currentTask.trim(),
+    focusMode: pomodoro.focusMode,
+    pomodoroMode: pomodoro.mode,
+    startedAt,
+    endedAt,
+    durationSeconds,
+    plannedSeconds: Math.max(0, Math.floor(options.plannedSeconds ?? pomodoro.activePlannedSeconds)),
+    completed: options.completed,
+    manuallyAdjusted: Boolean(options.manuallyAdjusted),
+    createdAt: endedAt,
+  };
+}
+
+function addSecondsToFocusRecord(records: FocusRecord[], recordId: string, seconds: number) {
+  return records.map((record) =>
+    record.id === recordId
+      ? {
+          ...record,
+          durationSeconds: record.durationSeconds + seconds,
+          manuallyAdjusted: true,
+        }
+      : record,
+  );
+}
+
+async function sendFocusNotification(title: string, body: string) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "granted") {
+    new Notification(title, { body });
+  }
 }
 
 function keyboardMessage(status: KeyboardStatus, language: AppLanguage) {
@@ -254,6 +399,7 @@ function activityStateFromMood(
   if (mood === "typing") return "typing";
   if (mood === "focus" || mood === "focusEnding") return "focus";
   if (mood === "break" || mood === "longBreak") return "break";
+  if (mood === "happy") return "happy";
   if (mood === "dragged") return "dragged";
   return "idle";
 }
@@ -307,6 +453,27 @@ function App() {
   const selectedPet = useMemo(
     () => pets.find((pet) => pet.id === state.selectedPetId) ?? pets[0] ?? fallbackPet,
     [pets, state.selectedPetId],
+  );
+  const todaySummary = useMemo(
+    () => summarizeFocusRecords(state.pomodoro.records, 1),
+    [state.pomodoro.records],
+  );
+  const weekSummary = useMemo(
+    () => summarizeFocusRecords(state.pomodoro.records, 7),
+    [state.pomodoro.records],
+  );
+  const latestRecords = useMemo(
+    () => state.pomodoro.records.slice(-6).reverse(),
+    [state.pomodoro.records],
+  );
+  const timerStageLabel =
+    state.pomodoro.focusMode === "stopwatch"
+      ? t.focusModeStopwatch
+      : modeLabel(state.pomodoro.mode, state.language);
+  const todayCompleted = Math.max(todaySummary.completed, state.pomodoro.completedToday);
+  const todayFocusSeconds = Math.max(
+    todaySummary.durationSeconds,
+    state.pomodoro.focusSecondsToday,
   );
 
   const registerPulse = useCallback((source = "browser-focus-fallback") => {
@@ -382,8 +549,29 @@ function App() {
     const interval = window.setInterval(() => {
       setState((current) => {
         if (!current.pomodoro.running) return current;
+        const now = new Date();
+        const nowIso = now.toISOString();
+        const activeStartedAt = current.pomodoro.activeStartedAt ?? nowIso;
+
+        if (current.pomodoro.focusMode === "stopwatch") {
+          return {
+            ...current,
+            pomodoro: {
+              ...current.pomodoro,
+              mode: "focus",
+              remainingSeconds: current.pomodoro.remainingSeconds + 1,
+              focusSecondsToday: current.pomodoro.focusSecondsToday + 1,
+              activeStartedAt,
+              activePlannedSeconds: plannedFocusSeconds(current.pomodoro, "focus"),
+            },
+          };
+        }
+
         const elapsedKey =
           current.pomodoro.mode === "focus" ? "focusSecondsToday" : "breakSecondsToday";
+        const plannedSeconds =
+          current.pomodoro.activePlannedSeconds ||
+          resetPomodoroDuration(current.pomodoro, current.pomodoro.mode);
         if (current.pomodoro.remainingSeconds > 1) {
           return {
             ...current,
@@ -391,6 +579,8 @@ function App() {
               ...current.pomodoro,
               remainingSeconds: current.pomodoro.remainingSeconds - 1,
               [elapsedKey]: current.pomodoro[elapsedKey] + 1,
+              activeStartedAt,
+              activePlannedSeconds: plannedSeconds,
             },
           };
         }
@@ -402,23 +592,51 @@ function App() {
             ? current.pomodoro.completedToday + 1
             : current.pomodoro.completedToday;
         const nextCycle = completedFocus
-          ? nextMode === "longBreak"
-            ? 0
-            : current.pomodoro.focusSessionsInCycle + 1
-          : current.pomodoro.focusSessionsInCycle;
+            ? nextMode === "longBreak"
+              ? 0
+              : current.pomodoro.focusSessionsInCycle + 1
+            : current.pomodoro.focusSessionsInCycle;
+        const record = completedFocus
+          ? createFocusRecord(current.pomodoro, {
+              now,
+              durationSeconds: plannedSeconds,
+              plannedSeconds,
+              completed: true,
+            })
+          : null;
+        const nextPlannedSeconds = resetPomodoroDuration(current.pomodoro, nextMode);
+        const runNext = shouldAutoRunNext(current.pomodoro, nextMode);
 
         return {
           ...current,
           pomodoro: {
             ...current.pomodoro,
             mode: nextMode,
-            running: shouldAutoRunNext(current.pomodoro, nextMode),
+            running: runNext,
             completedToday,
             focusSessionsInCycle: nextCycle,
             lastCompletedTask: completedFocus
               ? current.pomodoro.currentTask
               : current.pomodoro.lastCompletedTask,
-            remainingSeconds: resetPomodoroDuration(current.pomodoro, nextMode),
+            remainingSeconds: nextPlannedSeconds,
+            activeStartedAt: runNext ? nowIso : null,
+            activePlannedSeconds: nextPlannedSeconds,
+            pauseCount: 0,
+            extraSeconds: 0,
+            records: record
+              ? trimFocusRecords([...current.pomodoro.records, record])
+              : current.pomodoro.records,
+            completionReview: record
+              ? {
+                  recordId: record.id,
+                  taskTitle: record.taskTitle,
+                  focusMode: record.focusMode,
+                  durationSeconds: record.durationSeconds,
+                  plannedSeconds: record.plannedSeconds,
+                  nextMode,
+                  completedAt: record.endedAt,
+                }
+              : null,
             [elapsedKey]: current.pomodoro[elapsedKey] + 1,
           },
         };
@@ -432,11 +650,22 @@ function App() {
   }, [state.alwaysOnTop]);
 
   useEffect(() => {
-    const label = `${modeLabel(state.pomodoro.mode, state.language)} ${secondsToClock(
-      state.pomodoro.remainingSeconds,
-    )}`;
+    const label = `${timerStageLabel} ${secondsToClock(state.pomodoro.remainingSeconds)}`;
     void safeInvoke("set_tray_status", { tooltip: `Desktop LiveCat - ${label}` });
-  }, [state.language, state.pomodoro.mode, state.pomodoro.remainingSeconds]);
+  }, [state.pomodoro.remainingSeconds, timerStageLabel]);
+
+  const notifiedReviewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const review = state.pomodoro.completionReview;
+    if (!review || notifiedReviewRef.current === review.recordId) return;
+    notifiedReviewRef.current = review.recordId;
+    const task = review.taskTitle || t.untitledTask;
+    void sendFocusNotification(
+      t.focusDoneTitle,
+      `${task} · ${compactDuration(review.durationSeconds, state.language)}`,
+    );
+  }, [state.language, state.pomodoro.completionReview, t.focusDoneTitle, t.untitledTask]);
 
   const setClickThroughPreview = () => {
     setState((current) => ({ ...current, clickThrough: true }));
@@ -449,21 +678,99 @@ function App() {
 
   const pomodoroAction = (action: "toggle" | "reset" | "skip") => {
     setState((current) => {
+      const now = new Date();
+      const nowIso = now.toISOString();
       if (action === "toggle") {
+        if (current.pomodoro.running) {
+          return {
+            ...current,
+            pomodoro: {
+              ...current.pomodoro,
+              running: false,
+              pauseCount: current.pomodoro.pauseCount + 1,
+            },
+          };
+        }
+
+        const plannedSeconds =
+          current.pomodoro.focusMode === "stopwatch"
+            ? plannedFocusSeconds(current.pomodoro, "focus")
+            : resetPomodoroDuration(current.pomodoro, current.pomodoro.mode);
         return {
           ...current,
-          pomodoro: { ...current.pomodoro, running: !current.pomodoro.running },
+          pomodoro: {
+            ...current.pomodoro,
+            running: true,
+            activeStartedAt: current.pomodoro.activeStartedAt ?? nowIso,
+            activePlannedSeconds: plannedSeconds,
+            completionReview: null,
+            remainingSeconds:
+              current.pomodoro.focusMode === "pomo" && current.pomodoro.remainingSeconds <= 0
+                ? plannedSeconds
+                : current.pomodoro.remainingSeconds,
+          },
         };
       }
 
-      const skippedFocus = action === "skip" && current.pomodoro.mode === "focus";
-      const nextMode =
-        action === "skip" ? nextPomodoroMode(current.pomodoro) : current.pomodoro.mode;
-      const nextCycle = skippedFocus
-        ? nextMode === "longBreak"
-          ? 0
-          : current.pomodoro.focusSessionsInCycle + 1
-        : current.pomodoro.focusSessionsInCycle;
+      if (action === "reset") {
+        const remainingSeconds =
+          current.pomodoro.focusMode === "stopwatch"
+            ? 0
+            : resetPomodoroDuration(current.pomodoro, current.pomodoro.mode);
+        return {
+          ...current,
+          pomodoro: {
+            ...current.pomodoro,
+            running: false,
+            remainingSeconds,
+            activeStartedAt: null,
+            activePlannedSeconds:
+              current.pomodoro.focusMode === "stopwatch"
+                ? plannedFocusSeconds(current.pomodoro, "focus")
+                : remainingSeconds,
+            pauseCount: 0,
+            extraSeconds: 0,
+            completionReview: null,
+          },
+        };
+      }
+
+      if (current.pomodoro.focusMode === "stopwatch") {
+        return {
+          ...current,
+          pomodoro: {
+            ...current.pomodoro,
+            mode: "focus",
+            running: false,
+            remainingSeconds: 0,
+            activeStartedAt: null,
+            activePlannedSeconds: plannedFocusSeconds(current.pomodoro, "focus"),
+            pauseCount: 0,
+            extraSeconds: 0,
+            completionReview: null,
+          },
+        };
+      }
+
+      const skippedFocus =
+        current.pomodoro.focusMode === "pomo" && current.pomodoro.mode === "focus";
+      const nextMode: PomodoroMode =
+        current.pomodoro.mode === "focus" ? "break" : "focus";
+      const plannedSeconds =
+        current.pomodoro.activePlannedSeconds ||
+        resetPomodoroDuration(current.pomodoro, current.pomodoro.mode);
+      const elapsedSeconds = Math.max(0, plannedSeconds - current.pomodoro.remainingSeconds);
+      const incompleteRecord =
+        skippedFocus && elapsedSeconds >= 60
+          ? createFocusRecord(current.pomodoro, {
+              now,
+              durationSeconds: elapsedSeconds,
+              plannedSeconds,
+              completed: false,
+              manuallyAdjusted: true,
+            })
+          : null;
+      const nextRemaining = resetPomodoroDuration(current.pomodoro, nextMode);
 
       return {
         ...current,
@@ -471,14 +778,181 @@ function App() {
           ...current.pomodoro,
           mode: nextMode,
           running: false,
-          focusSessionsInCycle: nextCycle,
-          remainingSeconds: resetPomodoroDuration(current.pomodoro, nextMode),
-          completedToday: skippedFocus
-            ? current.pomodoro.completedToday + 1
-            : current.pomodoro.completedToday,
-          lastCompletedTask: skippedFocus
-            ? current.pomodoro.currentTask
-            : current.pomodoro.lastCompletedTask,
+          remainingSeconds: nextRemaining,
+          activeStartedAt: null,
+          activePlannedSeconds: nextRemaining,
+          pauseCount: 0,
+          extraSeconds: 0,
+          completionReview: null,
+          records: incompleteRecord
+            ? trimFocusRecords([...current.pomodoro.records, incompleteRecord])
+            : current.pomodoro.records,
+        },
+      };
+    });
+  };
+
+  const finishStopwatch = () => {
+    setState((current) => {
+      if (current.pomodoro.focusMode !== "stopwatch" || current.pomodoro.remainingSeconds <= 0) {
+        return current;
+      }
+
+      const now = new Date();
+      const plannedSeconds = plannedFocusSeconds(current.pomodoro, "focus");
+      const record = createFocusRecord(current.pomodoro, {
+        now,
+        durationSeconds: current.pomodoro.remainingSeconds,
+        plannedSeconds,
+        completed: true,
+      });
+
+      return {
+        ...current,
+        pomodoro: {
+          ...current.pomodoro,
+          running: false,
+          mode: "focus",
+          remainingSeconds: 0,
+          activeStartedAt: null,
+          activePlannedSeconds: plannedSeconds,
+          pauseCount: 0,
+          completedToday: current.pomodoro.completedToday + 1,
+          lastCompletedTask: current.pomodoro.currentTask,
+          records: trimFocusRecords([...current.pomodoro.records, record]),
+          completionReview: {
+            recordId: record.id,
+            taskTitle: record.taskTitle,
+            focusMode: record.focusMode,
+            durationSeconds: record.durationSeconds,
+            plannedSeconds: record.plannedSeconds,
+            nextMode: "break",
+            completedAt: record.endedAt,
+          },
+        },
+      };
+    });
+  };
+
+  const switchFocusMode = (focusMode: FocusTimerMode) => {
+    setState((current) => {
+      if (current.pomodoro.focusMode === focusMode) return current;
+      const pomodoro = {
+        ...current.pomodoro,
+        focusMode,
+        mode: "focus" as PomodoroMode,
+        running: false,
+        activeStartedAt: null,
+        pauseCount: 0,
+        extraSeconds: 0,
+        completionReview: null,
+      };
+      return {
+        ...current,
+        pomodoro: {
+          ...pomodoro,
+          remainingSeconds: focusMode === "stopwatch" ? 0 : resetPomodoroDuration(pomodoro),
+          activePlannedSeconds:
+            focusMode === "stopwatch"
+              ? plannedFocusSeconds(pomodoro, "focus")
+              : resetPomodoroDuration(pomodoro),
+        },
+      };
+    });
+  };
+
+  const setFocusPanelTab = (panelTab: FocusPanelTab) => {
+    setState((current) => ({
+      ...current,
+      pomodoro: { ...current.pomodoro, panelTab },
+    }));
+  };
+
+  const setEstimate = (field: "estimatedPomos" | "estimatedMinutes", value: number) => {
+    const max = field === "estimatedPomos" ? 99 : 10_000;
+    const bounded = Number.isFinite(value) ? Math.min(max, Math.max(0, Math.round(value))) : 0;
+    setState((current) => ({
+      ...current,
+      pomodoro: {
+        ...current.pomodoro,
+        [field]: bounded,
+        activePlannedSeconds:
+          current.pomodoro.focusMode === "stopwatch" && field === "estimatedMinutes"
+            ? bounded * 60
+            : current.pomodoro.activePlannedSeconds,
+      },
+    }));
+  };
+
+  const reviewAction = (action: "dismiss" | "continue5" | "adjust5" | "skipBreak") => {
+    setState((current) => {
+      const review = current.pomodoro.completionReview;
+      if (!review) return current;
+
+      if (action === "adjust5") {
+        const extraSeconds = 5 * 60;
+        const adjustedRecords = addSecondsToFocusRecord(
+          current.pomodoro.records,
+          review.recordId,
+          extraSeconds,
+        );
+        const reviewDay = todayKey(new Date(review.completedAt));
+        const isToday = reviewDay === todayKey();
+        return {
+          ...current,
+          pomodoro: {
+            ...current.pomodoro,
+            records: adjustedRecords,
+            focusSecondsToday: isToday
+              ? current.pomodoro.focusSecondsToday + extraSeconds
+              : current.pomodoro.focusSecondsToday,
+            extraSeconds: current.pomodoro.extraSeconds + extraSeconds,
+            completionReview: {
+              ...review,
+              durationSeconds: review.durationSeconds + extraSeconds,
+            },
+          },
+        };
+      }
+
+      if (action === "continue5") {
+        return {
+          ...current,
+          pomodoro: {
+            ...current.pomodoro,
+            focusMode: "pomo",
+            mode: "focus",
+            running: true,
+            remainingSeconds: 5 * 60,
+            activeStartedAt: new Date().toISOString(),
+            activePlannedSeconds: 5 * 60,
+            extraSeconds: current.pomodoro.extraSeconds + 5 * 60,
+            completionReview: null,
+          },
+        };
+      }
+
+      if (action === "skipBreak") {
+        const remainingSeconds = resetPomodoroDuration(current.pomodoro, "focus");
+        return {
+          ...current,
+          pomodoro: {
+            ...current.pomodoro,
+            mode: "focus",
+            running: false,
+            remainingSeconds,
+            activeStartedAt: null,
+            activePlannedSeconds: remainingSeconds,
+            completionReview: null,
+          },
+        };
+      }
+
+      return {
+        ...current,
+        pomodoro: {
+          ...current.pomodoro,
+          completionReview: null,
         },
       };
     });
@@ -509,6 +983,7 @@ function App() {
       ...current,
       pomodoro: {
         ...current.pomodoro,
+        focusMode: "pomo",
         presetId: preset.id,
         focusMinutes: preset.focus,
         breakMinutes: preset.break,
@@ -516,6 +991,11 @@ function App() {
         mode: "focus",
         running: false,
         remainingSeconds: preset.focus * 60,
+        activeStartedAt: null,
+        activePlannedSeconds: preset.focus * 60,
+        pauseCount: 0,
+        extraSeconds: 0,
+        completionReview: null,
       },
     }));
   };
@@ -537,7 +1017,14 @@ function App() {
         ...current,
         pomodoro: {
           ...pomodoro,
-          remainingSeconds: resetPomodoroDuration(pomodoro),
+          remainingSeconds:
+            pomodoro.focusMode === "stopwatch" ? pomodoro.remainingSeconds : resetPomodoroDuration(pomodoro),
+          activePlannedSeconds:
+            pomodoro.focusMode === "stopwatch"
+              ? plannedFocusSeconds(pomodoro, "focus")
+              : resetPomodoroDuration(pomodoro),
+          activeStartedAt: null,
+          completionReview: null,
         },
       };
     });
@@ -597,12 +1084,15 @@ function App() {
   const activeTapSide = Date.now() - lastTypingPulse < 170 ? lastTapSide : null;
   const focusEnding =
     state.pomodoro.running &&
+    state.pomodoro.focusMode === "pomo" &&
     state.pomodoro.mode === "focus" &&
     state.pomodoro.remainingSeconds <= 60;
   const petMood: PetMood = dragged
     ? "dragged"
     : isTyping
     ? "typing"
+    : state.pomodoro.completionReview
+      ? "happy"
     : focusEnding
       ? "focusEnding"
       : state.pomodoro.running && state.pomodoro.mode === "focus"
@@ -708,7 +1198,7 @@ function App() {
               </div>
               <div className="timer-note">
                 <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
-                <small>{modeLabel(state.pomodoro.mode, state.language)}</small>
+                <small>{timerStageLabel}</small>
               </div>
             </div>
           )}
@@ -891,140 +1381,326 @@ function App() {
             }
           />
 
-          <div className="timer-controls">
+          <div className="focus-tabs">
             <button
               type="button"
-              aria-label={state.pomodoro.running ? t.pauseTimer : t.startTimer}
-              onClick={() => pomodoroAction("toggle")}
+              className={state.pomodoro.panelTab === "timer" ? "active" : ""}
+              onClick={() => setFocusPanelTab("timer")}
             >
-              {state.pomodoro.running ? <Pause size={16} /> : <Play size={16} />}
+              <TimerReset size={14} />
+              {t.focusTimer}
             </button>
-            <button type="button" aria-label={t.resetTimer} onClick={() => pomodoroAction("reset")}>
-              <RotateCcw size={16} />
-            </button>
-            <button type="button" aria-label={t.skipTimer} onClick={() => pomodoroAction("skip")}>
-              <SkipForward size={16} />
-            </button>
-          </div>
-
-          <div className="preset-row">
-            {pomodoroPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                className={state.pomodoro.presetId === preset.id ? "active" : ""}
-                onClick={() => selectPreset(preset)}
-              >
-                {preset.id === "25-5-15" ? <TimerReset size={14} /> : <Coffee size={14} />}
-                {preset.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="duration-row">
-            <input
-              aria-label={t.focus}
-              type="number"
-              min="1"
-              max="180"
-              value={state.pomodoro.focusMinutes}
-              onChange={(event) => setDuration("focusMinutes", Number(event.currentTarget.value))}
-            />
-            <input
-              aria-label={t.break}
-              type="number"
-              min="1"
-              max="90"
-              value={state.pomodoro.breakMinutes}
-              onChange={(event) => setDuration("breakMinutes", Number(event.currentTarget.value))}
-            />
-            <input
-              aria-label={t.longBreak}
-              type="number"
-              min="1"
-              max="120"
-              value={state.pomodoro.longBreakMinutes}
-              onChange={(event) =>
-                setDuration("longBreakMinutes", Number(event.currentTarget.value))
-              }
-            />
-          </div>
-
-          <div className="duration-row">
-            <input
-              aria-label={t.task}
-              type="text"
-              maxLength={80}
-              value={state.pomodoro.currentTask}
-              onChange={(event) =>
-                setState((current) => ({
-                  ...current,
-                  pomodoro: { ...current.pomodoro, currentTask: event.currentTarget.value },
-                }))
-              }
-            />
-            <input
-              aria-label={t.longBreak}
-              type="number"
-              min="2"
-              max="12"
-              value={state.pomodoro.longBreakEvery}
-              onChange={(event) =>
-                setState((current) => ({
-                  ...current,
-                  pomodoro: {
-                    ...current.pomodoro,
-                    longBreakEvery: Number.isFinite(Number(event.currentTarget.value))
-                      ? Number(event.currentTarget.value)
-                      : current.pomodoro.longBreakEvery,
-                  },
-                }))
-              }
-            />
-          </div>
-
-          <div className="toggle-row">
-            <label>
-              <input
-                aria-label="Enable long break"
-                type="checkbox"
-                checked={state.pomodoro.longBreakEnabled}
-                onChange={(event) =>
-                  setState((current) => ({
-                    ...current,
-                    pomodoro: {
-                      ...current.pomodoro,
-                      longBreakEnabled: event.currentTarget.checked,
-                    },
-                  }))
-                }
-              />
-              {state.language === "zh-CN" ? "长休" : "LB"}
-            </label>
-            <select
-              aria-label="Timer auto flow"
-              value={state.pomodoro.autoFlow}
-              onChange={(event) =>
-                setState((current) => ({
-                  ...current,
-                  pomodoro: {
-                    ...current.pomodoro,
-                    autoFlow: event.currentTarget.value as AppState["pomodoro"]["autoFlow"],
-                  },
-                }))
-              }
+            <button
+              type="button"
+              className={state.pomodoro.panelTab === "stats" ? "active" : ""}
+              onClick={() => setFocusPanelTab("stats")}
             >
-              <option value="manual">{t.manual}</option>
-              <option value="autoBreak">{t.autoBreak}</option>
-              <option value="autoNext">{t.autoNext}</option>
-            </select>
+              <BarChart3 size={14} />
+              {t.focusStats}
+            </button>
+            <button
+              type="button"
+              className={state.pomodoro.panelTab === "records" ? "active" : ""}
+              onClick={() => setFocusPanelTab("records")}
+            >
+              <ListChecks size={14} />
+              {t.focusRecords}
+            </button>
           </div>
 
-          <div className="stats-row">
-            <span>{state.pomodoro.completedToday}</span>
-            <span>{minutesFromSeconds(state.pomodoro.focusSecondsToday)}m</span>
-            <span>{minutesFromSeconds(state.pomodoro.breakSecondsToday)}m</span>
-          </div>
+          {state.pomodoro.completionReview ? (
+            <div className="review-card">
+              <div>
+                <b>{t.focusDoneTitle}</b>
+                <span>
+                  {state.pomodoro.completionReview.taskTitle || t.untitledTask} ·{" "}
+                  {compactDuration(state.pomodoro.completionReview.durationSeconds, state.language)}
+                </span>
+              </div>
+              <div className="review-actions">
+                <button type="button" onClick={() => reviewAction("dismiss")}>
+                  <CheckCircle2 size={14} />
+                  {t.doneRest}
+                </button>
+                <button type="button" onClick={() => reviewAction("continue5")}>
+                  <Play size={14} />
+                  {t.reviewContinue}
+                </button>
+                <button type="button" onClick={() => reviewAction("adjust5")}>
+                  <Plus size={14} />
+                  {t.reviewAdjust}
+                </button>
+                <button type="button" onClick={() => reviewAction("skipBreak")}>
+                  <SkipForward size={14} />
+                  {t.skipBreak}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {state.pomodoro.panelTab === "timer" ? (
+            <>
+              <div className="focus-mode-row">
+                <button
+                  type="button"
+                  className={state.pomodoro.focusMode === "pomo" ? "active" : ""}
+                  onClick={() => switchFocusMode("pomo")}
+                >
+                  <TimerReset size={14} />
+                  {t.focusModePomo}
+                </button>
+                <button
+                  type="button"
+                  className={state.pomodoro.focusMode === "stopwatch" ? "active" : ""}
+                  onClick={() => switchFocusMode("stopwatch")}
+                >
+                  <Gauge size={14} />
+                  {t.focusModeStopwatch}
+                </button>
+              </div>
+
+              <div className="timer-controls">
+                <button
+                  type="button"
+                  aria-label={state.pomodoro.running ? t.pauseTimer : t.startTimer}
+                  onClick={() => pomodoroAction("toggle")}
+                >
+                  {state.pomodoro.running ? <Pause size={16} /> : <Play size={16} />}
+                </button>
+                <button
+                  type="button"
+                  aria-label={t.resetTimer}
+                  onClick={() => pomodoroAction("reset")}
+                >
+                  <RotateCcw size={16} />
+                </button>
+                {state.pomodoro.focusMode === "stopwatch" ? (
+                  <button
+                    type="button"
+                    aria-label={t.finishStopwatch}
+                    disabled={state.pomodoro.remainingSeconds <= 0}
+                    onClick={finishStopwatch}
+                  >
+                    <CheckCircle2 size={16} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label={t.skipTimer}
+                    onClick={() => pomodoroAction("skip")}
+                  >
+                    <SkipForward size={16} />
+                  </button>
+                )}
+              </div>
+
+              {state.pomodoro.focusMode === "pomo" ? (
+                <>
+                  <div className="preset-row">
+                    {pomodoroPresets.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        className={state.pomodoro.presetId === preset.id ? "active" : ""}
+                        onClick={() => selectPreset(preset)}
+                      >
+                        {preset.id === "25-5-15" ? (
+                          <TimerReset size={14} />
+                        ) : (
+                          <Coffee size={14} />
+                        )}
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="duration-row">
+                    <input
+                      aria-label={t.focus}
+                      type="number"
+                      min="1"
+                      max="180"
+                      value={state.pomodoro.focusMinutes}
+                      onChange={(event) =>
+                        setDuration("focusMinutes", Number(event.currentTarget.value))
+                      }
+                    />
+                    <input
+                      aria-label={t.break}
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={state.pomodoro.breakMinutes}
+                      onChange={(event) =>
+                        setDuration("breakMinutes", Number(event.currentTarget.value))
+                      }
+                    />
+                    <input
+                      aria-label={t.longBreak}
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={state.pomodoro.longBreakMinutes}
+                      onChange={(event) =>
+                        setDuration("longBreakMinutes", Number(event.currentTarget.value))
+                      }
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              <div className="duration-row task-row">
+                <input
+                  aria-label={t.task}
+                  type="text"
+                  maxLength={80}
+                  placeholder={t.task}
+                  value={state.pomodoro.currentTask}
+                  onChange={(event) =>
+                    setState((current) => ({
+                      ...current,
+                      pomodoro: { ...current.pomodoro, currentTask: event.currentTarget.value },
+                    }))
+                  }
+                />
+                {state.pomodoro.focusMode === "pomo" ? (
+                  <input
+                    aria-label={t.longBreak}
+                    type="number"
+                    min="2"
+                    max="12"
+                    value={state.pomodoro.longBreakEvery}
+                    onChange={(event) =>
+                      setState((current) => ({
+                        ...current,
+                        pomodoro: {
+                          ...current.pomodoro,
+                          longBreakEvery: Number.isFinite(Number(event.currentTarget.value))
+                            ? Number(event.currentTarget.value)
+                            : current.pomodoro.longBreakEvery,
+                        },
+                      }))
+                    }
+                  />
+                ) : null}
+              </div>
+
+              <div className="duration-row estimate-row">
+                <input
+                  aria-label={t.estimatePomos}
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={state.pomodoro.estimatedPomos}
+                  onChange={(event) =>
+                    setEstimate("estimatedPomos", Number(event.currentTarget.value))
+                  }
+                />
+                <input
+                  aria-label={t.estimateMinutes}
+                  type="number"
+                  min="0"
+                  max="10000"
+                  value={state.pomodoro.estimatedMinutes}
+                  onChange={(event) =>
+                    setEstimate("estimatedMinutes", Number(event.currentTarget.value))
+                  }
+                />
+              </div>
+
+              {state.pomodoro.focusMode === "pomo" ? (
+                <div className="toggle-row">
+                  <label>
+                    <input
+                      aria-label="Enable long break"
+                      type="checkbox"
+                      checked={state.pomodoro.longBreakEnabled}
+                      onChange={(event) =>
+                        setState((current) => ({
+                          ...current,
+                          pomodoro: {
+                            ...current.pomodoro,
+                            longBreakEnabled: event.currentTarget.checked,
+                          },
+                        }))
+                      }
+                    />
+                    {state.language === "zh-CN" ? "长休" : "LB"}
+                  </label>
+                  <select
+                    aria-label="Timer auto flow"
+                    value={state.pomodoro.autoFlow}
+                    onChange={(event) =>
+                      setState((current) => ({
+                        ...current,
+                        pomodoro: {
+                          ...current.pomodoro,
+                          autoFlow: event.currentTarget
+                            .value as AppState["pomodoro"]["autoFlow"],
+                        },
+                      }))
+                    }
+                  >
+                    <option value="manual">{t.manual}</option>
+                    <option value="autoBreak">{t.autoBreak}</option>
+                    <option value="autoNext">{t.autoNext}</option>
+                  </select>
+                </div>
+              ) : null}
+
+              <div className="stats-row">
+                <span>{todayCompleted}</span>
+                <span>{minutesFromSeconds(todayFocusSeconds)}m</span>
+                <span>{minutesFromSeconds(state.pomodoro.breakSecondsToday)}m</span>
+              </div>
+            </>
+          ) : state.pomodoro.panelTab === "stats" ? (
+            <div className="focus-stat-grid">
+              <div>
+                <span>{t.today}</span>
+                <b>{todayCompleted}</b>
+                <small>{compactDuration(todayFocusSeconds, state.language)}</small>
+              </div>
+              <div>
+                <span>{t.sevenDays}</span>
+                <b>{weekSummary.completed}</b>
+                <small>{compactDuration(weekSummary.durationSeconds, state.language)}</small>
+              </div>
+              <div>
+                <span>{t.recordAdjusted}</span>
+                <b>{weekSummary.adjusted}</b>
+                <small>{compactDuration(weekSummary.plannedSeconds, state.language)}</small>
+              </div>
+            </div>
+          ) : (
+            <div className="records-list">
+              {latestRecords.length ? (
+                latestRecords.map((record) => (
+                  <div className="record-row" key={record.id}>
+                    <span>
+                      <b>{record.taskTitle || t.untitledTask}</b>
+                      <small>
+                        {recordTimeLabel(record)} ·{" "}
+                        {record.focusMode === "stopwatch"
+                          ? t.focusModeStopwatch
+                          : t.focusModePomo}{" "}
+                        · {compactDuration(record.durationSeconds, state.language)}
+                      </small>
+                    </span>
+                    <em>
+                      {record.completed
+                        ? record.manuallyAdjusted
+                          ? t.recordAdjusted
+                          : t.recordCompleted
+                        : t.recordIncomplete}
+                    </em>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-records">{t.noRecords}</div>
+              )}
+            </div>
+          )}
         </aside>
       </section>
     </main>

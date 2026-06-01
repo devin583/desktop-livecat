@@ -1076,6 +1076,7 @@ fn default_state() -> Value {
         "lowPower": false,
         "keyboardSyncEnabled": true,
         "pomodoro": {
+            "focusMode": "pomo",
             "mode": "focus",
             "presetId": "25-5-15",
             "focusMinutes": 25,
@@ -1086,12 +1087,21 @@ fn default_state() -> Value {
             "autoFlow": "manual",
             "remainingSeconds": 1500,
             "running": false,
+            "activeStartedAt": null,
+            "activePlannedSeconds": 1500,
+            "pauseCount": 0,
+            "extraSeconds": 0,
+            "estimatedPomos": 0,
+            "estimatedMinutes": 0,
             "completedToday": 0,
             "focusSecondsToday": 0,
             "breakSecondsToday": 0,
             "focusSessionsInCycle": 0,
             "currentTask": "",
             "lastCompletedTask": "",
+            "records": [],
+            "completionReview": null,
+            "panelTab": "timer",
             "day": ""
         }
     })

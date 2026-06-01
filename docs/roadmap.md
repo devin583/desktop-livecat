@@ -2,6 +2,7 @@
 
 ## Near Term
 
+- Focus loop QA for Pomo, stopwatch, completion review, and local records.
 - Win11 real-machine QA.
 - Real Cubism model export for Mochi Prototype.
 - Resource package import and validation UX.
@@ -11,7 +12,7 @@
 
 - Multiple characters with quick switching.
 - Optional sound packs for typing and timer transitions.
-- Local-only growth stats based on focus sessions.
+- Richer local-only growth stats based on focus sessions.
 - Resource package wizard that creates `manifest.json` and folders for artists.
 - Low-power animation scheduler for older machines.
 

@@ -92,7 +92,36 @@ export type PomodoroAutoFlow = "manual" | "autoBreak" | "autoNext";
 
 export type AppLanguage = "zh-CN" | "en-US";
 
+export type FocusTimerMode = "pomo" | "stopwatch";
+
+export type FocusPanelTab = "timer" | "stats" | "records";
+
+export type FocusRecord = {
+  id: string;
+  taskTitle: string;
+  focusMode: FocusTimerMode;
+  pomodoroMode: PomodoroMode;
+  startedAt: string;
+  endedAt: string;
+  durationSeconds: number;
+  plannedSeconds: number;
+  completed: boolean;
+  manuallyAdjusted: boolean;
+  createdAt: string;
+};
+
+export type FocusCompletionReview = {
+  recordId: string;
+  taskTitle: string;
+  focusMode: FocusTimerMode;
+  durationSeconds: number;
+  plannedSeconds: number;
+  nextMode: PomodoroMode;
+  completedAt: string;
+};
+
 export type PomodoroState = {
+  focusMode: FocusTimerMode;
   mode: PomodoroMode;
   presetId: "25-5-15" | "50-10-20" | "90-20-30" | "custom";
   focusMinutes: number;
@@ -103,12 +132,21 @@ export type PomodoroState = {
   autoFlow: PomodoroAutoFlow;
   remainingSeconds: number;
   running: boolean;
+  activeStartedAt: string | null;
+  activePlannedSeconds: number;
+  pauseCount: number;
+  extraSeconds: number;
+  estimatedPomos: number;
+  estimatedMinutes: number;
   completedToday: number;
   focusSecondsToday: number;
   breakSecondsToday: number;
   focusSessionsInCycle: number;
   currentTask: string;
   lastCompletedTask: string;
+  records: FocusRecord[];
+  completionReview: FocusCompletionReview | null;
+  panelTab: FocusPanelTab;
   day: string;
 };
 
@@ -150,5 +188,6 @@ export type PetMood =
   | "focusEnding"
   | "break"
   | "longBreak"
+  | "happy"
   | "paused"
   | "dragged";
