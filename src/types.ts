@@ -105,6 +105,21 @@ export type FocusPanelTab = "timer" | "stats" | "records";
 
 export type ControlPanelTab = "pet" | "interact" | "focus" | "settings";
 
+export type UpdateStatus = "idle" | "checking" | "available" | "upToDate" | "failed";
+
+export type UpdateInfo = {
+  status: UpdateStatus;
+  currentVersion: string;
+  latestVersion: string | null;
+  releaseUrl: string | null;
+  standardAssetUrl: string | null;
+  fullOfflineAssetUrl: string | null;
+  publishedAt: string | null;
+  lastCheckedAt: string | null;
+  ignoredVersion: string | null;
+  error: string | null;
+};
+
 export type FocusRecord = {
   id: string;
   taskTitle: string;
@@ -169,6 +184,7 @@ export type AppState = {
   alwaysOnTop: boolean;
   lowPower: boolean;
   keyboardSyncEnabled: boolean;
+  update: UpdateInfo;
   pomodoro: PomodoroState;
 };
 
@@ -189,6 +205,12 @@ export type RuntimeInfo = {
   fixedWebView2Runtime: string | null;
   petRoots: string[];
   portableMode: boolean;
+};
+
+export type CleanupResult = {
+  removedItems: number;
+  removedBytes: number;
+  failedItems: string[];
 };
 
 export type PetMood =

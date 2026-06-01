@@ -7,6 +7,7 @@ import type {
   PetPack,
   PomodoroMode,
   PomodoroState,
+  UpdateInfo,
 } from "./types";
 
 export const fallbackPet: PetPack = {
@@ -69,6 +70,19 @@ export const initialPomodoro: PomodoroState = {
   day: todayKey(),
 };
 
+export const initialUpdateInfo: UpdateInfo = {
+  status: "idle",
+  currentVersion: "",
+  latestVersion: null,
+  releaseUrl: null,
+  standardAssetUrl: null,
+  fullOfflineAssetUrl: null,
+  publishedAt: null,
+  lastCheckedAt: null,
+  ignoredVersion: null,
+  error: null,
+};
+
 export const initialState: AppState = {
   selectedPetId: "orange-tabby-keyboard",
   language: "zh-CN",
@@ -79,6 +93,7 @@ export const initialState: AppState = {
   alwaysOnTop: true,
   lowPower: false,
   keyboardSyncEnabled: true,
+  update: initialUpdateInfo,
   pomodoro: initialPomodoro,
 };
 
@@ -96,6 +111,10 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     pomodoro: {
       ...initialPomodoro,
       ...(input?.pomodoro ?? {}),
+    },
+    update: {
+      ...initialUpdateInfo,
+      ...(input?.update ?? {}),
     },
   };
 
@@ -152,6 +171,16 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   next.pomodoro.estimatedMinutes = clampMinutes(next.pomodoro.estimatedMinutes, 0, 10_000, 0);
   next.pomodoro.currentTask = String(next.pomodoro.currentTask ?? "").slice(0, 80);
   next.pomodoro.lastCompletedTask = String(next.pomodoro.lastCompletedTask ?? "").slice(0, 80);
+  next.update.status = normalizeUpdateStatus(next.update.status);
+  next.update.currentVersion = String(next.update.currentVersion ?? "").slice(0, 32);
+  next.update.latestVersion = normalizeNullableString(next.update.latestVersion, 64);
+  next.update.releaseUrl = normalizeNullableString(next.update.releaseUrl, 300);
+  next.update.standardAssetUrl = normalizeNullableString(next.update.standardAssetUrl, 300);
+  next.update.fullOfflineAssetUrl = normalizeNullableString(next.update.fullOfflineAssetUrl, 300);
+  next.update.publishedAt = normalizeDateString(next.update.publishedAt);
+  next.update.lastCheckedAt = normalizeDateString(next.update.lastCheckedAt);
+  next.update.ignoredVersion = normalizeNullableString(next.update.ignoredVersion, 64);
+  next.update.error = normalizeNullableString(next.update.error, 240);
   next.pomodoro.records = normalizeFocusRecords(next.pomodoro.records);
   next.pomodoro.completionReview = normalizeCompletionReview(next.pomodoro.completionReview);
   if (
@@ -170,6 +199,22 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     next.pomodoro.focusMode === "stopwatch" ? 0 : resetPomodoroDuration(next.pomodoro),
   );
   return next;
+}
+
+function normalizeUpdateStatus(value: unknown): UpdateInfo["status"] {
+  return value === "idle" ||
+    value === "checking" ||
+    value === "available" ||
+    value === "upToDate" ||
+    value === "failed"
+    ? value
+    : "idle";
+}
+
+function normalizeNullableString(value: unknown, maxLength: number) {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  return text ? text.slice(0, maxLength) : null;
 }
 
 export function resetPomodoroDuration(pomodoro: PomodoroState, mode: PomodoroMode = pomodoro.mode) {

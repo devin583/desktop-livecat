@@ -4,11 +4,13 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const appVersion = `v${packageJson.version}`;
 const out = path.join(root, "release");
 const platformSuffix =
   process.platform === "win32" ? "win11-x64" : `${process.platform}-${process.arch}`;
-const standard = path.join(out, `desktop-livecat-${platformSuffix}`);
-const full = path.join(out, `desktop-livecat-${platformSuffix}-full-offline`);
+const standard = path.join(out, `desktop-livecat-${appVersion}-${platformSuffix}-portable`);
+const full = path.join(out, `desktop-livecat-${appVersion}-${platformSuffix}-full-offline`);
 const exeCandidates = [
   path.join(root, "src-tauri", "target", "release", "desktop-livecat.exe"),
   path.join(root, "src-tauri", "target", "release", "desktop-livecat"),
@@ -16,9 +18,10 @@ const exeCandidates = [
 
 function cleanOutput() {
   fs.mkdirSync(out, { recursive: true });
-  for (const target of [standard, full]) {
+  for (const entry of fs.readdirSync(out)) {
+    if (!entry.startsWith("desktop-livecat-")) continue;
+    const target = path.join(out, entry);
     fs.rmSync(target, { recursive: true, force: true });
-    fs.rmSync(`${target}.zip`, { force: true });
   }
 }
 
@@ -46,7 +49,7 @@ function copyStandard(target) {
   fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(
     path.join(dataDir, "README.txt"),
-    "Desktop LiveCat stores portable offline settings in this folder.\n",
+    "Desktop LiveCat stores portable offline settings in this folder. Keep this folder when upgrading.\n",
   );
   fs.copyFileSync(path.join(root, "docs", "distribution.md"), path.join(target, "README-portable.md"));
 }

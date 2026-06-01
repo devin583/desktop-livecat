@@ -52,6 +52,16 @@ struct RuntimeInfo {
     portable_mode: bool,
 }
 
+#[derive(Debug, Serialize)]
+struct CleanupResult {
+    #[serde(rename = "removedItems")]
+    removed_items: u32,
+    #[serde(rename = "removedBytes")]
+    removed_bytes: u64,
+    #[serde(rename = "failedItems")]
+    failed_items: Vec<String>,
+}
+
 #[tauri::command]
 fn list_pet_packs(app: AppHandle) -> Vec<PetPack> {
     let roots = pet_roots(&app);
@@ -127,6 +137,32 @@ fn runtime_info(app: AppHandle) -> RuntimeInfo {
         pet_roots: roots,
         portable_mode,
     }
+}
+
+#[tauri::command]
+fn cleanup_runtime_cache(app: AppHandle) -> CleanupResult {
+    let mut result = CleanupResult {
+        removed_items: 0,
+        removed_bytes: 0,
+        failed_items: Vec::new(),
+    };
+
+    let mut targets = Vec::new();
+    if let Some(data_dir) = state_path(&app).parent() {
+        for name in ["cache", "tmp", "update-downloads"] {
+            targets.push(data_dir.join(name));
+        }
+    }
+
+    if let Ok(cache_dir) = app.path().app_cache_dir() {
+        targets.push(cache_dir);
+    }
+
+    for target in targets {
+        remove_cleanup_target(&target, &mut result);
+    }
+
+    result
 }
 
 #[tauri::command]
@@ -1095,6 +1131,55 @@ fn state_path(app: &AppHandle) -> PathBuf {
         .join("state.json")
 }
 
+fn remove_cleanup_target(target: &Path, result: &mut CleanupResult) {
+    if !target.exists() {
+        return;
+    }
+
+    let Some(name) = target.file_name().and_then(|name| name.to_str()) else {
+        return;
+    };
+    if !matches!(
+        name,
+        "cache" | "tmp" | "update-downloads" | "Desktop LiveCat"
+    ) {
+        return;
+    }
+
+    let bytes = directory_size(target);
+    let removed = if target.is_dir() {
+        fs::remove_dir_all(target)
+    } else {
+        fs::remove_file(target)
+    };
+
+    match removed {
+        Ok(()) => {
+            result.removed_items += 1;
+            result.removed_bytes += bytes;
+        }
+        Err(error) => result
+            .failed_items
+            .push(format!("{}: {}", target.to_string_lossy(), error)),
+    }
+}
+
+fn directory_size(path: &Path) -> u64 {
+    if let Ok(metadata) = fs::metadata(path) {
+        if metadata.is_file() {
+            return metadata.len();
+        }
+    }
+
+    let mut total = 0;
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.flatten() {
+            total += directory_size(&entry.path());
+        }
+    }
+    total
+}
+
 #[cfg(target_os = "windows")]
 fn fixed_webview2_runtime_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
@@ -1160,14 +1245,27 @@ fn reveal_path(path: &Path) -> Result<(), String> {
 fn default_state() -> Value {
     json!({
         "selectedPetId": "orange-tabby-keyboard",
-        "language": "zh-CN",
-        "scale": 0.92,
-        "controlsOpen": false,
+            "language": "zh-CN",
+            "controlPanelTab": "interact",
+            "scale": 0.92,
+            "controlsOpen": false,
         "clickThrough": false,
         "alwaysOnTop": true,
-        "lowPower": false,
-        "keyboardSyncEnabled": true,
-        "pomodoro": {
+            "lowPower": false,
+            "keyboardSyncEnabled": true,
+            "update": {
+                "status": "idle",
+                "currentVersion": "",
+                "latestVersion": null,
+                "releaseUrl": null,
+                "standardAssetUrl": null,
+                "fullOfflineAssetUrl": null,
+                "publishedAt": null,
+                "lastCheckedAt": null,
+                "ignoredVersion": null,
+                "error": null
+            },
+            "pomodoro": {
             "focusMode": "pomo",
             "mode": "focus",
             "presetId": "25-5-15",
@@ -1208,6 +1306,7 @@ struct TrayLabels {
     timer_skip: &'static str,
     next_pet: &'static str,
     reload_pets: &'static str,
+    check_updates: &'static str,
     toggle_controls: &'static str,
     open_resources: &'static str,
     click_through_off: &'static str,
@@ -1224,6 +1323,7 @@ fn tray_labels(language: &str) -> TrayLabels {
             timer_skip: "Skip timer",
             next_pet: "Next pet",
             reload_pets: "Reload pets",
+            check_updates: "Check for updates",
             toggle_controls: "Toggle controls",
             open_resources: "Open resources",
             click_through_off: "Disable click-through",
@@ -1239,6 +1339,7 @@ fn tray_labels(language: &str) -> TrayLabels {
         timer_skip: "跳过计时",
         next_pet: "切换角色",
         reload_pets: "重新加载角色",
+        check_updates: "检查更新",
         toggle_controls: "显示 / 隐藏设置",
         open_resources: "打开资源目录",
         click_through_off: "关闭点击穿透",
@@ -1257,6 +1358,13 @@ fn tray_menu(app: &AppHandle, labels: TrayLabels) -> tauri::Result<Menu<tauri::W
     let next_pet = MenuItem::with_id(app, "next_pet", labels.next_pet, true, None::<&str>)?;
     let reload_pets =
         MenuItem::with_id(app, "reload_pets", labels.reload_pets, true, None::<&str>)?;
+    let check_updates = MenuItem::with_id(
+        app,
+        "check_updates",
+        labels.check_updates,
+        true,
+        None::<&str>,
+    )?;
     let toggle_controls = MenuItem::with_id(
         app,
         "toggle_controls",
@@ -1289,6 +1397,7 @@ fn tray_menu(app: &AppHandle, labels: TrayLabels) -> tauri::Result<Menu<tauri::W
             &timer_skip,
             &next_pet,
             &reload_pets,
+            &check_updates,
             &toggle_controls,
             &open_resources,
             &click_through_off,
@@ -1330,6 +1439,9 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             }
             "reload_pets" => {
                 let _ = app.emit("tray://reload-pets", ());
+            }
+            "check_updates" => {
+                let _ = app.emit("tray://check-updates", ());
             }
             "toggle_controls" => {
                 let _ = app.emit("tray://toggle-controls", ());
@@ -1410,6 +1522,7 @@ pub fn run() {
             set_pet_always_on_top,
             enable_keyboard_sync,
             runtime_info,
+            cleanup_runtime_cache,
             reveal_resources,
             reveal_pet_pack,
             read_pet_asset_data_url,

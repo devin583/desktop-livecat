@@ -4,7 +4,7 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.6.1 status
+## Current v0.8.1 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
@@ -32,6 +32,9 @@ copyable resource packs, and high-quality animated cat behavior.
   third-party models are intentionally not committed.
 - GitHub Actions checks run on macOS and Windows. Tagged releases build the
   Win11 portable package.
+- The app can check GitHub Releases for new versions, open the download page,
+  and clean safe runtime caches while preserving `data/`, custom `pets/`, and
+  the full-offline WebView2 runtime.
 
 ## Run locally
 
@@ -56,7 +59,8 @@ npm run verify:portable
 
 `npm run tauri:build` intentionally uses `tauri build --no-bundle` so the default
 deliverable stays a portable zip instead of an installer. The packaging script
-then writes `release/desktop-livecat-win11-x64.zip` on Windows. To include a
+uses versioned artifact names such as
+`release/desktop-livecat-v0.8.1-win11-x64-portable.zip` on Windows. To include a
 Fixed Version WebView2 Runtime in the full-offline folder locally, download and
 extract Microsoft's official CAB, then set:
 
@@ -66,7 +70,20 @@ WEBVIEW2_FIXED_RUNTIME_DIR=/path/to/fixed-webview2 npm run package:portable
 
 Tagged Windows releases run `npm run download:webview2-fixed` first, using
 Microsoft's WebView2 download page as the source, so they also produce
-`desktop-livecat-win11-x64-full-offline.zip`.
+`desktop-livecat-v0.8.1-win11-x64-full-offline.zip`.
+
+## Upgrade
+
+The app checks GitHub Releases at startup at most once every 24 hours and also
+offers a manual check in Settings. For portable upgrades, close the app, extract
+the new zip, and keep or copy these folders if they exist:
+
+- `data/`
+- custom pet folders under `pets/`
+
+The Settings panel includes a safe cache cleaner. It removes only app cache/temp
+folders and stale browser storage; it keeps settings, focus records, custom pet
+packs, and `runtime/webview2/`.
 
 ## Resource migration
 

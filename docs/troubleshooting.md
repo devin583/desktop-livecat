@@ -28,3 +28,13 @@
 
 - This is expected. It bundles Microsoft Fixed Version WebView2 Runtime so users
   do not need to install dependencies.
+
+## Update Still Shows Old Behavior
+
+- Confirm the zip filename includes the expected version, for example
+  `desktop-livecat-v0.8.1-win11-x64-portable.zip`.
+- Close every running Desktop LiveCat process before extracting the new package.
+- Keep `data/` and custom `pets/`, but let bundled app files come from the new
+  zip.
+- In Settings, run "Clean runtime cache" and restart the app. This preserves
+  settings and pet packs while clearing stale WebView/local storage cache.

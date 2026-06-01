@@ -744,6 +744,49 @@ input {
   font-weight: 750;
 }
 
+.update-nudge {
+  position: absolute;
+  right: 12px;
+  top: 54px;
+  max-width: 220px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px 28px;
+  gap: 5px;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid rgba(83, 62, 69, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 248, 237, 0.9);
+  color: #4c3a42;
+  box-shadow: 0 10px 24px rgba(63, 43, 50, 0.12);
+  z-index: 18;
+}
+
+.update-nudge span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.update-nudge button {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(83, 62, 69, 0.14);
+  border-radius: 7px;
+  background: #fff7e7;
+  color: #4c3a42;
+  cursor: pointer;
+}
+
+.update-nudge button:hover {
+  background: #ffd6c4;
+}
+
 .pet-stage:hover .settings-toggle,
 .settings-toggle:focus-visible,
 .settings-toggle.active {
@@ -757,6 +800,11 @@ input {
 
 .controls-open .status-capsule {
   opacity: 0;
+}
+
+.controls-open .update-nudge {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .control-strip {
@@ -935,6 +983,120 @@ input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 30px 30px;
   gap: 6px;
+}
+
+.update-card,
+.cleanup-card {
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid rgba(83, 62, 69, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 250, 240, 0.74);
+  color: #4c3a42;
+}
+
+.update-card-head,
+.update-version-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.update-card-head span,
+.cleanup-card b {
+  min-width: 0;
+  display: inline-grid;
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 5px;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.update-card-head b {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(255, 214, 196, 0.64);
+  color: #6a4148;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.update-available .update-card-head b {
+  background: rgba(207, 239, 197, 0.84);
+  color: #315f3f;
+}
+
+.update-failed .update-card-head b {
+  background: rgba(255, 218, 218, 0.8);
+  color: #80333f;
+}
+
+.update-version-row span,
+.update-version-row b,
+.update-message,
+.cleanup-card span,
+.cleanup-card small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #71545e;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.update-version-row b {
+  color: #4c3a42;
+  font-weight: 700;
+}
+
+.update-message {
+  white-space: normal;
+}
+
+.update-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.update-actions:has(button:nth-child(3)) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.update-actions button,
+.cleanup-card button {
+  height: 42px;
+  grid-auto-flow: row;
+  gap: 2px;
+  font-size: 10px;
+}
+
+.update-actions button span,
+.cleanup-card button span {
+  white-space: nowrap;
+}
+
+.cleanup-card {
+  grid-template-columns: minmax(0, 1fr) 86px;
+  align-items: center;
+}
+
+.cleanup-card div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.cleanup-card small {
+  grid-column: 1 / -1;
 }
 
 .install-row input {

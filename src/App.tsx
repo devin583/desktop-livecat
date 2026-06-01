@@ -8,6 +8,7 @@ import {
   type PointerEvent,
 } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   BadgeCheck,
   BarChart3,
@@ -18,6 +19,7 @@ import {
   CheckCircle2,
   Coffee,
   Eye,
+  ExternalLink,
   Fish,
   FolderOpen,
   Gauge,
@@ -34,6 +36,7 @@ import {
   Plus,
   ScrollText,
   Settings2,
+  ShieldCheck,
   Smile,
   Sparkles,
   RefreshCw,
@@ -41,6 +44,7 @@ import {
   Settings,
   SkipForward,
   TimerReset,
+  Trash2,
 } from "lucide-react";
 import { Live2DCanvas } from "./Live2DCanvas";
 import { SpritesheetPet } from "./SpritesheetPet";
@@ -61,6 +65,7 @@ import { safeInvoke } from "./tauriBridge";
 import type {
   AppState,
   AppLanguage,
+  CleanupResult,
   ControlPanelTab,
   FocusPanelTab,
   FocusRecord,
@@ -72,6 +77,7 @@ import type {
   PomodoroMode,
   RuntimeInfo,
   TypingPulse,
+  UpdateInfo,
 } from "./types";
 import "./App.css";
 
@@ -116,6 +122,10 @@ const pomodoroPresets = [
   { id: "50-10-20" as const, label: "50/10/20", focus: 50, break: 10, longBreak: 20 },
   { id: "90-20-30" as const, label: "90/20/30", focus: 90, break: 20, longBreak: 30 },
 ];
+
+const latestReleaseApi = "https://api.github.com/repos/devin583/desktop-livecat/releases/latest";
+const releasesLatestUrl = "https://github.com/devin583/desktop-livecat/releases/latest";
+const autoUpdateCheckIntervalMs = 24 * 60 * 60 * 1000;
 
 type DesktopKeyboardKey = {
   label: string;
@@ -231,6 +241,23 @@ const copy = {
     resourceStatus: "资源状态",
     scale: "角色缩放",
     sevenDays: "7 天",
+    updateTitle: "版本更新",
+    updateCheck: "检查更新",
+    updateChecking: "正在检查",
+    updateAvailable: "发现新版本",
+    updateReady: "已是最新版",
+    updateFailed: "检查失败",
+    updateOpen: "打开下载页",
+    updateIgnore: "忽略本版",
+    updateLastChecked: "上次检查",
+    updateNeverChecked: "尚未检查",
+    updateCurrent: "当前版本",
+    updateLatest: "最新版本",
+    cleanupTitle: "清理运行缓存",
+    cleanupAction: "清理缓存",
+    cleanupDone: "已清理",
+    cleanupFailed: "部分失败",
+    cleanupHint: "保留配置、番茄钟记录、角色包和离线运行时。",
     skipTimer: "跳过计时",
     skipBreak: "跳过休息",
     startTimer: "开始计时",
@@ -314,6 +341,23 @@ const copy = {
     resourceStatus: "Resource status",
     scale: "Pet scale",
     sevenDays: "7d",
+    updateTitle: "Version update",
+    updateCheck: "Check updates",
+    updateChecking: "Checking",
+    updateAvailable: "Update available",
+    updateReady: "Up to date",
+    updateFailed: "Check failed",
+    updateOpen: "Open download",
+    updateIgnore: "Ignore this version",
+    updateLastChecked: "Last checked",
+    updateNeverChecked: "Never checked",
+    updateCurrent: "Current",
+    updateLatest: "Latest",
+    cleanupTitle: "Clean runtime cache",
+    cleanupAction: "Clean cache",
+    cleanupDone: "Cleaned",
+    cleanupFailed: "Partially failed",
+    cleanupHint: "Keeps settings, focus records, pet packs, and offline runtime.",
     skipTimer: "Skip timer",
     skipBreak: "Skip break",
     startTimer: "Start timer",
@@ -438,6 +482,56 @@ function keyboardMessage(status: KeyboardStatus, language: AppLanguage) {
   if (status.backend === "disabled") return t.disabledKeyboard;
   if (status.backend.startsWith("windows")) return t.keyboardNative;
   return t.keyboardBrowser;
+}
+
+function normalizeVersion(version: string | null | undefined) {
+  return String(version ?? "")
+    .trim()
+    .replace(/^v/i, "");
+}
+
+function compareVersions(left: string | null | undefined, right: string | null | undefined) {
+  const leftParts = normalizeVersion(left).split(/[.-]/).map(numberPart);
+  const rightParts = normalizeVersion(right).split(/[.-]/).map(numberPart);
+  const length = Math.max(leftParts.length, rightParts.length, 3);
+  for (let index = 0; index < length; index += 1) {
+    const diff = (leftParts[index] ?? 0) - (rightParts[index] ?? 0);
+    if (diff !== 0) return diff > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
+function numberPart(value: string) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function updateStatusLabel(update: UpdateInfo, language: AppLanguage) {
+  const t = copy[language];
+  if (update.status === "checking") return t.updateChecking;
+  if (update.status === "available") return t.updateAvailable;
+  if (update.status === "upToDate") return t.updateReady;
+  if (update.status === "failed") return t.updateFailed;
+  return t.updateNeverChecked;
+}
+
+function formatCheckedAt(value: string | null, language: AppLanguage) {
+  if (!value) return copy[language].updateNeverChecked;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return copy[language].updateNeverChecked;
+  return date.toLocaleString(language === "zh-CN" ? "zh-CN" : "en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatBytes(bytes: number, language: AppLanguage) {
+  if (bytes < 1024) return language === "zh-CN" ? `${bytes} 字节` : `${bytes} B`;
+  const mb = bytes / 1024 / 1024;
+  if (mb >= 1) return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
 function artistStatusLabel(status: PetPack["artist_status"], language: AppLanguage) {
@@ -587,6 +681,7 @@ function App() {
   const [dragged, setDragged] = useState(false);
   const [installInput, setInstallInput] = useState("");
   const [installStatus, setInstallStatus] = useState("");
+  const [cleanupStatus, setCleanupStatus] = useState("");
   const pulsesRef = useRef<number[]>([]);
   const lookThrottleRef = useRef(0);
   const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
@@ -855,6 +950,21 @@ function App() {
   useEffect(() => {
     void safeInvoke("set_tray_language", { language: state.language });
   }, [state.language]);
+
+  useEffect(() => {
+    if (!runtimeInfo?.appVersion) return;
+    setState((current) =>
+      current.update.currentVersion === runtimeInfo.appVersion
+        ? current
+        : {
+            ...current,
+            update: {
+              ...current.update,
+              currentVersion: runtimeInfo.appVersion,
+            },
+          },
+    );
+  }, [runtimeInfo?.appVersion, setState]);
 
   useEffect(() => {
     const label = `${timerStageLabel} ${secondsToClock(state.pomodoro.remainingSeconds)}`;
@@ -1165,27 +1275,6 @@ function App() {
     });
   };
 
-  useEffect(() => {
-    const listeners = [
-      listen("tray://timer-toggle", () => pomodoroAction("toggle")),
-      listen("tray://timer-reset", () => pomodoroAction("reset")),
-      listen("tray://timer-skip", () => pomodoroAction("skip")),
-      listen("tray://reload-pets", refreshPets),
-      listen("tray://next-pet", selectNextPet),
-      listen("tray://toggle-controls", () => {
-        setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }));
-      }),
-      listen("tray://click-through-off", () => {
-        setState((current) => ({ ...current, clickThrough: false }));
-      }),
-    ];
-    return () => {
-      void Promise.all(listeners).then((unlisteners) => {
-        unlisteners.forEach((unlisten) => unlisten());
-      });
-    };
-  }, [refreshPets, selectNextPet]);
-
   const selectPreset = (preset: (typeof pomodoroPresets)[number]) => {
     setState((current) => ({
       ...current,
@@ -1277,6 +1366,165 @@ function App() {
       });
     });
   };
+
+  const openExternal = useCallback((url: string | null | undefined) => {
+    if (!url) return;
+    void openUrl(url).catch(() => {
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+  }, []);
+
+  const checkForUpdates = useCallback(
+    async (force = false) => {
+      const currentVersion = runtimeInfo?.appVersion || state.update.currentVersion;
+      const checkedAt = new Date().toISOString();
+      setState((current) => ({
+        ...current,
+        update: {
+          ...current.update,
+          status: "checking",
+          currentVersion,
+          error: null,
+          ignoredVersion: force ? null : current.update.ignoredVersion,
+        },
+      }));
+
+      try {
+        const response = await fetch(latestReleaseApi, {
+          headers: { Accept: "application/vnd.github+json" },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const release = (await response.json()) as {
+          tag_name?: string;
+          html_url?: string;
+          published_at?: string;
+          assets?: Array<{ name?: string; browser_download_url?: string }>;
+        };
+        const latestVersion = normalizeVersion(release.tag_name);
+        const standardAssetUrl =
+          release.assets?.find(
+            (asset) =>
+              asset.name?.includes("win11-x64") &&
+              !asset.name?.includes("full-offline") &&
+              asset.name?.endsWith(".zip"),
+          )?.browser_download_url ?? null;
+        const fullOfflineAssetUrl =
+          release.assets?.find(
+            (asset) =>
+              asset.name?.includes("win11-x64") &&
+              asset.name?.includes("full-offline") &&
+              asset.name?.endsWith(".zip"),
+          )?.browser_download_url ?? null;
+
+        setState((current) => {
+          const newer = compareVersions(latestVersion, currentVersion) > 0;
+          const ignored = !force && current.update.ignoredVersion === latestVersion;
+          return {
+            ...current,
+            update: {
+              ...current.update,
+              status: newer && !ignored ? "available" : "upToDate",
+              currentVersion,
+              latestVersion,
+              releaseUrl: release.html_url ?? releasesLatestUrl,
+              standardAssetUrl,
+              fullOfflineAssetUrl,
+              publishedAt: release.published_at ?? null,
+              lastCheckedAt: checkedAt,
+              ignoredVersion: force ? null : current.update.ignoredVersion,
+              error: null,
+            },
+          };
+        });
+      } catch (error) {
+        setState((current) => ({
+          ...current,
+          update: {
+            ...current.update,
+            status: "failed",
+            currentVersion,
+            lastCheckedAt: checkedAt,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        }));
+      }
+    },
+    [runtimeInfo?.appVersion, setState, state.update.currentVersion],
+  );
+
+  useEffect(() => {
+    if (!runtimeInfo?.appVersion) return;
+    const lastChecked = Date.parse(state.update.lastCheckedAt ?? "");
+    const fresh = Number.isFinite(lastChecked) && Date.now() - lastChecked < autoUpdateCheckIntervalMs;
+    if (!fresh) void checkForUpdates(false);
+  }, [checkForUpdates, runtimeInfo?.appVersion, state.update.lastCheckedAt]);
+
+  const ignoreCurrentUpdate = () => {
+    setState((current) => ({
+      ...current,
+      update: {
+        ...current.update,
+        status: "upToDate",
+        ignoredVersion: current.update.latestVersion,
+      },
+    }));
+  };
+
+  const cleanRuntimeCache = () => {
+    const preservedState = localStorage.getItem("desktop-livecat-state");
+    let removedLocalKeys = 0;
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (!key || key === "desktop-livecat-state") continue;
+      if (key.startsWith("desktop-livecat") || key.startsWith("livecat")) {
+        localStorage.removeItem(key);
+        removedLocalKeys += 1;
+      }
+    }
+    if (preservedState) localStorage.setItem("desktop-livecat-state", preservedState);
+
+    setCleanupStatus(state.language === "zh-CN" ? "清理中" : "Cleaning");
+    void safeInvoke<CleanupResult>("cleanup_runtime_cache").then((result) => {
+      const removedItems = (result?.removedItems ?? 0) + removedLocalKeys;
+      const removedBytes = result?.removedBytes ?? 0;
+      const failedItems = result?.failedItems ?? [];
+      const prefix =
+        failedItems.length > 0
+          ? state.language === "zh-CN"
+            ? t.cleanupFailed
+            : t.cleanupFailed
+          : state.language === "zh-CN"
+            ? t.cleanupDone
+            : t.cleanupDone;
+      setCleanupStatus(
+        `${prefix}: ${removedItems} ${
+          state.language === "zh-CN" ? "项" : "items"
+        }, ${formatBytes(removedBytes, state.language)}`,
+      );
+    });
+  };
+
+  useEffect(() => {
+    const listeners = [
+      listen("tray://timer-toggle", () => pomodoroAction("toggle")),
+      listen("tray://timer-reset", () => pomodoroAction("reset")),
+      listen("tray://timer-skip", () => pomodoroAction("skip")),
+      listen("tray://reload-pets", refreshPets),
+      listen("tray://check-updates", () => checkForUpdates(true)),
+      listen("tray://next-pet", selectNextPet),
+      listen("tray://toggle-controls", () => {
+        setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }));
+      }),
+      listen("tray://click-through-off", () => {
+        setState((current) => ({ ...current, clickThrough: false }));
+      }),
+    ];
+    return () => {
+      void Promise.all(listeners).then((unlisteners) => {
+        unlisteners.forEach((unlisten) => unlisten());
+      });
+    };
+  }, [checkForUpdates, refreshPets, selectNextPet]);
 
   const triggerInteraction = useCallback((mood: InteractionMood, prop: ActiveInteraction["prop"]) => {
     if (interactionTimeoutRef.current) {
@@ -1485,6 +1733,20 @@ function App() {
           <span>{moodStatusLabel(petMood, state.language)}</span>
           <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
         </div>
+        {state.update.status === "available" ? (
+          <div className="update-nudge">
+            <span>
+              {t.updateAvailable}
+              {state.update.latestVersion ? ` v${state.update.latestVersion}` : ""}
+            </span>
+            <button type="button" title={t.updateOpen} onClick={() => openExternal(state.update.releaseUrl)}>
+              <ExternalLink size={13} />
+            </button>
+            <button type="button" title={t.updateIgnore} onClick={ignoreCurrentUpdate}>
+              <CheckCircle2 size={13} />
+            </button>
+          </div>
+        ) : null}
 
         <button
           type="button"
@@ -1679,6 +1941,69 @@ function App() {
               <Languages size={16} />
               <span>{state.language === "zh-CN" ? "中" : "EN"}</span>
             </button>
+          </div>
+
+          <div className={`update-card update-${state.update.status}`}>
+            <div className="update-card-head">
+              <span>
+                <ShieldCheck size={14} />
+                {t.updateTitle}
+              </span>
+              <b>{updateStatusLabel(state.update, state.language)}</b>
+            </div>
+            <div className="update-version-row">
+              <span>{t.updateCurrent}</span>
+              <b>v{normalizeVersion(runtimeInfo?.appVersion || state.update.currentVersion)}</b>
+            </div>
+            <div className="update-version-row">
+              <span>{t.updateLatest}</span>
+              <b>{state.update.latestVersion ? `v${state.update.latestVersion}` : "-"}</b>
+            </div>
+            <div className="update-version-row">
+              <span>{t.updateLastChecked}</span>
+              <b>{formatCheckedAt(state.update.lastCheckedAt, state.language)}</b>
+            </div>
+            {state.update.status === "failed" && state.update.error ? (
+              <div className="update-message">{state.update.error}</div>
+            ) : null}
+            <div className="update-actions">
+              <button
+                type="button"
+                title={t.updateCheck}
+                disabled={state.update.status === "checking"}
+                onClick={() => checkForUpdates(true)}
+              >
+                <RefreshCw size={14} />
+                <span>{t.updateCheck}</span>
+              </button>
+              <button
+                type="button"
+                title={t.updateOpen}
+                disabled={!state.update.releaseUrl}
+                onClick={() => openExternal(state.update.releaseUrl)}
+              >
+                <ExternalLink size={14} />
+                <span>{t.updateOpen}</span>
+              </button>
+              {state.update.status === "available" ? (
+                <button type="button" title={t.updateIgnore} onClick={ignoreCurrentUpdate}>
+                  <CheckCircle2 size={14} />
+                  <span>{t.updateIgnore}</span>
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="cleanup-card">
+            <div>
+              <b>{t.cleanupTitle}</b>
+              <span>{t.cleanupHint}</span>
+            </div>
+            <button type="button" title={t.cleanupAction} onClick={cleanRuntimeCache}>
+              <Trash2 size={14} />
+              <span>{t.cleanupAction}</span>
+            </button>
+            {cleanupStatus ? <small>{cleanupStatus}</small> : null}
           </div>
 
           <div className="install-row">

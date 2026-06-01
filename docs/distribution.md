@@ -2,7 +2,7 @@
 
 ## Standard package
 
-`desktop-livecat-win11-x64.zip`
+`desktop-livecat-v<version>-win11-x64-portable.zip`
 
 - Contains the Tauri executable and bundled `pets/` resources.
 - Assumes Win11 has Microsoft Edge WebView2 Runtime available.
@@ -10,7 +10,7 @@
 
 ## Full offline package
 
-`desktop-livecat-win11-x64-full-offline.zip`
+`desktop-livecat-v<version>-win11-x64-full-offline.zip`
 
 - Contains the standard package contents.
 - Also includes Microsoft Fixed Version WebView2 Runtime under `runtime/webview2/`.
@@ -31,3 +31,15 @@ Copy these directories next to the executable:
 
 - `pets/`: resource packs.
 - `data/`: local state and settings.
+
+## Upgrade flow
+
+- The app checks GitHub Releases for newer tags and can open the latest release
+  page from Settings or the tray menu.
+- It does not replace the running executable. Users should close the app,
+  extract the new zip, and keep or copy `data/` plus any custom pet folders.
+- The Settings cache cleaner is intentionally conservative. It removes only
+  `data/cache/`, `data/tmp/`, `data/update-downloads/`, and the app cache
+  directory when present.
+- Never delete `runtime/webview2/` during cleanup; full-offline packages need it
+  for machines without a system WebView2 runtime.
