@@ -192,6 +192,7 @@ const copy = {
     installPlaceholder: "路径或描述",
     pauseTimer: "暂停计时",
     petPack: "角色包",
+    petPosition: "角色序号",
     petNext: "下一个角色",
     petPrevious: "上一个角色",
     reloadPets: "重新加载角色",
@@ -252,6 +253,7 @@ const copy = {
     installPlaceholder: "Path or prompt",
     pauseTimer: "Pause timer",
     petPack: "Pet pack",
+    petPosition: "Pet position",
     petNext: "Next pet",
     petPrevious: "Previous pet",
     reloadPets: "Reload pets",
@@ -430,9 +432,20 @@ function rendererLabel(pet: PetPack, language: AppLanguage) {
   return "Live2D";
 }
 
+function petOriginLabel(pet: PetPack, language: AppLanguage) {
+  if (pet.tags.includes("user-supplied")) {
+    return language === "zh-CN" ? "用户素材" : "User asset";
+  }
+  if (pet.source === "bundled-fallback") {
+    return language === "zh-CN" ? "内置兜底" : "Built-in fallback";
+  }
+  return pet.artist;
+}
+
 function isSelectablePet(pet: PetPack) {
   if (pet.id.startsWith("_")) return false;
-  if (pet.id === "livecat-default" && !pet.has_live2d_model && !pet.has_spritesheet) return false;
+  if (pet.id === "pixel-mochi") return false;
+  if (pet.id === "livecat-default") return false;
   if (pet.id === "replace-with-pet-id" || pet.id === "your-pet-id") return false;
   return pet.has_spritesheet || pet.has_live2d_model;
 }
@@ -1311,6 +1324,12 @@ function App() {
         </button>
 
         <aside className="control-strip">
+          <div className="pet-picker-header">
+            <span>{t.petPack}</span>
+            <b title={t.petPosition}>
+              {selectablePets.length ? `${selectedPetIndex + 1}/${selectablePets.length}` : "0/0"}
+            </b>
+          </div>
           <div className="pet-picker">
             <button
               type="button"
@@ -1348,7 +1367,7 @@ function App() {
 
           <div className="pet-meta" title={selectedPet.description || selectedPet.name}>
             <div>
-              <span>{selectedPet.artist}</span>
+              <span>{petOriginLabel(selectedPet, state.language)}</span>
               <b>{selectedPet.version}</b>
             </div>
             <div>

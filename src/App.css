@@ -729,6 +729,29 @@ input {
   width: 100%;
 }
 
+.pet-picker-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  color: #4d3c45;
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 0 1px;
+}
+
+.pet-picker-header span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-picker-header b {
+  color: #6b5962;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .pet-picker {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) 32px;

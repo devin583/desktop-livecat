@@ -1,9 +1,9 @@
 {
   "id": "orange-tabby-keyboard",
-  "name": "Orange Tabby Keyboard",
+  "name": "橘猫键盘 Orange Tabby",
   "version": "0.1.0",
   "artist": "User supplied via ChatGPT Image",
-  "description": "Orange tabby keyboard cat spritesheet from the supplied ChatGPT image grid, cleaned into a local transparent resource pack.",
+  "description": "User-supplied orange tabby keyboard cat spritesheet, cleaned into a local transparent resource pack.",
   "preview": "preview/preview.png",
   "renderMode": "spritesheet",
   "tags": [
@@ -15,7 +15,7 @@
     "user-supplied"
   ],
   "persona": {
-    "name": "Orange Tabby Keyboard",
+    "name": "橘猫键盘 Orange Tabby",
     "species": "orange tabby cat",
     "style": "warm orange tabby cartoon keyboard cat spritesheet",
     "personality": "curious, expressive, energetic, and typing-focused",
