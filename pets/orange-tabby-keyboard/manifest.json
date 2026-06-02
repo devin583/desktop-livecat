@@ -12,8 +12,15 @@
     "cat",
     "pomodoro",
     "offline",
-    "user-supplied"
+    "user-supplied",
+    "legacy",
+    "deprecated"
   ],
+  "quality": {
+    "deprecated": true,
+    "replacement": "orange-tabby-keyboard-v2",
+    "reason": "Legacy 7-column sheet keeps detached emoji/effect marks in the sprite frames and does not follow the current pet-composition contract."
+  },
   "persona": {
     "name": "橘猫键盘 Orange Tabby",
     "species": "orange tabby cat",
@@ -35,6 +42,17 @@
     "rows": 9,
     "frameWidth": 169,
     "frameHeight": 148,
+    "composition": {
+      "baseline": "keyboard",
+      "bakedProps": [
+        "computer-keyboard",
+        "hearts",
+        "zzz",
+        "anger-marks"
+      ],
+      "detachedEffects": true,
+      "runtimeOverlays": []
+    },
     "statesFile": "spritesheet/states.json"
   },
   "privacy": {

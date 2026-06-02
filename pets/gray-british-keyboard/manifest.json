@@ -12,8 +12,15 @@
     "cat",
     "pomodoro",
     "offline",
-    "user-supplied"
+    "user-supplied",
+    "legacy",
+    "deprecated"
   ],
+  "quality": {
+    "deprecated": true,
+    "replacement": "gray-british-keyboard-v2",
+    "reason": "Legacy 7-column sheet keeps detached emoji/effect marks in the sprite frames and does not follow the current pet-composition contract."
+  },
   "persona": {
     "name": "英短键盘 Gray British",
     "species": "gray British-style cat",
@@ -35,6 +42,17 @@
     "rows": 9,
     "frameWidth": 169,
     "frameHeight": 148,
+    "composition": {
+      "baseline": "keyboard",
+      "bakedProps": [
+        "computer-keyboard",
+        "hearts",
+        "zzz",
+        "anger-marks"
+      ],
+      "detachedEffects": true,
+      "runtimeOverlays": []
+    },
     "statesFile": "spritesheet/states.json"
   },
   "privacy": {

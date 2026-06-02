@@ -652,6 +652,7 @@ function isSelectablePet(pet: PetPack) {
   if (pet.id.startsWith("_")) return false;
   if (pet.id === "pixel-mochi") return false;
   if (pet.id === "livecat-default") return false;
+  if (pet.tags.includes("deprecated") || pet.tags.includes("legacy")) return false;
   if (pet.id === "replace-with-pet-id" || pet.id === "your-pet-id") return false;
   return pet.has_spritesheet || pet.has_live2d_model;
 }
@@ -675,8 +676,6 @@ function orderPets(pets: PetPack[]) {
 const browserPreviewPetIds = [
   "orange-tabby-keyboard-v2",
   "gray-british-keyboard-v2",
-  "orange-tabby-keyboard",
-  "gray-british-keyboard",
 ];
 
 async function loadBrowserPreviewPetPacks() {

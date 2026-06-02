@@ -38,6 +38,14 @@ For `spritesheet` and `hybrid` packs:
 - `spritesheet.frameWidth`: default `192`.
 - `spritesheet.frameHeight`: default `208`.
 - `spritesheet.states`: state-to-frame mapping. `idle` is the required safe fallback.
+- `spritesheet.composition.baseline`: visual ground reference, usually `keyboard`
+  for keyboard-cat packs.
+- `spritesheet.composition.bakedProps`: props already included inside the image
+  frames, such as `computer-keyboard`.
+- `spritesheet.composition.detachedEffects`: must be `false` for production
+  packs. `true` is only allowed for deprecated legacy packs.
+- `spritesheet.composition.runtimeOverlays`: overlays the app may draw on top,
+  such as `timer-bubble`, `care-props`, and `reaction-bubble`.
 
 Optional fields:
 
@@ -81,6 +89,13 @@ runtime falls back to `idle`.
 Single image imports are treated as inert spritesheet packs. The app creates a
 manifest and artist handoff around the image, then the artist can replace it
 with a full 8 x 9 sheet later.
+
+Production spritesheets should follow
+[`pet-asset-pipeline-standards.md`](pet-asset-pipeline-standards.md). In short:
+if a keyboard is baked into the sheet, the keyboard is the stable baseline and
+must not be redrawn by the runtime; detached hearts, Z marks, anger marks,
+sparkles, speed lines, and text belong in runtime overlays rather than in the
+spritesheet.
 
 ## Live2D source assets
 

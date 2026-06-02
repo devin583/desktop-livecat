@@ -81,6 +81,8 @@ function validatePack(packDir, folderName) {
   const expectsLive2D = renderMode === "live2d" || renderMode === "hybrid" || manifest.live2d !== undefined;
   const expectsSpritesheet =
     renderMode === "spritesheet" || renderMode === "hybrid" || manifest.spritesheet !== undefined;
+  const tags = Array.isArray(manifest.tags) ? manifest.tags.filter(isNonEmptyString) : [];
+  const deprecated = Boolean(manifest.quality?.deprecated) || tags.includes("deprecated");
 
   if (manifest.preview !== undefined) {
     validatePath(packDir, folderName, manifest.preview, "preview", { required: true });
@@ -102,7 +104,7 @@ function validatePack(packDir, folderName) {
   }
 
   if (expectsSpritesheet) {
-    validateSpritesheet(packDir, folderName, manifest.spritesheet, renderMode);
+    validateSpritesheet(packDir, folderName, manifest.spritesheet, renderMode, { deprecated });
   }
 
   if (manifest.privacy && manifest.privacy.storesKeyValues !== false) {
@@ -110,6 +112,7 @@ function validatePack(packDir, folderName) {
   }
 
   validatePersona(folderName, manifest.persona);
+  validateQuality(folderName, manifest.quality);
   validateArtistWorkflow(packDir, folderName, manifest.artistWorkflow, sourceLayerMapPath, renderMode);
 }
 
@@ -157,11 +160,13 @@ function validateLive2D(packDir, folderName, live2d, renderMode) {
   return live2d.sourceLayerMap;
 }
 
-function validateSpritesheet(packDir, folderName, spritesheet, renderMode) {
+function validateSpritesheet(packDir, folderName, spritesheet, renderMode, options = {}) {
   if (!spritesheet || typeof spritesheet !== "object" || Array.isArray(spritesheet)) {
     fail(`${folderName}: manifest.spritesheet must be an object for renderMode "${renderMode}".`);
     return;
   }
+
+  validateSpritesheetComposition(folderName, spritesheet.composition, options);
 
   if (!isNonEmptyString(spritesheet.image)) {
     fail(`${folderName}: manifest.spritesheet.image must be a non-empty string.`);
@@ -225,6 +230,43 @@ function validateSpritesheet(packDir, folderName, spritesheet, renderMode) {
   }
 }
 
+function validateSpritesheetComposition(folderName, composition, options = {}) {
+  if (composition === undefined) return;
+  if (!composition || typeof composition !== "object" || Array.isArray(composition)) {
+    fail(`${folderName}: manifest.spritesheet.composition must be an object when present.`);
+    return;
+  }
+
+  if (
+    composition.baseline !== undefined &&
+    !["keyboard", "character", "ground", "none"].includes(composition.baseline)
+  ) {
+    fail(`${folderName}: spritesheet.composition.baseline must be keyboard, character, ground, or none.`);
+  }
+
+  for (const field of ["bakedProps", "runtimeOverlays"]) {
+    if (
+      composition[field] !== undefined &&
+      (!Array.isArray(composition[field]) || !composition[field].every(isNonEmptyString))
+    ) {
+      fail(`${folderName}: spritesheet.composition.${field} must be an array of non-empty strings.`);
+    }
+  }
+
+  if (
+    composition.detachedEffects !== undefined &&
+    typeof composition.detachedEffects !== "boolean"
+  ) {
+    fail(`${folderName}: spritesheet.composition.detachedEffects must be a boolean.`);
+  }
+
+  if (composition.detachedEffects === true && !options.deprecated) {
+    fail(
+      `${folderName}: spritesheet.composition.detachedEffects=true is only allowed for deprecated legacy packs.`,
+    );
+  }
+}
+
 function validateSpritesheetState(folderName, spritesheet, stateName, stateSpec, label) {
   if (!animationStates.has(stateName)) {
     fail(`${folderName}: ${label} is not a supported animation state.`);
@@ -284,6 +326,23 @@ function validatePersona(folderName, persona) {
     if (!Array.isArray(persona.palette) || !persona.palette.every(isNonEmptyString)) {
       fail(`${folderName}: manifest.persona.palette must be an array of non-empty color strings.`);
     }
+  }
+}
+
+function validateQuality(folderName, quality) {
+  if (quality === undefined) return;
+  if (!quality || typeof quality !== "object" || Array.isArray(quality)) {
+    fail(`${folderName}: manifest.quality must be an object when present.`);
+    return;
+  }
+  if (quality.deprecated !== undefined && typeof quality.deprecated !== "boolean") {
+    fail(`${folderName}: manifest.quality.deprecated must be a boolean when present.`);
+  }
+  if (quality.replacement !== undefined && !isNonEmptyString(quality.replacement)) {
+    fail(`${folderName}: manifest.quality.replacement must be a non-empty string when present.`);
+  }
+  if (quality.reason !== undefined && !isNonEmptyString(quality.reason)) {
+    fail(`${folderName}: manifest.quality.reason must be a non-empty string when present.`);
   }
 }
 

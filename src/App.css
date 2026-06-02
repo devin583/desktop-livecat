@@ -1898,6 +1898,10 @@ input {
   animation: timer-bubble-complete 1300ms cubic-bezier(0.2, 0.84, 0.22, 1) both;
 }
 
+.renderer-spritesheet .pet-timer-bubble {
+  bottom: calc(334px * var(--pet-scale));
+}
+
 @keyframes timer-bubble-in {
   from {
     opacity: 0;

@@ -35,6 +35,10 @@ export const fallbackPet: PetPack = {
 
 const maxDaySeconds = 24 * 60 * 60;
 const maxRecords = 500;
+const deprecatedPetReplacement: Record<string, string> = {
+  "gray-british-keyboard": "gray-british-keyboard-v2",
+  "orange-tabby-keyboard": "orange-tabby-keyboard-v2",
+};
 
 export const todayKey = (date = new Date()) => {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
@@ -132,6 +136,8 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
       ...(input?.petCare ?? {}),
     },
   };
+
+  next.selectedPetId = deprecatedPetReplacement[next.selectedPetId] ?? next.selectedPetId;
 
   if (
     next.selectedPetId === "pixel-mochi" ||
