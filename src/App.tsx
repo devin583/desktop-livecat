@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent,
   type PointerEvent,
 } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -72,6 +73,7 @@ import type {
   FocusTimerMode,
   KeyboardStatus,
   PetAnimationState,
+  PetCareState,
   PetMood,
   PetPack,
   PomodoroMode,
@@ -190,6 +192,22 @@ const copy = {
     statusCleaning: "整理毛毛",
     statusPraised: "被夸了",
     statusAttention: "休息提醒",
+    careBond: "亲密",
+    careCleanliness: "清洁",
+    careEnergy: "精力",
+    careFullness: "饱腹",
+    careHappiness: "开心",
+    focusCompanion: "陪伴专注",
+    focusCompletePet: "完成啦",
+    focusResetPet: "重新准备",
+    focusSkipPet: "切换节奏",
+    focusStartPet: "准备专注",
+    focusPausedPet: "等你回来",
+    focusRunningPet: "陪你专注",
+    menuCare: "照顾",
+    menuFocus: "番茄钟",
+    menuSettings: "设置",
+    menuOpenControls: "完整面板",
     interactPet: "抚摸",
     interactFeed: "喂食",
     interactPlay: "玩耍",
@@ -290,6 +308,22 @@ const copy = {
     statusCleaning: "Grooming",
     statusPraised: "Praised",
     statusAttention: "Break nudge",
+    careBond: "Bond",
+    careCleanliness: "Clean",
+    careEnergy: "Energy",
+    careFullness: "Full",
+    careHappiness: "Happy",
+    focusCompanion: "Focus buddy",
+    focusCompletePet: "Done",
+    focusResetPet: "Reset",
+    focusSkipPet: "Switching",
+    focusStartPet: "Ready",
+    focusPausedPet: "Waiting",
+    focusRunningPet: "Focusing",
+    menuCare: "Care",
+    menuFocus: "Timer",
+    menuSettings: "Settings",
+    menuOpenControls: "Full panel",
     interactPet: "Pet",
     interactFeed: "Feed",
     interactPlay: "Play",
@@ -774,7 +808,7 @@ function normalizeArtistStatus(value: string | null): PetPack["artist_status"] {
 }
 
 const nonPetPointerSelector =
-  "button, input, select, textarea, .control-strip, .settings-toggle, .status-capsule, .update-nudge";
+  "button, input, select, textarea, .control-strip, .settings-toggle, .status-capsule, .update-nudge, .pet-context-menu, .pet-action-dock";
 
 function isPetSurfacePointer(event: PointerEvent<HTMLElement>) {
   if (event.button !== 0) return false;
@@ -790,9 +824,16 @@ type InteractionMood = Extract<
 >;
 
 type ActiveInteraction = {
+  id: number;
   mood: InteractionMood;
   prop: "fish" | "wand" | "brush" | "heart" | "bell" | null;
+  reaction: string;
   until: number;
+};
+
+type PetContextMenuState = {
+  x: number;
+  y: number;
 };
 
 const interactionDurationMs: Record<InteractionMood, number> = {
@@ -803,6 +844,86 @@ const interactionDurationMs: Record<InteractionMood, number> = {
   praised: 4200,
   attention_call: 4300,
 };
+
+const interactionCareDelta: Record<
+  InteractionMood,
+  Partial<Record<Exclude<keyof PetCareState, "lastInteractionAt">, number>>
+> = {
+  petting: { happiness: 10, energy: 2, bond: 2 },
+  feeding: { fullness: 18, happiness: 4, energy: 2, bond: 1 },
+  playing: { happiness: 14, fullness: -3, energy: -7, bond: 2 },
+  cleaning: { cleanliness: 22, happiness: 3, energy: -2, bond: 1 },
+  praised: { happiness: 12, energy: 3, bond: 3 },
+  attention_call: { energy: 8, happiness: 2, bond: 1 },
+};
+
+function applyCareDelta(
+  care: PetCareState,
+  delta: Partial<Record<Exclude<keyof PetCareState, "lastInteractionAt">, number>>,
+): PetCareState {
+  return {
+    ...care,
+    happiness: clampCare(care.happiness + (delta.happiness ?? 0)),
+    fullness: clampCare(care.fullness + (delta.fullness ?? 0)),
+    cleanliness: clampCare(care.cleanliness + (delta.cleanliness ?? 0)),
+    energy: clampCare(care.energy + (delta.energy ?? 0)),
+    bond: Math.max(0, Math.min(9999, Math.round(care.bond + (delta.bond ?? 0)))),
+    lastInteractionAt: new Date().toISOString(),
+  };
+}
+
+function clampCare(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function interactionReactionLabel(
+  mood: InteractionMood,
+  language: AppLanguage,
+  delta = interactionCareDelta[mood],
+) {
+  const positiveMetric =
+    (delta.fullness ?? 0) > 0
+      ? language === "zh-CN"
+        ? "饱腹"
+        : "full"
+      : (delta.cleanliness ?? 0) > 0
+        ? language === "zh-CN"
+          ? "清洁"
+          : "clean"
+        : (delta.energy ?? 0) > 0
+          ? language === "zh-CN"
+            ? "精力"
+            : "energy"
+          : language === "zh-CN"
+            ? "开心"
+            : "happy";
+  const amount = Math.max(
+    delta.happiness ?? 0,
+    delta.fullness ?? 0,
+    delta.cleanliness ?? 0,
+    delta.energy ?? 0,
+    1,
+  );
+  const verb =
+    language === "zh-CN"
+      ? {
+          petting: "舒服",
+          feeding: "吃到啦",
+          playing: "开玩",
+          cleaning: "清爽",
+          praised: "被夸",
+          attention_call: "提醒",
+        }[mood]
+      : {
+          petting: "Purr",
+          feeding: "Snack",
+          playing: "Play",
+          cleaning: "Groom",
+          praised: "Praised",
+          attention_call: "Nudge",
+        }[mood];
+  return language === "zh-CN" ? `${verb} +${amount} ${positiveMetric}` : `${verb} +${amount} ${positiveMetric}`;
+}
 
 const dragIntentDelayMs = 160;
 const dragIntentDistancePx = 28;
@@ -830,6 +951,7 @@ function App() {
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [lastMouseActivity, setLastMouseActivity] = useState(0);
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
+  const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
   const [dragged, setDragged] = useState(false);
   const [installInput, setInstallInput] = useState("");
   const [installStatus, setInstallStatus] = useState("");
@@ -839,10 +961,10 @@ function App() {
   const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
   const dragCandidateRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
+  const interactionIdRef = useRef(0);
   const t = copy[state.language];
 
   const selectablePets = useMemo(() => orderPets(pets.filter(isSelectablePet)), [pets]);
-  const pickerPets = selectablePets.length ? selectablePets : [fallbackPet];
   const selectedPet = useMemo(
     () =>
       selectablePets.find((pet) => pet.id === state.selectedPetId) ??
@@ -877,6 +999,38 @@ function App() {
     state.pomodoro.focusSecondsToday,
   );
   const spriteAssetFailed = failedSpritePetIds.has(selectedPet.id);
+  const plannedTimerSeconds =
+    state.pomodoro.focusMode === "stopwatch"
+      ? Math.max(1, plannedFocusSeconds(state.pomodoro, "focus") || state.pomodoro.remainingSeconds || 1)
+      : Math.max(1, state.pomodoro.activePlannedSeconds || resetPomodoroDuration(state.pomodoro));
+  const freshTimerSeconds = resetPomodoroDuration(state.pomodoro);
+  const timerHasContext =
+    state.pomodoro.running ||
+    Boolean(state.pomodoro.completionReview) ||
+    state.pomodoro.mode !== "focus" ||
+    state.pomodoro.remainingSeconds !== freshTimerSeconds;
+  const timerProgress =
+    state.pomodoro.focusMode === "stopwatch"
+      ? Math.min(1, state.pomodoro.remainingSeconds / plannedTimerSeconds)
+      : Math.min(1, Math.max(0, 1 - state.pomodoro.remainingSeconds / plannedTimerSeconds));
+  const timerBubbleTone = state.pomodoro.completionReview
+    ? "complete"
+    : state.pomodoro.running
+      ? state.pomodoro.mode
+      : "paused";
+  const focusCompanionLabel = state.pomodoro.completionReview
+    ? t.focusCompletePet
+    : state.pomodoro.running
+      ? t.focusRunningPet
+      : timerHasContext
+        ? t.focusPausedPet
+        : t.focusCompanion;
+  const careMeters = [
+    ["happiness", t.careHappiness, state.petCare.happiness],
+    ["fullness", t.careFullness, state.petCare.fullness],
+    ["cleanliness", t.careCleanliness, state.petCare.cleanliness],
+    ["energy", t.careEnergy, state.petCare.energy],
+  ] as const;
 
   const registerPulse = useCallback((source = "browser-focus-fallback") => {
     const now = Date.now();
@@ -1142,6 +1296,49 @@ function App() {
     );
   }, [state.language, state.pomodoro.completionReview, t.focusDoneTitle, t.untitledTask]);
 
+  const triggerInteraction = useCallback(
+    (
+      mood: InteractionMood,
+      prop: ActiveInteraction["prop"],
+      options: { adjustCare?: boolean; closeMenu?: boolean; reaction?: string } = {},
+    ) => {
+      if (interactionTimeoutRef.current) {
+        window.clearTimeout(interactionTimeoutRef.current);
+      }
+      const id = interactionIdRef.current + 1;
+      interactionIdRef.current = id;
+      setActiveInteraction({
+        id,
+        mood,
+        prop,
+        reaction: options.reaction ?? interactionReactionLabel(mood, state.language),
+        until: Date.now() + interactionDurationMs[mood],
+      });
+      if (options.adjustCare !== false) {
+        setState((current) => ({
+          ...current,
+          petCare: applyCareDelta(current.petCare, interactionCareDelta[mood]),
+        }));
+      }
+      if (options.closeMenu !== false) setPetMenu(null);
+      interactionTimeoutRef.current = window.setTimeout(() => {
+        setActiveInteraction(null);
+        interactionTimeoutRef.current = null;
+      }, interactionDurationMs[mood]);
+    },
+    [setState, state.language],
+  );
+
+  useEffect(() => {
+    const review = state.pomodoro.completionReview;
+    if (!review) return;
+    triggerInteraction("praised", "heart", {
+      adjustCare: true,
+      closeMenu: false,
+      reaction: state.language === "zh-CN" ? `${t.focusCompletePet} +${t.careBond}` : `${t.focusCompletePet} +${t.careBond}`,
+    });
+  }, [state.pomodoro.completionReview?.recordId, triggerInteraction]);
+
   const setClickThroughPreview = () => {
     setState((current) => ({ ...current, clickThrough: true }));
     void safeInvoke("set_click_through", { enabled: true });
@@ -1152,6 +1349,34 @@ function App() {
   };
 
   const pomodoroAction = (action: "toggle" | "reset" | "skip") => {
+    if (action === "toggle") {
+      triggerInteraction(
+        state.pomodoro.running ? "attention_call" : state.pomodoro.mode === "focus" ? "cleaning" : "playing",
+        state.pomodoro.running ? "bell" : state.pomodoro.mode === "focus" ? "brush" : "wand",
+        {
+          adjustCare: false,
+          closeMenu: false,
+          reaction: state.pomodoro.running
+            ? t.focusPausedPet
+            : state.pomodoro.mode === "focus"
+              ? t.focusStartPet
+              : modeLabel(state.pomodoro.mode, state.language),
+        },
+      );
+    } else if (action === "reset") {
+      triggerInteraction("attention_call", "bell", {
+        adjustCare: false,
+        closeMenu: false,
+        reaction: t.focusResetPet,
+      });
+    } else {
+      triggerInteraction(
+        state.pomodoro.mode === "focus" ? "attention_call" : "praised",
+        state.pomodoro.mode === "focus" ? "bell" : "heart",
+        { adjustCare: false, closeMenu: false, reaction: t.focusSkipPet },
+      );
+    }
+
     setState((current) => {
       const now = new Date();
       const nowIso = now.toISOString();
@@ -1684,27 +1909,27 @@ function App() {
     };
   }, [checkForUpdates, refreshPets, selectNextPet]);
 
-  const triggerInteraction = useCallback((mood: InteractionMood, prop: ActiveInteraction["prop"]) => {
-    if (interactionTimeoutRef.current) {
-      window.clearTimeout(interactionTimeoutRef.current);
-    }
-    setActiveInteraction({
-      mood,
-      prop,
-      until: Date.now() + interactionDurationMs[mood],
-    });
-    interactionTimeoutRef.current = window.setTimeout(() => {
-      setActiveInteraction(null);
-      interactionTimeoutRef.current = null;
-    }, interactionDurationMs[mood]);
-  }, []);
-
   useEffect(
     () => () => {
       if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
     },
     [],
   );
+
+  const openPetContextMenu = (event: MouseEvent<HTMLElement>) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest(nonPetPointerSelector) && !target.closest(".live2d-layer")) return;
+    if (!target.closest(".live2d-layer")) return;
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const menuWidth = 252;
+    const menuHeight = 380;
+    const x = Math.min(Math.max(10, event.clientX - rect.left), Math.max(10, rect.width - menuWidth - 10));
+    const y = Math.min(Math.max(10, event.clientY - rect.top), Math.max(10, rect.height - menuHeight - 10));
+    setState((current) => ({ ...current, controlsOpen: false }));
+    setPetMenu({ x, y });
+  };
 
   const updateLook = (event: PointerEvent<HTMLElement>) => {
     const target = event.target;
@@ -1761,6 +1986,10 @@ function App() {
   };
 
   const beginPetDrag = (event: PointerEvent<HTMLElement>) => {
+    const target = event.target;
+    if (petMenu && target instanceof Element && !target.closest(".pet-context-menu")) {
+      setPetMenu(null);
+    }
     if (isPetSurfacePointer(event)) {
       dragCandidateRef.current = { at: Date.now(), x: event.clientX, y: event.clientY };
       event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -1768,8 +1997,15 @@ function App() {
   };
 
   const endPetDrag = (event: PointerEvent<HTMLElement>) => {
+    const candidate = dragCandidateRef.current;
+    const pointerDistance = candidate
+      ? Math.hypot(event.clientX - candidate.x, event.clientY - candidate.y)
+      : 0;
     dragCandidateRef.current = null;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
+    if (candidate && !dragged && pointerDistance < 14 && Date.now() - candidate.at < 520) {
+      triggerInteraction("petting", "heart", { closeMenu: false });
+    }
     setDragged(false);
   };
 
@@ -1823,6 +2059,7 @@ function App() {
           "--pet-scale": state.scale,
           "--look-x": look.x,
           "--look-y": look.y,
+          "--focus-progress": `${Math.round(timerProgress * 100)}%`,
         } as CSSProperties
       }
     >
@@ -1833,6 +2070,7 @@ function App() {
           state.lowPower ? "low-power" : ""
         }`}
         aria-label={t.appStage}
+        onContextMenu={openPetContextMenu}
         onPointerMove={updateLook}
         onPointerDown={beginPetDrag}
         onPointerUp={endPetDrag}
@@ -1909,7 +2147,11 @@ function App() {
             </div>
           )}
           {activeInteraction?.prop ? (
-            <div className={`interaction-prop prop-${activeInteraction.prop}`} aria-hidden="true">
+            <div
+              key={`prop-${activeInteraction.id}`}
+              className={`interaction-prop prop-${activeInteraction.prop} mood-prop-${activeInteraction.mood}`}
+              aria-hidden="true"
+            >
               {activeInteraction.prop === "fish"
                 ? <Fish size={15} />
                 : activeInteraction.prop === "wand"
@@ -1921,11 +2163,181 @@ function App() {
                       : <Heart size={15} />}
             </div>
           ) : null}
+          {activeInteraction ? (
+            <div key={`reaction-${activeInteraction.id}`} className="pet-reaction-bubble">
+              {activeInteraction.reaction}
+            </div>
+          ) : null}
+          {timerHasContext ? (
+            <div className={`pet-timer-bubble timer-${timerBubbleTone}`}>
+              <div className="pet-timer-face">
+                <span>{secondsToClock(state.pomodoro.remainingSeconds)}</span>
+              </div>
+              <div className="pet-timer-copy">
+                <b>{focusCompanionLabel}</b>
+                <small>{timerStageLabel}</small>
+              </div>
+            </div>
+          ) : null}
         </div>
+
+        <div
+          className="pet-action-dock"
+          aria-label={t.menuCare}
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            aria-label={t.interactPet}
+            title={t.interactPet}
+            onClick={() => triggerInteraction("petting", "heart")}
+          >
+            <HandHeart size={15} />
+          </button>
+          <button
+            type="button"
+            aria-label={t.interactFeed}
+            title={t.interactFeed}
+            onClick={() => triggerInteraction("feeding", "fish")}
+          >
+            <Fish size={15} />
+          </button>
+          <button
+            type="button"
+            aria-label={t.interactPlay}
+            title={t.interactPlay}
+            onClick={() => triggerInteraction("playing", "wand")}
+          >
+            <Joystick size={15} />
+          </button>
+        </div>
+
+        {petMenu ? (
+          <div
+            className="pet-context-menu"
+            style={{ left: petMenu.x, top: petMenu.y } as CSSProperties}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <div className="pet-context-head">
+              <span>{selectedPet.name}</span>
+              <b>{moodStatusLabel(petMood, state.language)}</b>
+            </div>
+
+            {timerHasContext ? (
+              <div className="pet-context-section timer-quick-section">
+                <div className="pet-context-label">{t.menuFocus}</div>
+                <div className="context-timer">
+                  <div className="context-timer-clock">
+                    <span>{secondsToClock(state.pomodoro.remainingSeconds)}</span>
+                    <small>{timerStageLabel}</small>
+                  </div>
+                  <div className="context-timer-actions">
+                    <button type="button" onClick={() => pomodoroAction("toggle")}>
+                      {state.pomodoro.running ? <Pause size={15} /> : <Play size={15} />}
+                      <span>{state.pomodoro.running ? t.pauseTimer : t.startTimer}</span>
+                    </button>
+                    <button type="button" onClick={() => pomodoroAction("reset")}>
+                      <RotateCcw size={15} />
+                      <span>{t.resetTimer}</span>
+                    </button>
+                    <button type="button" onClick={() => pomodoroAction("skip")}>
+                      <SkipForward size={15} />
+                      <span>{state.pomodoro.mode === "focus" ? t.skipTimer : t.skipBreak}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="pet-context-section">
+              <div className="pet-context-label">{t.menuCare}</div>
+              <div className="context-action-grid">
+                <button type="button" onClick={() => triggerInteraction("petting", "heart")}>
+                  <HandHeart size={15} />
+                  <span>{t.interactPet}</span>
+                </button>
+                <button type="button" onClick={() => triggerInteraction("feeding", "fish")}>
+                  <Fish size={15} />
+                  <span>{t.interactFeed}</span>
+                </button>
+                <button type="button" onClick={() => triggerInteraction("playing", "wand")}>
+                  <Joystick size={15} />
+                  <span>{t.interactPlay}</span>
+                </button>
+                <button type="button" onClick={() => triggerInteraction("cleaning", "brush")}>
+                  <BrushCleaning size={15} />
+                  <span>{t.interactClean}</span>
+                </button>
+                <button type="button" onClick={() => triggerInteraction("praised", "heart")}>
+                  <Heart size={15} />
+                  <span>{t.interactPraise}</span>
+                </button>
+                <button type="button" onClick={() => triggerInteraction("attention_call", "bell")}>
+                  <BellRing size={15} />
+                  <span>{t.interactCall}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="care-meter-grid">
+              {careMeters.map(([key, label, value]) => (
+                <div className={`care-meter care-${key}`} key={key}>
+                  <span>{label}</span>
+                  <i>
+                    <b style={{ width: `${value}%` }} />
+                  </i>
+                </div>
+              ))}
+              <div className="care-bond">
+                <span>{t.careBond}</span>
+                <b>{state.petCare.bond}</b>
+              </div>
+            </div>
+
+            <div className="pet-context-section">
+              <div className="pet-context-label">{t.menuSettings}</div>
+              <div className="context-settings-grid">
+                <button
+                  type="button"
+                  className={state.alwaysOnTop ? "active" : ""}
+                  title={t.top}
+                  onClick={() =>
+                    setState((current) => ({ ...current, alwaysOnTop: !current.alwaysOnTop }))
+                  }
+                >
+                  <Eye size={15} />
+                </button>
+                <button
+                  type="button"
+                  className={state.lowPower ? "active" : ""}
+                  title={t.lowPower}
+                  onClick={() => setState((current) => ({ ...current, lowPower: !current.lowPower }))}
+                >
+                  <Gauge size={15} />
+                </button>
+                <button type="button" title={t.clickThrough} onClick={setClickThroughPreview}>
+                  <MousePointer2 size={15} />
+                </button>
+                <button
+                  type="button"
+                  title={t.menuOpenControls}
+                  onClick={() => {
+                    setPetMenu(null);
+                    setState((current) => ({ ...current, controlsOpen: true }));
+                  }}
+                >
+                  <Settings2 size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="status-capsule" title={`${t.compactStatus}: ${moodStatusLabel(petMood, state.language)}`}>
           <span>{moodStatusLabel(petMood, state.language)}</span>
-          <b>{secondsToClock(state.pomodoro.remainingSeconds)}</b>
+          <b>{timerHasContext ? timerStageLabel : selectedPet.version}</b>
         </div>
         {state.update.status === "available" ? (
           <div className="update-nudge">
@@ -2002,20 +2414,17 @@ function App() {
             >
               <ChevronLeft size={16} />
             </button>
-            <select
-              value={selectedPet.id}
-              onChange={(event) =>
-                setState((current) => ({ ...current, selectedPetId: event.target.value }))
-              }
+            <button
+              type="button"
+              className="pet-current-card"
               aria-label={t.petPack}
               title={t.petPack}
+              disabled={selectablePets.length <= 1}
+              onClick={() => selectPetByIndex(selectedPetIndex + 1)}
             >
-              {pickerPets.map((pet) => (
-                <option key={pet.id} value={pet.id}>
-                  {pet.name}
-                </option>
-              ))}
-            </select>
+              <span>{selectedPet.name}</span>
+              <b>{selectedPet.version}</b>
+            </button>
             <button
               type="button"
               aria-label={t.petNext}

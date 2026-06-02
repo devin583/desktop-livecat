@@ -105,6 +105,15 @@ export type FocusPanelTab = "timer" | "stats" | "records";
 
 export type ControlPanelTab = "pet" | "interact" | "focus" | "settings";
 
+export type PetCareState = {
+  happiness: number;
+  fullness: number;
+  cleanliness: number;
+  energy: number;
+  bond: number;
+  lastInteractionAt: string | null;
+};
+
 export type UpdateStatus = "idle" | "checking" | "available" | "upToDate" | "failed";
 
 export type UpdateInfo = {
@@ -178,6 +187,7 @@ export type AppState = {
   selectedPetId: string;
   language: AppLanguage;
   controlPanelTab: ControlPanelTab;
+  petCare: PetCareState;
   scale: number;
   controlsOpen: boolean;
   clickThrough: boolean;

@@ -4,6 +4,7 @@ import type {
   FocusPanelTab,
   FocusRecord,
   FocusTimerMode,
+  PetCareState,
   PetPack,
   PomodoroMode,
   PomodoroState,
@@ -83,10 +84,20 @@ export const initialUpdateInfo: UpdateInfo = {
   error: null,
 };
 
+export const initialPetCare: PetCareState = {
+  happiness: 68,
+  fullness: 62,
+  cleanliness: 74,
+  energy: 70,
+  bond: 0,
+  lastInteractionAt: null,
+};
+
 export const initialState: AppState = {
   selectedPetId: "orange-tabby-keyboard-v2",
   language: "zh-CN",
   controlPanelTab: "interact",
+  petCare: initialPetCare,
   scale: 0.92,
   controlsOpen: false,
   clickThrough: false,
@@ -115,6 +126,10 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     update: {
       ...initialUpdateInfo,
       ...(input?.update ?? {}),
+    },
+    petCare: {
+      ...initialPetCare,
+      ...(input?.petCare ?? {}),
     },
   };
 
@@ -155,6 +170,17 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     next.controlPanelTab = "interact";
   }
 
+  next.petCare.happiness = clampMinutes(next.petCare.happiness, 0, 100, initialPetCare.happiness);
+  next.petCare.fullness = clampMinutes(next.petCare.fullness, 0, 100, initialPetCare.fullness);
+  next.petCare.cleanliness = clampMinutes(
+    next.petCare.cleanliness,
+    0,
+    100,
+    initialPetCare.cleanliness,
+  );
+  next.petCare.energy = clampMinutes(next.petCare.energy, 0, 100, initialPetCare.energy);
+  next.petCare.bond = clampMinutes(next.petCare.bond, 0, 9999, initialPetCare.bond);
+  next.petCare.lastInteractionAt = normalizeDateString(next.petCare.lastInteractionAt);
   next.scale = Math.min(1.4, Math.max(0.65, Number(next.scale) || 1));
   next.controlsOpen = Boolean(next.controlsOpen);
   next.pomodoro.focusMinutes = clampMinutes(next.pomodoro.focusMinutes, 1, 180, 25);
