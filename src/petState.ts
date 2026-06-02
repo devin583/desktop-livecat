@@ -84,7 +84,7 @@ export const initialUpdateInfo: UpdateInfo = {
 };
 
 export const initialState: AppState = {
-  selectedPetId: "orange-tabby-keyboard",
+  selectedPetId: "orange-tabby-keyboard-v2",
   language: "zh-CN",
   controlPanelTab: "interact",
   scale: 0.92,

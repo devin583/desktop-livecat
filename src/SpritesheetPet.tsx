@@ -114,6 +114,8 @@ export function SpritesheetPet({
   const row = clampFrameIndex(frame.row, rows);
   const x = (column / columns) * -100;
   const y = (row / rows) * -100;
+  const backgroundX = columns > 1 ? (column / (columns - 1)) * 100 : 0;
+  const backgroundY = rows > 1 ? (row / (rows - 1)) * 100 : 0;
 
   return (
     <div
@@ -127,19 +129,28 @@ export function SpritesheetPet({
           "--sprite-sheet-height": `${rows * 100}%`,
           "--sprite-x": `${x}%`,
           "--sprite-y": `${y}%`,
+          "--sprite-bg-x": `${backgroundX}%`,
+          "--sprite-bg-y": `${backgroundY}%`,
         } as CSSProperties
       }
     >
       {imageUrl && (
-        <img
-          alt=""
-          aria-hidden="true"
-          className="spritesheet-image"
-          draggable={false}
-          src={imageUrl}
-          onError={() => onAssetError?.(pet.id, imageUrl)}
-          onLoad={() => onAssetLoad?.(pet.id)}
-        />
+        <>
+          <div
+            aria-hidden="true"
+            className="spritesheet-viewport"
+            style={{ backgroundImage: `url(${JSON.stringify(imageUrl)})` }}
+          />
+          <img
+            alt=""
+            aria-hidden="true"
+            className="spritesheet-preload"
+            draggable={false}
+            src={imageUrl}
+            onError={() => onAssetError?.(pet.id, imageUrl)}
+            onLoad={() => onAssetLoad?.(pet.id)}
+          />
+        </>
       )}
     </div>
   );

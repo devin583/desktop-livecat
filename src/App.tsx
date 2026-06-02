@@ -7,11 +7,11 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from "react";
-import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   BadgeCheck,
   BarChart3,
+  BellRing,
   BrushCleaning,
   Cat,
   ChevronLeft,
@@ -61,7 +61,7 @@ import {
   todayKey,
   trimFocusRecords,
 } from "./petState";
-import { safeInvoke } from "./tauriBridge";
+import { safeInvoke, safeListen } from "./tauriBridge";
 import type {
   AppState,
   AppLanguage,
@@ -182,6 +182,7 @@ const copy = {
     controlSettings: "设置",
     statusIdle: "猫咪空闲",
     statusTyping: "正在打字",
+    statusDragged: "移动中",
     statusWatching: "看着你",
     statusPetting: "正在被摸",
     statusFeeding: "吃点东西",
@@ -281,6 +282,7 @@ const copy = {
     controlSettings: "Settings",
     statusIdle: "Idle cat",
     statusTyping: "Typing",
+    statusDragged: "Moving",
     statusWatching: "Watching",
     statusPetting: "Petting",
     statusFeeding: "Feeding",
@@ -589,6 +591,7 @@ function rendererLabel(pet: PetPack, language: AppLanguage) {
 function moodStatusLabel(mood: PetMood, language: AppLanguage) {
   const t = copy[language];
   if (mood === "typing") return t.statusTyping;
+  if (mood === "dragged") return t.statusDragged;
   if (mood === "watching_mouse") return t.statusWatching;
   if (mood === "petting") return t.statusPetting;
   if (mood === "feeding") return t.statusFeeding;
@@ -621,7 +624,7 @@ function isSelectablePet(pet: PetPack) {
 
 function petSortScore(pet: PetPack) {
   if (pet.id === initialState.selectedPetId) return 0;
-  if (pet.id === "gray-british-keyboard") return 1;
+  if (pet.id === "gray-british-keyboard-v2") return 1;
   if (pet.has_spritesheet) return 10;
   if (pet.has_live2d_model) return 20;
   return 99;
@@ -633,6 +636,152 @@ function orderPets(pets: PetPack[]) {
       petSortScore(left) - petSortScore(right) ||
       left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
   );
+}
+
+const browserPreviewPetIds = [
+  "orange-tabby-keyboard-v2",
+  "gray-british-keyboard-v2",
+  "orange-tabby-keyboard",
+  "gray-british-keyboard",
+];
+
+async function loadBrowserPreviewPetPacks() {
+  const packs = await Promise.all(browserPreviewPetIds.map(loadBrowserPreviewPetPack));
+  return packs.filter((pack): pack is PetPack => Boolean(pack));
+}
+
+async function loadBrowserPreviewPetPack(petId: string): Promise<PetPack | null> {
+  try {
+    const manifestResponse = await fetch(`/pets/${petId}/manifest.json`, { cache: "no-store" });
+    if (!manifestResponse.ok) return null;
+    const manifest = (await manifestResponse.json()) as Record<string, unknown>;
+    const workflow = objectValue(manifest.artistWorkflow);
+    const spritesheet = await hydrateBrowserPreviewSpritesheet(petId, objectValue(manifest.spritesheet));
+    const renderMode = stringValue(manifest.renderMode);
+    const artistChecklist = stringValue(workflow?.checklist) ?? null;
+    const artistStatus = normalizeArtistStatus(stringValue(workflow?.status));
+
+    return {
+      id: stringValue(manifest.id) ?? petId,
+      name: stringValue(manifest.name) ?? petId,
+      version: stringValue(manifest.version) ?? "0.0.0",
+      artist: stringValue(manifest.artist) ?? "Unknown",
+      description: stringValue(manifest.description) ?? "",
+      render_mode:
+        renderMode === "live2d" || renderMode === "hybrid" || renderMode === "spritesheet"
+          ? renderMode
+          : spritesheet
+            ? "spritesheet"
+            : "live2d",
+      artist_checklist: artistChecklist,
+      artist_status: artistStatus,
+      has_artist_checklist: Boolean(artistChecklist),
+      has_live2d_model: false,
+      has_parameter_spec: false,
+      has_source_assets: Boolean(workflow?.primarySource),
+      has_spritesheet: Boolean(spritesheet?.image),
+      live2d_model: null,
+      persona: personaValue(manifest.persona),
+      preview: stringValue(manifest.preview),
+      source: "browser-preview",
+      spritesheet,
+      tags: stringArrayValue(manifest.tags),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function hydrateBrowserPreviewSpritesheet(
+  petId: string,
+  input: Record<string, unknown> | null,
+): Promise<PetPack["spritesheet"]> {
+  if (!input) return null;
+  const image = stringValue(input.image);
+  if (!image) return null;
+  const statesFile = stringValue(input.statesFile);
+  const embeddedStates = objectValue(input.states) ?? {};
+  let fileStates: Record<string, unknown> = {};
+
+  if (statesFile) {
+    try {
+      const statesResponse = await fetch(`/pets/${petId}/${statesFile}`, { cache: "no-store" });
+      if (statesResponse.ok) {
+        fileStates = objectValue(await statesResponse.json()) ?? {};
+      }
+    } catch {
+      fileStates = {};
+    }
+  }
+
+  return {
+    image,
+    columns: positiveIntegerValue(input.columns, 1),
+    rows: positiveIntegerValue(input.rows, 1),
+    frameWidth: positiveIntegerValue(input.frameWidth, 192),
+    frameHeight: positiveIntegerValue(input.frameHeight, 208),
+    states: {
+      ...embeddedStates,
+      ...fileStates,
+    } as NonNullable<PetPack["spritesheet"]>["states"],
+    statesFile: statesFile ?? undefined,
+  };
+}
+
+function objectValue(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function stringArrayValue(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+}
+
+function personaValue(value: unknown): PetPack["persona"] {
+  const persona = objectValue(value);
+  if (!persona) return null;
+  const palette = stringArrayValue(persona.palette);
+  return {
+    name: stringValue(persona.name) ?? "Desktop Pet",
+    species: stringValue(persona.species) ?? "cat",
+    style: stringValue(persona.style) ?? "spritesheet",
+    personality: stringValue(persona.personality) ?? "reactive desktop companion",
+    palette: palette.length ? palette : ["#f6b56a", "#4d3541", "#fff7df"],
+    accessories: stringArrayValue(persona.accessories),
+  };
+}
+
+function positiveIntegerValue(value: unknown, fallback: number) {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) && number > 0 ? Math.floor(number) : fallback;
+}
+
+function normalizeArtistStatus(value: string | null): PetPack["artist_status"] {
+  return value === "missing" ||
+    value === "source-ready" ||
+    value === "psd-ready" ||
+    value === "rigging-ready" ||
+    value === "runtime-ready"
+    ? value
+    : "missing";
+}
+
+const nonPetPointerSelector =
+  "button, input, select, textarea, .control-strip, .settings-toggle, .status-capsule, .update-nudge";
+
+function isPetSurfacePointer(event: PointerEvent<HTMLElement>) {
+  if (event.button !== 0) return false;
+  const target = event.target;
+  if (!(target instanceof Element)) return false;
+  if (target.closest(nonPetPointerSelector)) return false;
+  return Boolean(target.closest(".live2d-layer"));
 }
 
 type InteractionMood = Extract<
@@ -647,13 +796,16 @@ type ActiveInteraction = {
 };
 
 const interactionDurationMs: Record<InteractionMood, number> = {
-  petting: 3200,
-  feeding: 4600,
-  playing: 4800,
-  cleaning: 3600,
-  praised: 2800,
-  attention_call: 4200,
+  petting: 5200,
+  feeding: 5400,
+  playing: 5200,
+  cleaning: 4600,
+  praised: 4200,
+  attention_call: 4300,
 };
+
+const dragIntentDelayMs = 160;
+const dragIntentDistancePx = 28;
 
 function App() {
   const [state, setState] = usePersistedState();
@@ -685,6 +837,7 @@ function App() {
   const pulsesRef = useRef<number[]>([]);
   const lookThrottleRef = useRef(0);
   const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
+  const dragCandidateRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
   const t = copy[state.language];
 
@@ -768,9 +921,8 @@ function App() {
     selectPetByIndex(selectedPetIndex + 1);
   }, [selectPetByIndex, selectedPetIndex]);
 
-  useEffect(() => {
-    safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
-      if (!loaded?.length) return;
+  const applyPetPacks = useCallback(
+    (loaded: PetPack[]) => {
       const orderedPets = orderPets(loaded);
       setPets(orderedPets);
       const selectable = orderedPets.filter(isSelectablePet);
@@ -779,18 +931,24 @@ function App() {
         const fallback = selectable.find((pet) => pet.id === initialState.selectedPetId) ?? selectable[0];
         return fallback ? { ...current, selectedPetId: fallback.id } : current;
       });
+    },
+    [setState],
+  );
+
+  const refreshPets = useCallback(() => {
+    return safeInvoke<PetPack[]>("list_pet_packs").then(async (nativePets) => {
+      const loaded = nativePets?.length ? nativePets : await loadBrowserPreviewPetPacks();
+      if (loaded.length) applyPetPacks(loaded);
+      return loaded.length ? loaded : null;
     });
+  }, [applyPetPacks]);
+
+  useEffect(() => {
+    void refreshPets();
     safeInvoke<RuntimeInfo>("runtime_info").then((info) => {
       if (info) setRuntimeInfo(info);
     });
-  }, []);
-
-  const refreshPets = useCallback(() => {
-    return safeInvoke<PetPack[]>("list_pet_packs").then((loaded) => {
-      if (loaded?.length) setPets(orderPets(loaded));
-      return loaded ?? null;
-    });
-  }, []);
+  }, [refreshPets]);
 
   useEffect(() => {
     if (!state.keyboardSyncEnabled) {
@@ -806,7 +964,7 @@ function App() {
       if (status) setKeyboardStatus(status);
     });
 
-    const unlistenPromise = listen<TypingPulse>("keyboard-sync://pulse", (event) => {
+    const unlistenPromise = safeListen<TypingPulse>("keyboard-sync://pulse", (event) => {
       registerPulse(event.payload.source);
     });
 
@@ -818,7 +976,7 @@ function App() {
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      void unlistenPromise.then((unlisten) => unlisten());
+      void unlistenPromise.then((unlisten) => unlisten?.());
     };
   }, [registerPulse, state.keyboardSyncEnabled]);
 
@@ -1506,22 +1664,22 @@ function App() {
 
   useEffect(() => {
     const listeners = [
-      listen("tray://timer-toggle", () => pomodoroAction("toggle")),
-      listen("tray://timer-reset", () => pomodoroAction("reset")),
-      listen("tray://timer-skip", () => pomodoroAction("skip")),
-      listen("tray://reload-pets", refreshPets),
-      listen("tray://check-updates", () => checkForUpdates(true)),
-      listen("tray://next-pet", selectNextPet),
-      listen("tray://toggle-controls", () => {
+      safeListen("tray://timer-toggle", () => pomodoroAction("toggle")),
+      safeListen("tray://timer-reset", () => pomodoroAction("reset")),
+      safeListen("tray://timer-skip", () => pomodoroAction("skip")),
+      safeListen("tray://reload-pets", refreshPets),
+      safeListen("tray://check-updates", () => checkForUpdates(true)),
+      safeListen("tray://next-pet", selectNextPet),
+      safeListen("tray://toggle-controls", () => {
         setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }));
       }),
-      listen("tray://click-through-off", () => {
+      safeListen("tray://click-through-off", () => {
         setState((current) => ({ ...current, clickThrough: false }));
       }),
     ];
     return () => {
       void Promise.all(listeners).then((unlisteners) => {
-        unlisteners.forEach((unlisten) => unlisten());
+        unlisteners.forEach((unlisten) => unlisten?.());
       });
     };
   }, [checkForUpdates, refreshPets, selectNextPet]);
@@ -1549,12 +1707,33 @@ function App() {
   );
 
   const updateLook = (event: PointerEvent<HTMLElement>) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest(nonPetPointerSelector)) return;
     const now = Date.now();
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
     const boundedX = Math.max(-1, Math.min(1, x));
     const boundedY = Math.max(-1, Math.min(1, y));
+    const pettingZone = boundedY > -0.35 && boundedY < 0.42 && Math.abs(boundedX) < 0.62;
+    const dragCandidate = dragCandidateRef.current;
+    const pointerDistance = dragCandidate
+      ? Math.hypot(event.clientX - dragCandidate.x, event.clientY - dragCandidate.y)
+      : 0;
+    if (
+      dragCandidate &&
+      !dragged &&
+      !pettingZone &&
+      now - dragCandidate.at >= dragIntentDelayMs &&
+      pointerDistance >= dragIntentDistancePx
+    ) {
+      if (interactionTimeoutRef.current) {
+        window.clearTimeout(interactionTimeoutRef.current);
+        interactionTimeoutRef.current = null;
+      }
+      setActiveInteraction(null);
+      setDragged(true);
+    }
     const throttleMs = state.lowPower || document.hidden ? 110 : 34;
     if (now - lookThrottleRef.current >= throttleMs) {
       lookThrottleRef.current = now;
@@ -1565,7 +1744,7 @@ function App() {
       });
     }
 
-    if (!state.lowPower && boundedY > -0.35 && boundedY < 0.42 && Math.abs(boundedX) < 0.62) {
+    if (!state.lowPower && pettingZone) {
       const previous = pettingRef.current;
       const fresh = now - previous.at < 900;
       const dx = fresh ? boundedX - previous.x : 0;
@@ -1574,9 +1753,24 @@ function App() {
       pettingRef.current = { at: now, x: boundedX, y: boundedY, distance };
       if (distance > 0.55 && activeInteraction?.mood !== "petting") {
         pettingRef.current.distance = 0;
+        dragCandidateRef.current = null;
+        setDragged(false);
         triggerInteraction("petting", "heart");
       }
     }
+  };
+
+  const beginPetDrag = (event: PointerEvent<HTMLElement>) => {
+    if (isPetSurfacePointer(event)) {
+      dragCandidateRef.current = { at: Date.now(), x: event.clientX, y: event.clientY };
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    }
+  };
+
+  const endPetDrag = (event: PointerEvent<HTMLElement>) => {
+    dragCandidateRef.current = null;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    setDragged(false);
   };
 
   const isTyping = Date.now() - lastTypingPulse < 1200;
@@ -1638,13 +1832,13 @@ function App() {
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
         }`}
-        data-tauri-drag-region
         aria-label={t.appStage}
         onPointerMove={updateLook}
-        onPointerDown={() => setDragged(true)}
-        onPointerUp={() => setDragged(false)}
-        onPointerCancel={() => setDragged(false)}
+        onPointerDown={beginPetDrag}
+        onPointerUp={endPetDrag}
+        onPointerCancel={endPetDrag}
         onPointerLeave={() => {
+          dragCandidateRef.current = null;
           setDragged(false);
           setLook({ x: 0, y: 0 });
         }}
@@ -1717,14 +1911,14 @@ function App() {
           {activeInteraction?.prop ? (
             <div className={`interaction-prop prop-${activeInteraction.prop}`} aria-hidden="true">
               {activeInteraction.prop === "fish"
-                ? "><>"
+                ? <Fish size={15} />
                 : activeInteraction.prop === "wand"
-                  ? "*"
+                  ? <Sparkles size={15} />
                   : activeInteraction.prop === "brush"
-                    ? "///"
+                    ? <BrushCleaning size={15} />
                     : activeInteraction.prop === "bell"
-                      ? "!"
-                      : "love"}
+                      ? <BellRing size={15} />
+                      : <Heart size={15} />}
             </div>
           ) : null}
         </div>
@@ -1753,6 +1947,7 @@ function App() {
           className={`settings-toggle ${state.controlsOpen ? "active" : ""}`}
           aria-label={t.controls}
           title={t.controls}
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={() =>
             setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }))
           }
@@ -1760,7 +1955,10 @@ function App() {
           <Settings size={16} />
         </button>
 
-        <aside className="control-strip">
+        <aside
+          className={`control-strip ${state.controlsOpen ? "open" : ""}`}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <div className="control-tabs" role="tablist" aria-label={t.controls}>
             {[
               ["pet", Cat, t.controlPet],
@@ -2054,6 +2252,7 @@ function App() {
               <div className="interaction-grid">
                 <button
                   type="button"
+                  className={activeInteraction?.mood === "petting" ? "active" : ""}
                   title={t.interactPet}
                   onClick={() => triggerInteraction("petting", "heart")}
                 >
@@ -2062,6 +2261,7 @@ function App() {
                 </button>
                 <button
                   type="button"
+                  className={activeInteraction?.mood === "feeding" ? "active" : ""}
                   title={t.interactFeed}
                   onClick={() => triggerInteraction("feeding", "fish")}
                 >
@@ -2070,6 +2270,7 @@ function App() {
                 </button>
                 <button
                   type="button"
+                  className={activeInteraction?.mood === "playing" ? "active" : ""}
                   title={t.interactPlay}
                   onClick={() => triggerInteraction("playing", "wand")}
                 >
@@ -2078,6 +2279,7 @@ function App() {
                 </button>
                 <button
                   type="button"
+                  className={activeInteraction?.mood === "cleaning" ? "active" : ""}
                   title={t.interactClean}
                   onClick={() => triggerInteraction("cleaning", "brush")}
                 >
@@ -2086,6 +2288,7 @@ function App() {
                 </button>
                 <button
                   type="button"
+                  className={activeInteraction?.mood === "praised" ? "active" : ""}
                   title={t.interactPraise}
                   onClick={() => triggerInteraction("praised", "heart")}
                 >
@@ -2094,6 +2297,7 @@ function App() {
                 </button>
                 <button
                   type="button"
+                  className={activeInteraction?.mood === "attention_call" ? "active" : ""}
                   title={t.interactCall}
                   onClick={() => triggerInteraction("attention_call", "bell")}
                 >

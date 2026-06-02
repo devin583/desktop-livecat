@@ -44,22 +44,22 @@
       {
         "row": 1,
         "column": 0,
-        "durationMs": 50
+        "durationMs": 72
       },
       {
         "row": 1,
         "column": 1,
-        "durationMs": 55
+        "durationMs": 88
       },
       {
         "row": 1,
         "column": 2,
-        "durationMs": 70
+        "durationMs": 118
       },
       {
         "row": 1,
         "column": 3,
-        "durationMs": 120
+        "durationMs": 170
       }
     ],
     "loopStartIndex": null,
@@ -70,22 +70,22 @@
       {
         "row": 2,
         "column": 0,
-        "durationMs": 50
+        "durationMs": 72
       },
       {
         "row": 2,
         "column": 1,
-        "durationMs": 55
+        "durationMs": 88
       },
       {
         "row": 2,
         "column": 2,
-        "durationMs": 70
+        "durationMs": 118
       },
       {
         "row": 2,
         "column": 3,
-        "durationMs": 120
+        "durationMs": 170
       }
     ],
     "loopStartIndex": null,
@@ -186,37 +186,37 @@
       {
         "row": 6,
         "column": 0,
-        "durationMs": 360
+        "durationMs": 460
       },
       {
         "row": 6,
         "column": 1,
-        "durationMs": 220
+        "durationMs": 280
       },
       {
         "row": 6,
         "column": 2,
-        "durationMs": 220
+        "durationMs": 300
       },
       {
         "row": 6,
         "column": 3,
-        "durationMs": 260
+        "durationMs": 340
       },
       {
         "row": 6,
         "column": 4,
-        "durationMs": 320
+        "durationMs": 420
       },
       {
         "row": 6,
         "column": 5,
-        "durationMs": 400
+        "durationMs": 520
       },
       {
         "row": 6,
         "column": 6,
-        "durationMs": 900
+        "durationMs": 1050
       }
     ],
     "loopStartIndex": 0
@@ -327,17 +327,17 @@
       {
         "row": 6,
         "column": 2,
-        "durationMs": 360
+        "durationMs": 520
       },
       {
         "row": 6,
         "column": 3,
-        "durationMs": 420
+        "durationMs": 620
       },
       {
         "row": 6,
         "column": 4,
-        "durationMs": 520
+        "durationMs": 760
       }
     ],
     "loopStartIndex": 0,
@@ -348,12 +348,12 @@
       {
         "row": 3,
         "column": 0,
-        "durationMs": 520
+        "durationMs": 620
       },
       {
         "row": 6,
         "column": 5,
-        "durationMs": 620
+        "durationMs": 860
       }
     ],
     "loopStartIndex": 0,
@@ -364,17 +364,17 @@
       {
         "row": 6,
         "column": 0,
-        "durationMs": 300
+        "durationMs": 430
       },
       {
         "row": 6,
         "column": 1,
-        "durationMs": 260
+        "durationMs": 360
       },
       {
         "row": 6,
         "column": 2,
-        "durationMs": 300
+        "durationMs": 440
       }
     ],
     "loopStartIndex": 0,
@@ -401,12 +401,12 @@
       {
         "row": 6,
         "column": 0,
-        "durationMs": 280
+        "durationMs": 420
       },
       {
         "row": 6,
         "column": 6,
-        "durationMs": 680
+        "durationMs": 980
       }
     ],
     "loopStartIndex": 0,

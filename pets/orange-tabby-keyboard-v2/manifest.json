@@ -1,0 +1,50 @@
+{
+  "id": "orange-tabby-keyboard-v2",
+  "name": "橘猫键盘 V2 Orange Tabby",
+  "version": "0.1.0",
+  "artist": "Codex hatch-pet + imagegen",
+  "description": "Hatch-pet generated orange tabby keyboard cat with validated transparent 8 x 9 spritesheet.",
+  "preview": "preview/preview.png",
+  "renderMode": "spritesheet",
+  "tags": [
+    "spritesheet",
+    "keyboard",
+    "cat",
+    "hatch-pet",
+    "v2"
+  ],
+  "persona": {
+    "name": "橘猫键盘 V2 Orange Tabby",
+    "species": "orange tabby cat",
+    "style": "polished sticker hatch-pet keyboard cat",
+    "personality": "curious, expressive, energetic, and typing-focused",
+    "palette": [
+      "#d88a28",
+      "#8b4f18",
+      "#f7d59a",
+      "#222930"
+    ],
+    "accessories": [
+      "computer keyboard"
+    ]
+  },
+  "spritesheet": {
+    "image": "spritesheet/avatar.webp",
+    "columns": 8,
+    "rows": 9,
+    "frameWidth": 192,
+    "frameHeight": 208,
+    "statesFile": "spritesheet/states.json"
+  },
+  "privacy": {
+    "keyboardSync": "rhythm-only",
+    "storesKeyValues": false
+  },
+  "artistWorkflow": {
+    "status": "runtime-ready",
+    "brief": "artist/spritesheet-handoff.md",
+    "checklist": "artist/artist-checklist.md",
+    "primarySource": "source/original-grid.png",
+    "preferredDeliverable": "Hatch-pet 8 x 9 spritesheet, 192 x 208 cells"
+  }
+}

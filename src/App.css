@@ -83,34 +83,62 @@ input {
   --sprite-sheet-height: 900%;
   --sprite-x: 0%;
   --sprite-y: 0%;
+  --sprite-bg-x: 0%;
+  --sprite-bg-y: 0%;
   position: relative;
   width: calc(292px * var(--pet-scale));
   max-width: calc(100vw - 24px);
   aspect-ratio: var(--sprite-aspect);
   align-self: end;
   margin-bottom: calc(22px * var(--pet-scale));
-  overflow: hidden;
-  filter: drop-shadow(0 18px 18px rgba(43, 34, 42, 0.24));
+  overflow: visible;
   transform-origin: bottom center;
-  animation: sprite-breathe 7.5s ease-in-out infinite;
+  animation: sprite-breathe 8.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 1;
 }
 
-.spritesheet-image {
+.spritesheet-pet::after {
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--sprite-sheet-width);
-  height: var(--sprite-sheet-height);
-  max-width: none;
-  transform: translate(var(--sprite-x), var(--sprite-y));
-  transform-origin: top left;
-  object-fit: fill;
+  left: 10%;
+  right: 10%;
+  bottom: calc(-7px * var(--pet-scale));
+  height: calc(22px * var(--pet-scale));
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(43, 34, 42, 0.22) 0%, rgba(43, 34, 42, 0) 72%);
+  pointer-events: none;
+  transform-origin: center;
+  animation: sprite-ground-shadow 8.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 0;
+}
+
+.spritesheet-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: var(--sprite-sheet-width) var(--sprite-sheet-height);
+  background-position: var(--sprite-bg-x) var(--sprite-bg-y);
+  background-clip: padding-box;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  image-rendering: auto;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.spritesheet-preload {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
   pointer-events: none;
   user-select: none;
 }
 
 .mood-dragged .spritesheet-pet {
-  animation: sprite-dragged 0.7s ease-in-out infinite;
+  animation: sprite-dragged 1.8s cubic-bezier(0.37, 0, 0.2, 1) infinite;
 }
 
 .mood-focus .spritesheet-pet,
@@ -120,40 +148,36 @@ input {
 
 .mood-break .spritesheet-pet,
 .mood-longBreak .spritesheet-pet {
-  animation: sprite-break 3.6s ease-in-out infinite;
+  animation: sprite-break 5.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .mood-happy .spritesheet-pet {
-  animation: sprite-happy 1.15s ease-in-out infinite;
+  animation: sprite-affection 3.2s cubic-bezier(0.18, 0.82, 0.24, 1) infinite;
 }
 
 .mood-watching_mouse .spritesheet-pet {
-  transform: translate(
-    calc(var(--look-x) * 7px),
-    calc(var(--look-y) * 2px)
-  );
-  animation: none;
+  animation: sprite-watch 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .mood-petting .spritesheet-pet,
 .mood-praised .spritesheet-pet {
-  animation: sprite-happy 1.45s ease-in-out infinite;
+  animation: sprite-affection 5.2s cubic-bezier(0.18, 0.82, 0.24, 1) infinite;
 }
 
 .mood-feeding .spritesheet-pet {
-  animation: sprite-feed 1.8s ease-in-out infinite;
+  animation: sprite-feed 5.4s cubic-bezier(0.2, 0.78, 0.18, 1) infinite;
 }
 
 .mood-playing .spritesheet-pet {
-  animation: sprite-play 1.2s ease-in-out infinite;
+  animation: sprite-play 5.2s cubic-bezier(0.2, 0.78, 0.18, 1) infinite;
 }
 
 .mood-cleaning .spritesheet-pet {
-  animation: sprite-clean 1.6s ease-in-out infinite;
+  animation: sprite-clean 4.6s cubic-bezier(0.2, 0.78, 0.18, 1) infinite;
 }
 
 .mood-attention_call .spritesheet-pet {
-  animation: sprite-attention 1.35s ease-in-out infinite;
+  animation: sprite-attention 3.6s cubic-bezier(0.22, 0.9, 0.26, 1) infinite;
 }
 
 .body {
@@ -859,6 +883,7 @@ input {
   white-space: nowrap;
 }
 
+.control-strip.open,
 .controls-open .control-strip {
   opacity: 1;
   pointer-events: auto;
@@ -1338,8 +1363,7 @@ input {
   border-color: rgba(137, 79, 86, 0.28);
 }
 
-.control-strip button[title],
-.settings-toggle[title] {
+.control-strip button[title] {
   position: relative;
 }
 
@@ -1378,8 +1402,8 @@ input {
 
 .interaction-prop {
   position: absolute;
-  left: calc(50% - 48px * var(--pet-scale));
-  bottom: calc(228px * var(--pet-scale));
+  left: calc(50% - 92px * var(--pet-scale));
+  bottom: calc(268px * var(--pet-scale));
   min-width: calc(28px * var(--pet-scale));
   height: calc(24px * var(--pet-scale));
   display: grid;
@@ -1391,7 +1415,7 @@ input {
   font-size: calc(10px * var(--pet-scale));
   font-weight: 800;
   pointer-events: none;
-  animation: prop-float 1100ms ease-in-out infinite;
+  animation: prop-float 1800ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
   z-index: 8;
 }
 
@@ -1435,89 +1459,111 @@ input {
 @keyframes sprite-breathe {
   0%,
   100% {
-    transform: translateY(0) scaleY(1);
+    filter: brightness(1) saturate(1);
   }
   50% {
-    transform: translateY(1.5px) scaleY(0.996);
+    filter: brightness(1.015) saturate(1.02);
+  }
+}
+
+@keyframes sprite-ground-shadow {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.68;
+    transform: scaleX(0.96);
   }
 }
 
 @keyframes sprite-break {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg) scaleY(1);
+    filter: brightness(1) saturate(1);
   }
   50% {
-    transform: translateY(8px) rotate(-1deg) scaleY(0.96);
+    filter: brightness(0.99) saturate(0.96);
   }
 }
 
-@keyframes sprite-happy {
+@keyframes sprite-affection {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg) scale(1);
+    filter: brightness(1) saturate(1);
   }
   35% {
-    transform: translateY(-8px) rotate(-1deg) scale(1.02, 0.98);
+    filter: brightness(1.04) saturate(1.06);
   }
   70% {
-    transform: translateY(-2px) rotate(1deg) scale(0.99, 1.01);
+    filter: brightness(1.015) saturate(1.02);
+  }
+}
+
+@keyframes sprite-watch {
+  0%,
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(1.01) saturate(1.015);
   }
 }
 
 @keyframes sprite-feed {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg) scale(1);
+    filter: brightness(1) saturate(1);
   }
   45% {
-    transform: translateY(calc(5px * var(--pet-scale))) rotate(-1deg) scale(1.01, 0.99);
+    filter: brightness(1.03) saturate(1.04);
   }
 }
 
 @keyframes sprite-play {
   0%,
   100% {
-    transform: translateX(0) rotate(0deg);
+    filter: brightness(1) saturate(1);
   }
   35% {
-    transform: translateX(calc(-5px * var(--pet-scale))) rotate(-1deg);
+    filter: brightness(1.04) saturate(1.08);
   }
   70% {
-    transform: translateX(calc(5px * var(--pet-scale))) rotate(1deg);
+    filter: brightness(1.015) saturate(1.03);
   }
 }
 
 @keyframes sprite-clean {
   0%,
   100% {
-    filter: drop-shadow(0 18px 18px rgba(43, 34, 42, 0.24)) brightness(1);
+    filter: brightness(1) saturate(1);
   }
   50% {
-    filter: drop-shadow(0 18px 18px rgba(43, 34, 42, 0.2)) brightness(1.08);
+    filter: brightness(1.06) saturate(0.98);
   }
 }
 
 @keyframes sprite-attention {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    filter: brightness(1) saturate(1);
   }
   28% {
-    transform: translateY(calc(-5px * var(--pet-scale))) rotate(-1deg);
+    filter: brightness(1.05) saturate(1.08);
   }
   56% {
-    transform: translateY(0) rotate(1deg);
+    filter: brightness(1.01) saturate(1.03);
   }
 }
 
 @keyframes sprite-dragged {
   0%,
   100% {
-    transform: translateY(0) rotate(-2deg) scaleX(1.03) scaleY(0.96);
+    filter: brightness(0.995) saturate(0.98);
   }
   50% {
-    transform: translateY(5px) rotate(2deg) scaleX(0.98) scaleY(1.03);
+    filter: brightness(1.025) saturate(1.03);
   }
 }
 
