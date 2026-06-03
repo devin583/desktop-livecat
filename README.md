@@ -4,7 +4,7 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.8.1 status
+## Current v0.9.3 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
@@ -35,6 +35,11 @@ copyable resource packs, and high-quality animated cat behavior.
 - The app can check GitHub Releases for new versions, open the download page,
   and clean safe runtime caches while preserving `data/`, custom `pets/`, and
   the full-offline WebView2 runtime.
+- The old 7-column supplied-cat packs and their one-off import/refine scripts
+  have been removed from production packaging. Existing local state still
+  migrates their IDs to the V2 packs.
+- Desktop pet product thinking, interaction principles, Pomodoro integration,
+  and asset-pipeline decisions are versioned in `docs/` for continued iteration.
 
 ## Run locally
 
@@ -60,7 +65,7 @@ npm run verify:portable
 `npm run tauri:build` intentionally uses `tauri build --no-bundle` so the default
 deliverable stays a portable zip instead of an installer. The packaging script
 uses versioned artifact names such as
-`release/desktop-livecat-v0.8.1-win11-x64-portable.zip` on Windows. To include a
+`release/desktop-livecat-v0.9.3-win11-x64-portable.zip` on Windows. To include a
 Fixed Version WebView2 Runtime in the full-offline folder locally, download and
 extract Microsoft's official CAB, then set:
 
@@ -70,7 +75,7 @@ WEBVIEW2_FIXED_RUNTIME_DIR=/path/to/fixed-webview2 npm run package:portable
 
 Tagged Windows releases run `npm run download:webview2-fixed` first, using
 Microsoft's WebView2 download page as the source, so they also produce
-`desktop-livecat-v0.8.1-win11-x64-full-offline.zip`.
+`desktop-livecat-v0.9.3-win11-x64-full-offline.zip`.
 
 ## Upgrade
 
@@ -116,6 +121,10 @@ ARTIST_ASSET_CHECK=1 npm run validate:pets
 - [docs/live2d-art-brief.md](docs/live2d-art-brief.md)
 - [docs/live2d-tooling.md](docs/live2d-tooling.md)
 - [docs/live2d-ai-generation-research.md](docs/live2d-ai-generation-research.md)
+- [docs/pet-product-design-knowledge.md](docs/pet-product-design-knowledge.md)
+- [docs/pet-interaction-ux-knowledge.md](docs/pet-interaction-ux-knowledge.md)
+- [docs/pet-asset-pipeline-standards.md](docs/pet-asset-pipeline-standards.md)
+- [docs/pet-knowledge-changelog.md](docs/pet-knowledge-changelog.md)
 - [docs/keyboard-sync.md](docs/keyboard-sync.md)
 - [docs/spritesheet-pets.md](docs/spritesheet-pets.md)
 - [docs/win11-qa.md](docs/win11-qa.md)

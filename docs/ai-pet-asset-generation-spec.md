@@ -11,7 +11,7 @@
 1. **短期可接入版：Enhanced Spritesheet Pack**
    - 每只猫一张透明 spritesheet。
    - 键盘底线固定，动作通过多帧表现。
-   - 适合快速替换现有 `orange-tabby-keyboard` / `gray-british-keyboard`。
+   - 适合快速替换现有 `orange-tabby-keyboard-v2` / `gray-british-keyboard-v2`。
 
 2. **最终推荐版：Layered Rig Pack**
    - 每只猫一套分层 PNG/PSD/SVG。

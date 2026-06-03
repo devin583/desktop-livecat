@@ -1,5 +1,0 @@
-- [x] Character reads as a cat.
-- [x] Keyboard reads as a computer keyboard.
-- [x] Left and right typing rows are visually distinct.
-- [x] Imported grid has been converted to transparent PNG.
-- [ ] Hand-clean any remaining checkerboard edge halos if the source is replaced by a true transparent file later.

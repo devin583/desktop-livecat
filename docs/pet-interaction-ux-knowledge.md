@@ -1,6 +1,10 @@
 # Desktop LiveCat Interaction UX Knowledge
 
+Version: 0.2.0
 Updated: 2026-06-02
+Last reviewed: 2026-06-03
+Review cadence: every 5 hours through the pet knowledge automation
+Confidence: high for menu hierarchy, medium for final visual style until premium pet-specific poses exist
 
 ## Sources Read
 
@@ -74,3 +78,12 @@ Updated: 2026-06-02
 - Keep full Pomodoro setup in the focus panel.
 
 Confidence: high for information architecture and interaction hierarchy; medium for final visual style because richer pet-specific poses still need dedicated sprite states/assets.
+
+## Version Log
+
+- 0.2.0, 2026-06-03: Added explicit versioning and linked this document to the
+  five-hour recurring knowledge review cadence. Product theory now lives in
+  `docs/pet-product-design-knowledge.md`; asset contracts now live in
+  `docs/pet-asset-pipeline-standards.md`.
+- 0.1.0, 2026-06-02: Captured initial QQ Pet, context menu, motion, and Pomodoro
+  integration conclusions for the v0.9.1 interaction pass.
