@@ -94,6 +94,11 @@ export const initialPetCare: PetCareState = {
   cleanliness: 74,
   energy: 70,
   bond: 0,
+  level: 1,
+  experience: 0,
+  coins: 0,
+  streak: 0,
+  lastFocusDay: null,
   lastInteractionAt: null,
 };
 
@@ -186,6 +191,16 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   );
   next.petCare.energy = clampMinutes(next.petCare.energy, 0, 100, initialPetCare.energy);
   next.petCare.bond = clampMinutes(next.petCare.bond, 0, 9999, initialPetCare.bond);
+  next.petCare.level = clampMinutes(next.petCare.level, 1, 999, initialPetCare.level);
+  next.petCare.experience = clampMinutes(
+    next.petCare.experience,
+    0,
+    999_999,
+    initialPetCare.experience,
+  );
+  next.petCare.coins = clampMinutes(next.petCare.coins, 0, 999_999, initialPetCare.coins);
+  next.petCare.streak = clampMinutes(next.petCare.streak, 0, 9999, initialPetCare.streak);
+  next.petCare.lastFocusDay = normalizeDayString(next.petCare.lastFocusDay);
   next.petCare.lastInteractionAt = normalizeDateString(next.petCare.lastInteractionAt);
   next.scale = Math.min(1.4, Math.max(0.65, Number(next.scale) || 1));
   next.controlsOpen = Boolean(next.controlsOpen);
@@ -357,6 +372,11 @@ function normalizeDateString(value: unknown) {
   const time = Date.parse(value);
   if (!Number.isFinite(time)) return null;
   return new Date(time).toISOString();
+}
+
+function normalizeDayString(value: unknown) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  return value;
 }
 
 function normalizeFocusMode(value: unknown): FocusTimerMode | null {

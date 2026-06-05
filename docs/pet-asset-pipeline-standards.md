@@ -1,9 +1,9 @@
 # Desktop LiveCat Asset Pipeline Standards
 
-Version: 0.2.0
-Last reviewed: 2026-06-03
+Version: 0.3.0
+Last reviewed: 2026-06-05
 Review cadence: every 5 hours through the pet knowledge automation
-Confidence: high for current spritesheet constraints, medium for future Live2D/Rive/Spine tooling choice
+Confidence: high for current spritesheet constraints and composition diagnosis, medium for future Live2D/Rive/Spine tooling choice
 
 This document defines how Desktop LiveCat should classify, request, validate, and
 package pet assets. It replaces the loose "make a cute sheet" approach with a
@@ -28,6 +28,29 @@ was a broken asset contract.
 The result was predictable: cat, keyboard, timer, and decorations moved like
 unrelated objects. Good desktop pets need a source asset system, not only a final
 atlas.
+
+## v0.9.4 Runtime Patch And Remaining Asset Debt
+
+The v0.9.4 runtime fixes the most visible composition failures without pretending
+the assets are complete:
+
+- Synthetic spritesheet floor shadow is disabled. The V2 cat sheets already
+  include keyboard/ground treatment, so a runtime pseudo-shadow created double
+  shadow and top/crop artifacts during motion.
+- Care, focus, completion, and failure feedback now use pet-stage overlays
+  instead of editing the baked atlas. This prevents the cat and keyboard from
+  being scaled together for local touch feedback.
+- Deprecated supplied-cat IDs still migrate to V2 packs, and the default pack is
+  `orange-tabby-keyboard-v2`.
+- Growth values are stored in runtime state, not in the asset. The asset only
+  needs anchors and expressive action states; XP/coins/streak remain product
+  state.
+
+The remaining debt is not solvable by CSS alone. The current V2 atlas can
+represent basic moods, but `petting`, `feeding`, `playing`, `completion-eat`, and
+`abandon-wilt` are semantic aliases over generic rows. The next asset pack must
+provide either independent rows for those actions or a layered rig with named
+pivots and state clips.
 
 ## Answer To The "Is This Still Old Slicing?" Question
 
@@ -271,6 +294,9 @@ Tool fit:
 
 ## Version Log
 
+- 0.3.0, 2026-06-05: Added the v0.9.4 runtime patch notes, clarified that
+  spritesheet shadow/crop fixes are runtime composition safeguards, and recorded
+  the remaining need for action-specific rows or rigged layers.
 - 0.2.0, 2026-06-03: Added asset taxonomy, source/runtime split, anchors,
   Pomodoro asset standard, AI generation request standard, and modern rigging
   tool notes. Cleaned the old 7-column supplied-cat path from production.

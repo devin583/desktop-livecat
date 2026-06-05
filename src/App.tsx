@@ -192,11 +192,16 @@ const copy = {
     statusCleaning: "整理毛毛",
     statusPraised: "被夸了",
     statusAttention: "休息提醒",
+    statusFailed: "番茄枯萎",
     careBond: "亲密",
     careCleanliness: "清洁",
+    careCoins: "金币",
     careEnergy: "精力",
+    careExperience: "经验",
     careFullness: "饱腹",
     careHappiness: "开心",
+    careLevel: "等级",
+    careStreak: "连击",
     focusCompanion: "陪伴专注",
     focusCompletePet: "完成啦",
     focusResetPet: "重新准备",
@@ -204,6 +209,11 @@ const copy = {
     focusStartPet: "准备专注",
     focusPausedPet: "等你回来",
     focusRunningPet: "陪你专注",
+    focusReward: "专注奖励",
+    focusTomatoComplete: "番茄成熟",
+    focusTomatoGrowing: "番茄成长中",
+    focusTomatoPaused: "番茄等你",
+    focusTomatoWilted: "番茄枯萎",
     menuCare: "照顾",
     menuFocus: "番茄钟",
     menuSettings: "设置",
@@ -308,11 +318,16 @@ const copy = {
     statusCleaning: "Grooming",
     statusPraised: "Praised",
     statusAttention: "Break nudge",
+    statusFailed: "Tomato wilted",
     careBond: "Bond",
     careCleanliness: "Clean",
+    careCoins: "Coins",
     careEnergy: "Energy",
+    careExperience: "XP",
     careFullness: "Full",
     careHappiness: "Happy",
+    careLevel: "Level",
+    careStreak: "Streak",
     focusCompanion: "Focus buddy",
     focusCompletePet: "Done",
     focusResetPet: "Reset",
@@ -320,6 +335,11 @@ const copy = {
     focusStartPet: "Ready",
     focusPausedPet: "Waiting",
     focusRunningPet: "Focusing",
+    focusReward: "Focus reward",
+    focusTomatoComplete: "Tomato ripe",
+    focusTomatoGrowing: "Tomato growing",
+    focusTomatoPaused: "Tomato waiting",
+    focusTomatoWilted: "Tomato wilted",
     menuCare: "Care",
     menuFocus: "Timer",
     menuSettings: "Settings",
@@ -599,6 +619,7 @@ function activityStateFromMood(
   if (mood === "cleaning") return "cleaning";
   if (mood === "praised") return "praised";
   if (mood === "attention_call") return "attention_call";
+  if (mood === "failed") return "failed";
   return "idle";
 }
 
@@ -632,6 +653,7 @@ function moodStatusLabel(mood: PetMood, language: AppLanguage) {
   if (mood === "playing") return t.statusPlaying;
   if (mood === "cleaning") return t.statusCleaning;
   if (mood === "praised" || mood === "happy") return t.statusPraised;
+  if (mood === "failed") return t.statusFailed;
   if (mood === "attention_call" || mood === "focusEnding") return t.statusAttention;
   if (mood === "focus") return modeLabel("focus", language);
   if (mood === "break" || mood === "longBreak") return modeLabel("break", language);
@@ -819,41 +841,54 @@ function isPetSurfacePointer(event: PointerEvent<HTMLElement>) {
 
 type InteractionMood = Extract<
   PetMood,
-  "petting" | "feeding" | "playing" | "cleaning" | "praised" | "attention_call"
+  | "focus"
+  | "petting"
+  | "feeding"
+  | "playing"
+  | "cleaning"
+  | "praised"
+  | "attention_call"
+  | "failed"
 >;
 
 type ActiveInteraction = {
   id: number;
   mood: InteractionMood;
-  prop: "fish" | "wand" | "brush" | "heart" | "bell" | null;
+  prop: "fish" | "wand" | "brush" | "heart" | "bell" | "tomato" | "wiltedTomato" | null;
   reaction: string;
+  durationMs: number;
   until: number;
 };
 
 type PetContextMenuState = {
   x: number;
   y: number;
+  maxHeight: number;
 };
 
 const interactionDurationMs: Record<InteractionMood, number> = {
+  focus: 4600,
   petting: 5200,
   feeding: 5400,
   playing: 5200,
   cleaning: 4600,
   praised: 4200,
   attention_call: 4300,
+  failed: 5200,
 };
 
 const interactionCareDelta: Record<
   InteractionMood,
   Partial<Record<Exclude<keyof PetCareState, "lastInteractionAt">, number>>
 > = {
+  focus: {},
   petting: { happiness: 10, energy: 2, bond: 2 },
   feeding: { fullness: 18, happiness: 4, energy: 2, bond: 1 },
   playing: { happiness: 14, fullness: -3, energy: -7, bond: 2 },
   cleaning: { cleanliness: 22, happiness: 3, energy: -2, bond: 1 },
   praised: { happiness: 12, energy: 3, bond: 3 },
   attention_call: { energy: 8, happiness: 2, bond: 1 },
+  failed: { happiness: -6, energy: -2 },
 };
 
 function applyCareDelta(
@@ -875,11 +910,95 @@ function clampCare(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+type FocusReward = {
+  bond: number;
+  coins: number;
+  energy: number;
+  experience: number;
+  fullness: number;
+  happiness: number;
+};
+
+function focusRewardFromSeconds(seconds: number): FocusReward {
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return {
+    experience: minutes,
+    coins: Math.max(1, Math.floor(minutes / 5)),
+    energy: Math.max(4, Math.min(60, Math.round(minutes * 1.36))),
+    fullness: Math.max(2, Math.min(35, Math.round(minutes * 0.42))),
+    happiness: Math.max(4, Math.min(28, Math.round(minutes * 0.5))),
+    bond: Math.max(1, Math.min(8, Math.floor(minutes / 12) + 1)),
+  };
+}
+
+function levelRequirement(level: number) {
+  return 40 + level * 30;
+}
+
+function addExperience(level: number, experience: number, amount: number) {
+  let nextLevel = Math.max(1, Math.floor(level));
+  let nextExperience = Math.max(0, Math.floor(experience + amount));
+  while (nextExperience >= levelRequirement(nextLevel) && nextLevel < 999) {
+    nextExperience -= levelRequirement(nextLevel);
+    nextLevel += 1;
+  }
+  return { level: nextLevel, experience: nextExperience };
+}
+
+function previousDayKey(day: string) {
+  const date = new Date(`${day}T00:00:00`);
+  date.setDate(date.getDate() - 1);
+  return todayKey(date);
+}
+
+function nextStreak(care: PetCareState, focusDay: string) {
+  if (care.lastFocusDay === focusDay) return care.streak;
+  if (care.lastFocusDay === previousDayKey(focusDay)) return care.streak + 1;
+  return 1;
+}
+
+function applyFocusReward(care: PetCareState, seconds: number, now = new Date()): PetCareState {
+  const reward = focusRewardFromSeconds(seconds);
+  const leveled = addExperience(care.level, care.experience, reward.experience);
+  const focusDay = todayKey(now);
+  return {
+    ...care,
+    happiness: clampCare(care.happiness + reward.happiness),
+    fullness: clampCare(care.fullness + reward.fullness),
+    cleanliness: clampCare(care.cleanliness + 2),
+    energy: clampCare(care.energy + reward.energy),
+    bond: Math.max(0, Math.min(9999, care.bond + reward.bond)),
+    level: leveled.level,
+    experience: leveled.experience,
+    coins: Math.max(0, Math.min(999_999, care.coins + reward.coins)),
+    streak: nextStreak(care, focusDay),
+    lastFocusDay: focusDay,
+    lastInteractionAt: now.toISOString(),
+  };
+}
+
+function focusRewardLabel(seconds: number, language: AppLanguage) {
+  const reward = focusRewardFromSeconds(seconds);
+  const xp = language === "zh-CN" ? "经验" : "XP";
+  const coins = language === "zh-CN" ? "金币" : "coins";
+  return `+${reward.experience} ${xp} · +${reward.coins} ${coins}`;
+}
+
+function levelProgressPercent(care: PetCareState) {
+  return Math.min(100, Math.round((care.experience / levelRequirement(care.level)) * 100));
+}
+
 function interactionReactionLabel(
   mood: InteractionMood,
   language: AppLanguage,
   delta = interactionCareDelta[mood],
 ) {
+  if (mood === "failed") {
+    return language === "zh-CN" ? "番茄枯萎 · 未获得奖励" : "Tomato wilted · no reward";
+  }
+  if (mood === "focus") {
+    return language === "zh-CN" ? "准备专注" : "Ready to focus";
+  }
   const positiveMetric =
     (delta.fullness ?? 0) > 0
       ? language === "zh-CN"
@@ -912,6 +1031,7 @@ function interactionReactionLabel(
           cleaning: "清爽",
           praised: "被夸",
           attention_call: "提醒",
+          focus: "准备",
         }[mood]
       : {
           petting: "Purr",
@@ -920,6 +1040,7 @@ function interactionReactionLabel(
           cleaning: "Groom",
           praised: "Praised",
           attention_call: "Nudge",
+          focus: "Ready",
         }[mood];
   return language === "zh-CN" ? `${verb} +${amount} ${positiveMetric}` : `${verb} +${amount} ${positiveMetric}`;
 }
@@ -1030,6 +1151,34 @@ function App() {
     ["cleanliness", t.careCleanliness, state.petCare.cleanliness],
     ["energy", t.careEnergy, state.petCare.energy],
   ] as const;
+  const focusRewardPreview = focusRewardLabel(plannedTimerSeconds, state.language);
+  const tomatoStage =
+    activeInteraction?.prop === "wiltedTomato"
+      ? "wilted"
+      : state.pomodoro.completionReview
+        ? "complete"
+        : state.pomodoro.mode !== "focus"
+          ? "rest"
+          : !state.pomodoro.running && timerHasContext
+            ? "paused"
+            : timerProgress >= 0.86
+              ? "ripe"
+              : timerProgress >= 0.18
+                ? "growing"
+                : "seed";
+  const tomatoLabel =
+    tomatoStage === "wilted"
+      ? t.focusTomatoWilted
+      : tomatoStage === "complete" || tomatoStage === "ripe"
+        ? t.focusTomatoComplete
+        : tomatoStage === "paused"
+          ? t.focusTomatoPaused
+          : t.focusTomatoGrowing;
+  const showFocusTomato =
+    timerHasContext &&
+    (state.pomodoro.mode === "focus" ||
+      Boolean(state.pomodoro.completionReview) ||
+      activeInteraction?.prop === "wiltedTomato");
 
   const registerPulse = useCallback((source = "browser-focus-fallback") => {
     const now = Date.now();
@@ -1218,6 +1367,9 @@ function App() {
 
         return {
           ...current,
+          petCare: completedFocus
+            ? applyFocusReward(current.petCare, plannedSeconds, now)
+            : current.petCare,
           pomodoro: {
             ...current.pomodoro,
             mode: nextMode,
@@ -1306,12 +1458,14 @@ function App() {
       }
       const id = interactionIdRef.current + 1;
       interactionIdRef.current = id;
+      const durationMs = interactionDurationMs[mood];
       setActiveInteraction({
         id,
         mood,
         prop,
         reaction: options.reaction ?? interactionReactionLabel(mood, state.language),
-        until: Date.now() + interactionDurationMs[mood],
+        durationMs,
+        until: Date.now() + durationMs,
       });
       if (options.adjustCare !== false) {
         setState((current) => ({
@@ -1323,7 +1477,7 @@ function App() {
       interactionTimeoutRef.current = window.setTimeout(() => {
         setActiveInteraction(null);
         interactionTimeoutRef.current = null;
-      }, interactionDurationMs[mood]);
+      }, durationMs);
     },
     [setState, state.language],
   );
@@ -1334,7 +1488,7 @@ function App() {
     triggerInteraction("praised", "heart", {
       adjustCare: true,
       closeMenu: false,
-      reaction: state.language === "zh-CN" ? `${t.focusCompletePet} +${t.careBond}` : `${t.focusCompletePet} +${t.careBond}`,
+      reaction: `${t.focusCompletePet} · ${focusRewardLabel(review.durationSeconds, state.language)}`,
     });
   }, [state.pomodoro.completionReview?.recordId, triggerInteraction]);
 
@@ -1348,10 +1502,14 @@ function App() {
   };
 
   const pomodoroAction = (action: "toggle" | "reset" | "skip") => {
+    const skippingFocus =
+      action === "skip" &&
+      state.pomodoro.focusMode === "pomo" &&
+      state.pomodoro.mode === "focus";
     if (action === "toggle") {
       triggerInteraction(
-        state.pomodoro.running ? "attention_call" : state.pomodoro.mode === "focus" ? "cleaning" : "playing",
-        state.pomodoro.running ? "bell" : state.pomodoro.mode === "focus" ? "brush" : "wand",
+        state.pomodoro.running ? "attention_call" : state.pomodoro.mode === "focus" ? "focus" : "playing",
+        state.pomodoro.running ? "bell" : state.pomodoro.mode === "focus" ? "tomato" : "wand",
         {
           adjustCare: false,
           closeMenu: false,
@@ -1370,9 +1528,13 @@ function App() {
       });
     } else {
       triggerInteraction(
-        state.pomodoro.mode === "focus" ? "attention_call" : "praised",
-        state.pomodoro.mode === "focus" ? "bell" : "heart",
-        { adjustCare: false, closeMenu: false, reaction: t.focusSkipPet },
+        skippingFocus ? "failed" : state.pomodoro.mode === "focus" ? "attention_call" : "praised",
+        skippingFocus ? "wiltedTomato" : state.pomodoro.mode === "focus" ? "bell" : "heart",
+        {
+          adjustCare: skippingFocus,
+          closeMenu: false,
+          reaction: skippingFocus ? t.focusTomatoWilted : t.focusSkipPet,
+        },
       );
     }
 
@@ -1599,6 +1761,7 @@ function App() {
         const isToday = reviewDay === todayKey();
         return {
           ...current,
+          petCare: applyFocusReward(current.petCare, extraSeconds, new Date(review.completedAt)),
           pomodoro: {
             ...current.pomodoro,
             records: adjustedRecords,
@@ -1923,11 +2086,12 @@ function App() {
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
     const menuWidth = 252;
-    const menuHeight = 380;
+    const menuHeight = timerHasContext ? 520 : 430;
     const x = Math.min(Math.max(10, event.clientX - rect.left), Math.max(10, rect.width - menuWidth - 10));
     const y = Math.min(Math.max(10, event.clientY - rect.top), Math.max(10, rect.height - menuHeight - 10));
+    const maxHeight = Math.max(240, rect.height - y - 10);
     setState((current) => ({ ...current, controlsOpen: false }));
-    setPetMenu({ x, y });
+    setPetMenu({ x, y, maxHeight });
   };
 
   const updateLook = (event: PointerEvent<HTMLElement>) => {
@@ -2159,12 +2323,27 @@ function App() {
                     ? <BrushCleaning size={15} />
                     : activeInteraction.prop === "bell"
                       ? <BellRing size={15} />
+                      : activeInteraction.prop === "tomato" || activeInteraction.prop === "wiltedTomato"
+                        ? <span className="mini-tomato" />
                       : <Heart size={15} />}
             </div>
           ) : null}
           {activeInteraction ? (
-            <div key={`reaction-${activeInteraction.id}`} className="pet-reaction-bubble">
+            <div
+              key={`reaction-${activeInteraction.id}`}
+              className={`pet-reaction-bubble reaction-${activeInteraction.mood}`}
+            >
               {activeInteraction.reaction}
+            </div>
+          ) : null}
+          {showFocusTomato ? (
+            <div
+              className={`focus-tomato tomato-${tomatoStage}`}
+              aria-label={tomatoLabel}
+              title={tomatoLabel}
+            >
+              <span />
+              <i />
             </div>
           ) : null}
           {timerHasContext ? (
@@ -2175,6 +2354,9 @@ function App() {
               <div className="pet-timer-copy">
                 <b>{focusCompanionLabel}</b>
                 <small>{timerStageLabel}</small>
+                {state.pomodoro.mode === "focus" || state.pomodoro.completionReview ? (
+                  <small>{focusRewardPreview}</small>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -2189,25 +2371,28 @@ function App() {
         >
           <button
             type="button"
+            className={activeInteraction?.mood === "petting" ? "active" : ""}
             aria-label={t.interactPet}
             title={t.interactPet}
-            onClick={() => triggerInteraction("petting", "heart")}
+            onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
           >
             <HandHeart size={15} />
           </button>
           <button
             type="button"
+            className={activeInteraction?.mood === "feeding" ? "active" : ""}
             aria-label={t.interactFeed}
             title={t.interactFeed}
-            onClick={() => triggerInteraction("feeding", "fish")}
+            onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
           >
             <Fish size={15} />
           </button>
           <button
             type="button"
+            className={activeInteraction?.mood === "playing" ? "active" : ""}
             aria-label={t.interactPlay}
             title={t.interactPlay}
-            onClick={() => triggerInteraction("playing", "wand")}
+            onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
           >
             <Joystick size={15} />
           </button>
@@ -2216,7 +2401,7 @@ function App() {
         {petMenu ? (
           <div
             className="pet-context-menu"
-            style={{ left: petMenu.x, top: petMenu.y } as CSSProperties}
+            style={{ left: petMenu.x, top: petMenu.y, maxHeight: petMenu.maxHeight } as CSSProperties}
             onPointerDown={(event) => event.stopPropagation()}
           >
             <div className="pet-context-head">
@@ -2253,27 +2438,51 @@ function App() {
             <div className="pet-context-section">
               <div className="pet-context-label">{t.menuCare}</div>
               <div className="context-action-grid">
-                <button type="button" onClick={() => triggerInteraction("petting", "heart")}>
+                <button
+                  type="button"
+                  className={activeInteraction?.mood === "petting" ? "active" : ""}
+                  onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
+                >
                   <HandHeart size={15} />
                   <span>{t.interactPet}</span>
                 </button>
-                <button type="button" onClick={() => triggerInteraction("feeding", "fish")}>
+                <button
+                  type="button"
+                  className={activeInteraction?.mood === "feeding" ? "active" : ""}
+                  onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
+                >
                   <Fish size={15} />
                   <span>{t.interactFeed}</span>
                 </button>
-                <button type="button" onClick={() => triggerInteraction("playing", "wand")}>
+                <button
+                  type="button"
+                  className={activeInteraction?.mood === "playing" ? "active" : ""}
+                  onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
+                >
                   <Joystick size={15} />
                   <span>{t.interactPlay}</span>
                 </button>
-                <button type="button" onClick={() => triggerInteraction("cleaning", "brush")}>
+                <button
+                  type="button"
+                  className={activeInteraction?.mood === "cleaning" ? "active" : ""}
+                  onClick={() => triggerInteraction("cleaning", "brush", { closeMenu: false })}
+                >
                   <BrushCleaning size={15} />
                   <span>{t.interactClean}</span>
                 </button>
-                <button type="button" onClick={() => triggerInteraction("praised", "heart")}>
+                <button
+                  type="button"
+                  className={activeInteraction?.mood === "praised" ? "active" : ""}
+                  onClick={() => triggerInteraction("praised", "heart", { closeMenu: false })}
+                >
                   <Heart size={15} />
                   <span>{t.interactPraise}</span>
                 </button>
-                <button type="button" onClick={() => triggerInteraction("attention_call", "bell")}>
+                <button
+                  type="button"
+                  className={activeInteraction?.mood === "attention_call" ? "active" : ""}
+                  onClick={() => triggerInteraction("attention_call", "bell", { closeMenu: false })}
+                >
                   <BellRing size={15} />
                   <span>{t.interactCall}</span>
                 </button>
@@ -2292,6 +2501,18 @@ function App() {
               <div className="care-bond">
                 <span>{t.careBond}</span>
                 <b>{state.petCare.bond}</b>
+              </div>
+              <div className="care-bond care-growth">
+                <span>{t.careLevel}</span>
+                <b>{state.petCare.level}</b>
+              </div>
+              <div className="care-bond care-growth">
+                <span>{t.careCoins}</span>
+                <b>{state.petCare.coins}</b>
+              </div>
+              <div className="care-bond care-growth">
+                <span>{t.careStreak}</span>
+                <b>{state.petCare.streak}</b>
               </div>
             </div>
 
@@ -2657,12 +2878,39 @@ function App() {
           {state.controlPanelTab === "interact" ? (
             <div className="interaction-panel">
               <div className="interaction-hint">{t.interactHint}</div>
+              <div className="pet-growth-card">
+                <div>
+                  <span>{t.careLevel}</span>
+                  <b>{state.petCare.level}</b>
+                  <i>
+                    <em style={{ width: `${levelProgressPercent(state.petCare)}%` }} />
+                  </i>
+                  <small>
+                    {state.petCare.experience}/{levelRequirement(state.petCare.level)} {t.careExperience}
+                  </small>
+                </div>
+                <div>
+                  <span>{t.careCoins}</span>
+                  <b>{state.petCare.coins}</b>
+                  <small>{t.careStreak}: {state.petCare.streak}</small>
+                </div>
+              </div>
+              {activeInteraction ? (
+                <div
+                  className={`interaction-status interaction-status-${activeInteraction.mood}`}
+                  style={{ ["--interaction-duration" as string]: `${activeInteraction.durationMs}ms` }}
+                >
+                  <b>{moodStatusLabel(activeInteraction.mood, state.language)}</b>
+                  <span>{activeInteraction.reaction}</span>
+                  <i />
+                </div>
+              ) : null}
               <div className="interaction-grid">
                 <button
                   type="button"
                   className={activeInteraction?.mood === "petting" ? "active" : ""}
                   title={t.interactPet}
-                  onClick={() => triggerInteraction("petting", "heart")}
+                  onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
                 >
                   <HandHeart size={16} />
                   <span>{t.interactPet}</span>
@@ -2671,7 +2919,7 @@ function App() {
                   type="button"
                   className={activeInteraction?.mood === "feeding" ? "active" : ""}
                   title={t.interactFeed}
-                  onClick={() => triggerInteraction("feeding", "fish")}
+                  onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
                 >
                   <Fish size={16} />
                   <span>{t.interactFeed}</span>
@@ -2680,7 +2928,7 @@ function App() {
                   type="button"
                   className={activeInteraction?.mood === "playing" ? "active" : ""}
                   title={t.interactPlay}
-                  onClick={() => triggerInteraction("playing", "wand")}
+                  onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
                 >
                   <Joystick size={16} />
                   <span>{t.interactPlay}</span>
@@ -2689,7 +2937,7 @@ function App() {
                   type="button"
                   className={activeInteraction?.mood === "cleaning" ? "active" : ""}
                   title={t.interactClean}
-                  onClick={() => triggerInteraction("cleaning", "brush")}
+                  onClick={() => triggerInteraction("cleaning", "brush", { closeMenu: false })}
                 >
                   <BrushCleaning size={16} />
                   <span>{t.interactClean}</span>
@@ -2698,7 +2946,7 @@ function App() {
                   type="button"
                   className={activeInteraction?.mood === "praised" ? "active" : ""}
                   title={t.interactPraise}
-                  onClick={() => triggerInteraction("praised", "heart")}
+                  onClick={() => triggerInteraction("praised", "heart", { closeMenu: false })}
                 >
                   <Heart size={16} />
                   <span>{t.interactPraise}</span>
@@ -2707,7 +2955,7 @@ function App() {
                   type="button"
                   className={activeInteraction?.mood === "attention_call" ? "active" : ""}
                   title={t.interactCall}
-                  onClick={() => triggerInteraction("attention_call", "bell")}
+                  onClick={() => triggerInteraction("attention_call", "bell", { closeMenu: false })}
                 >
                   <Smile size={16} />
                   <span>{t.interactCall}</span>
@@ -2753,6 +3001,10 @@ function App() {
                   {state.pomodoro.completionReview.taskTitle || t.untitledTask} ·{" "}
                   {compactDuration(state.pomodoro.completionReview.durationSeconds, state.language)}
                 </span>
+                <small>
+                  {t.focusReward}:{" "}
+                  {focusRewardLabel(state.pomodoro.completionReview.durationSeconds, state.language)}
+                </small>
               </div>
               <div className="review-actions">
                 <button type="button" onClick={() => reviewAction("dismiss")}>

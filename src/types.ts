@@ -111,6 +111,11 @@ export type PetCareState = {
   cleanliness: number;
   energy: number;
   bond: number;
+  level: number;
+  experience: number;
+  coins: number;
+  streak: number;
+  lastFocusDay: string | null;
   lastInteractionAt: string | null;
 };
 
@@ -239,4 +244,5 @@ export type PetMood =
   | "playing"
   | "cleaning"
   | "praised"
-  | "attention_call";
+  | "attention_call"
+  | "failed";

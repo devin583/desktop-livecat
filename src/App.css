@@ -112,6 +112,10 @@ input {
   z-index: 0;
 }
 
+.renderer-spritesheet .spritesheet-pet::after {
+  display: none;
+}
+
 .spritesheet-viewport {
   position: absolute;
   inset: 0;
@@ -875,6 +879,7 @@ input {
 
 .pet-action-dock button:hover,
 .pet-action-dock button:focus-visible,
+.pet-action-dock button.active,
 .pet-context-menu button:hover,
 .pet-context-menu button:focus-visible,
 .pet-context-menu button.active {
@@ -1032,6 +1037,10 @@ input {
 .care-bond {
   grid-column: 1 / -1;
   grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.care-growth {
+  grid-column: auto;
 }
 
 .care-bond b {
@@ -1275,7 +1284,9 @@ input {
 .records-list,
 .toggle-row,
 .stats-row,
-.interaction-grid {
+.interaction-grid,
+.pet-growth-card,
+.interaction-status {
   display: grid;
   gap: 6px;
 }
@@ -1296,6 +1307,96 @@ input {
   color: #71545e;
   font-size: 10px;
   line-height: 1.35;
+}
+
+.pet-growth-card {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+
+.pet-growth-card div,
+.interaction-status {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(83, 62, 69, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 250, 240, 0.74);
+  color: #4c3a42;
+}
+
+.pet-growth-card div {
+  display: grid;
+  gap: 4px;
+}
+
+.pet-growth-card span,
+.pet-growth-card small,
+.interaction-status span {
+  min-width: 0;
+  overflow: hidden;
+  color: #71545e;
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-growth-card b,
+.interaction-status b {
+  min-width: 0;
+  overflow: hidden;
+  color: #4c3a42;
+  font-size: 13px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-growth-card i,
+.interaction-status i {
+  position: relative;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(76, 65, 64, 0.14);
+}
+
+.pet-growth-card i em {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: #d79047;
+}
+
+.interaction-status {
+  position: relative;
+  overflow: hidden;
+}
+
+.interaction-status i {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  border-radius: 0;
+  background: #4aa59b;
+  animation: interaction-status-drain var(--interaction-duration, 4200ms) linear both;
+}
+
+.interaction-status-failed {
+  border-color: rgba(137, 79, 86, 0.18);
+  background: rgba(255, 244, 235, 0.86);
+}
+
+.interaction-status-failed i {
+  background: #cf7a5d;
+}
+
+@keyframes interaction-status-drain {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 .interaction-grid {
@@ -1554,6 +1655,7 @@ input {
 }
 
 .review-card span,
+.review-card small,
 .record-row small {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1744,9 +1846,41 @@ input {
   color: #6b5962;
 }
 
+.prop-tomato,
+.prop-wiltedTomato {
+  color: #c94f43;
+}
+
+.mini-tomato {
+  position: relative;
+  width: calc(15px * var(--pet-scale));
+  height: calc(14px * var(--pet-scale));
+  border-radius: 48% 48% 54% 54%;
+  background: linear-gradient(145deg, #ef6a54, #c9463f);
+  box-shadow: inset calc(-2px * var(--pet-scale)) calc(-2px * var(--pet-scale)) 0 rgba(105, 39, 41, 0.18);
+}
+
+.mini-tomato::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(-4px * var(--pet-scale));
+  width: calc(10px * var(--pet-scale));
+  height: calc(6px * var(--pet-scale));
+  border-radius: 80% 20% 80% 20%;
+  background: #4d8d62;
+  transform: translateX(-50%) rotate(-12deg);
+}
+
+.prop-wiltedTomato .mini-tomato {
+  background: linear-gradient(145deg, #a98168, #6f5d58);
+  transform: rotate(-18deg) scale(0.92);
+  filter: saturate(0.65);
+}
+
 .mood-prop-feeding {
-  left: calc(50% - 128px * var(--pet-scale));
-  bottom: calc(234px * var(--pet-scale));
+  left: calc(50% - 72px * var(--pet-scale));
+  bottom: calc(186px * var(--pet-scale));
   animation-name: prop-feed-path;
 }
 
@@ -1762,10 +1896,22 @@ input {
   animation-name: prop-clean-path;
 }
 
+.mood-prop-focus {
+  left: calc(50% + 82px * var(--pet-scale));
+  bottom: calc(254px * var(--pet-scale));
+  animation-name: prop-nudge-path;
+}
+
 .mood-prop-attention_call {
   left: calc(50% + 88px * var(--pet-scale));
   bottom: calc(286px * var(--pet-scale));
   animation-name: prop-nudge-path;
+}
+
+.mood-prop-failed {
+  left: calc(50% - 104px * var(--pet-scale));
+  bottom: calc(226px * var(--pet-scale));
+  animation-name: prop-wilt-path;
 }
 
 .pet-reaction-bubble {
@@ -1792,12 +1938,105 @@ input {
   z-index: 9;
 }
 
+.pet-reaction-bubble.reaction-failed {
+  border-color: rgba(137, 79, 86, 0.18);
+  background: rgba(255, 244, 235, 0.94);
+  color: #75444a;
+}
+
+.focus-tomato {
+  position: absolute;
+  left: calc(50% + 78px * var(--pet-scale));
+  bottom: calc(246px * var(--pet-scale));
+  width: calc(38px * var(--pet-scale));
+  height: calc(42px * var(--pet-scale));
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform-origin: 50% 82%;
+  animation: tomato-idle 2200ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 9;
+}
+
+.focus-tomato span {
+  position: relative;
+  width: calc(27px * var(--pet-scale));
+  height: calc(28px * var(--pet-scale));
+  border-radius: 48% 48% 54% 54%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.42) 0 13%, transparent 14%),
+    linear-gradient(145deg, #ef6a54, #c9443c);
+  box-shadow:
+    inset calc(-4px * var(--pet-scale)) calc(-5px * var(--pet-scale)) 0 rgba(105, 39, 41, 0.18),
+    0 calc(5px * var(--pet-scale)) calc(10px * var(--pet-scale)) rgba(65, 39, 44, 0.14);
+}
+
+.focus-tomato span::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(-8px * var(--pet-scale));
+  width: calc(18px * var(--pet-scale));
+  height: calc(10px * var(--pet-scale));
+  border-radius: 80% 20% 80% 20%;
+  background: #4d8d62;
+  transform: translateX(-50%) rotate(-12deg);
+}
+
+.focus-tomato i {
+  position: absolute;
+  left: 50%;
+  bottom: calc(1px * var(--pet-scale));
+  width: calc(30px * var(--pet-scale));
+  height: calc(6px * var(--pet-scale));
+  border-radius: 999px;
+  background: rgba(78, 61, 55, 0.14);
+  transform: translateX(-50%);
+}
+
+.tomato-seed span {
+  width: calc(12px * var(--pet-scale));
+  height: calc(13px * var(--pet-scale));
+  background: linear-gradient(145deg, #8bb86d, #5e965c);
+}
+
+.tomato-growing span {
+  width: calc(21px * var(--pet-scale));
+  height: calc(23px * var(--pet-scale));
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.36) 0 12%, transparent 13%),
+    linear-gradient(145deg, #d8a857, #d36b45);
+}
+
+.tomato-ripe {
+  animation-duration: 1200ms;
+}
+
+.tomato-complete {
+  animation: tomato-complete 1100ms cubic-bezier(0.2, 0.84, 0.22, 1) both;
+}
+
+.tomato-paused {
+  filter: saturate(0.72);
+  animation-play-state: paused;
+}
+
+.tomato-wilted span {
+  background: linear-gradient(145deg, #a98168, #6f5d58);
+  transform: rotate(-18deg) scale(0.9);
+  filter: saturate(0.65);
+}
+
+.tomato-rest {
+  display: none;
+}
+
 .pet-timer-bubble {
   position: absolute;
   left: 50%;
   bottom: calc(304px * var(--pet-scale));
   display: grid;
-  grid-template-columns: calc(46px * var(--pet-scale)) minmax(0, calc(96px * var(--pet-scale)));
+  grid-template-columns: calc(46px * var(--pet-scale)) minmax(0, calc(124px * var(--pet-scale)));
   gap: calc(7px * var(--pet-scale));
   align-items: center;
   padding: calc(7px * var(--pet-scale)) calc(9px * var(--pet-scale)) calc(7px * var(--pet-scale))
@@ -1902,6 +2141,10 @@ input {
   bottom: calc(334px * var(--pet-scale));
 }
 
+.renderer-spritesheet .focus-tomato {
+  bottom: calc(282px * var(--pet-scale));
+}
+
 @keyframes timer-bubble-in {
   from {
     opacity: 0;
@@ -1950,21 +2193,21 @@ input {
 @keyframes prop-feed-path {
   0% {
     opacity: 0;
-    transform: translate(-18px, 12px) scale(0.9) rotate(-12deg);
+    transform: translate(-20px, 14px) scale(0.9) rotate(-12deg);
   }
   18% {
     opacity: 1;
   }
   58% {
-    transform: translate(52px, -22px) scale(1.05) rotate(7deg);
+    transform: translate(30px, -2px) scale(1.05) rotate(6deg);
   }
   82% {
     opacity: 1;
-    transform: translate(68px, -30px) scale(0.9) rotate(3deg);
+    transform: translate(36px, -6px) scale(0.88) rotate(2deg);
   }
   100% {
     opacity: 0;
-    transform: translate(74px, -30px) scale(0.72) rotate(0deg);
+    transform: translate(42px, -8px) scale(0.7) rotate(0deg);
   }
 }
 
@@ -2034,6 +2277,24 @@ input {
   }
 }
 
+@keyframes prop-wilt-path {
+  0% {
+    opacity: 0;
+    transform: translate(0, -10px) scale(0.95) rotate(-6deg);
+  }
+  18%,
+  76% {
+    opacity: 1;
+  }
+  48% {
+    transform: translate(8px, 16px) scale(0.9) rotate(-18deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(12px, 24px) scale(0.82) rotate(-24deg);
+  }
+}
+
 @keyframes reaction-pop {
   0% {
     opacity: 0;
@@ -2046,6 +2307,34 @@ input {
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-10px) scale(0.98);
+  }
+}
+
+@keyframes tomato-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(calc(-4px * var(--pet-scale))) rotate(2deg);
+  }
+}
+
+@keyframes tomato-complete {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(8px * var(--pet-scale))) scale(0.84) rotate(-8deg);
+  }
+  24% {
+    opacity: 1;
+    transform: translateY(calc(-8px * var(--pet-scale))) scale(1.08) rotate(7deg);
+  }
+  58% {
+    transform: translateY(0) scale(1) rotate(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(-2deg);
   }
 }
 

@@ -1,8 +1,8 @@
 # Desktop LiveCat Interaction UX Knowledge
 
-Version: 0.2.0
-Updated: 2026-06-02
-Last reviewed: 2026-06-03
+Version: 0.3.0
+Updated: 2026-06-05
+Last reviewed: 2026-06-05
 Review cadence: every 5 hours through the pet knowledge automation
 Confidence: high for menu hierarchy, medium for final visual style until premium pet-specific poses exist
 
@@ -79,8 +79,30 @@ Confidence: high for menu hierarchy, medium for final visual style until premium
 
 Confidence: high for information architecture and interaction hierarchy; medium for final visual style because richer pet-specific poses still need dedicated sprite states/assets.
 
+## 0.9.4 Design Decision
+
+- Keep Pomodoro setup in the focus panel, but expose context quick controls from
+  right-click when the timer is active, paused, break, or completion-review.
+- Make the action dock and interaction panel show the currently running care
+  action until the reaction completes. This prevents the "clicked feed and it
+  jumped back to the first option" failure mode.
+- Use longer pet reaction windows: petting and praise are short, feeding and
+  playing are medium, completion/failure are held long enough to read.
+- Pet-owned focus feedback is now visible in three places: tomato prop, timer
+  bubble, and persistent growth values. The panel is no longer the only place
+  where focus has meaning.
+- Failed or abandoned focus has a distinct mood and wilted tomato. Do not use a
+  generic happy animation for failure.
+- Runtime overlay props are acceptable for v0.9.4, but every prop must be
+  anchored to the pet stage and must not compress the whole cat-keyboard image.
+
+Confidence: high for interaction clarity; medium for final cuteness because the
+underlying V2 sheets still lack dedicated action poses.
+
 ## Version Log
 
+- 0.3.0, 2026-06-05: Added the v0.9.4 interaction decision for active care
+  states, pet-owned tomato focus, growth rewards, and abandon/failure feedback.
 - 0.2.0, 2026-06-03: Added explicit versioning and linked this document to the
   five-hour recurring knowledge review cadence. Product theory now lives in
   `docs/pet-product-design-knowledge.md`; asset contracts now live in

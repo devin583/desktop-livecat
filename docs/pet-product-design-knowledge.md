@@ -1,9 +1,9 @@
 # Desktop LiveCat Product Design Knowledge
 
-Version: 0.1.0
-Last reviewed: 2026-06-03
+Version: 0.2.0
+Last reviewed: 2026-06-05
 Review cadence: every 5 hours through the pet knowledge automation
-Confidence: high for interaction hierarchy, medium for final emotional tuning until more custom motion assets exist
+Confidence: high for interaction hierarchy and runtime integration, medium for final emotional tuning until more custom action assets exist
 
 This document captures the product theory for Desktop LiveCat: how the pet should
 feel alive, how Pomodoro should become part of the pet, and how future iterations
@@ -143,6 +143,27 @@ The number can appear above or near the head, but only when it is anchored to th
 pet and visually belongs to the current state. A detached corner timer is a tool
 feature, not pet integration.
 
+## v0.9.4 Runtime Decision
+
+The v0.9.4 implementation treats focus as a pet-owned loop instead of a parallel
+timer panel:
+
+- Focus start creates a tomato/timer prop near the pet.
+- Running focus changes the tomato stage and keeps the number inside the pet
+  stage, not in a detached dashboard.
+- Completion applies XP, coins, energy, fullness, happiness, bond, and streak.
+- Completion review can convert extra focus minutes into additional reward.
+- Abandoning a focus session creates a wilted-tomato failure beat and avoids
+  reward, making the consequence visible without harsh punishment.
+- Care actions keep their active state and visible reaction until the motion
+  duration completes, so the UI no longer snaps back to the first option.
+
+This is still a runtime overlay solution. It is the correct near-term fix
+because the current V2 spritesheets do not contain independent petting, feeding,
+playing, tomato-eating, or failure-eat animation rows. The next premium asset
+pack must move those beats into source animation or rigged layers instead of
+using generic row aliases plus CSS props.
+
 ## Menu And Action Design Decisions
 
 - Care and focus should not be mixed as one flat list. They can share a context
@@ -189,6 +210,9 @@ feature, not pet integration.
 
 ## Version Log
 
+- 0.2.0, 2026-06-05: Recorded the v0.9.4 runtime decision: tomato-owned focus,
+  pet growth rewards, active action state, failure/wilt feedback, and the
+  remaining requirement for true action-specific assets.
 - 0.1.0, 2026-06-03: Captured the product thesis, design layers,
   anthropomorphism rules, motion timing, interaction hierarchy, Pomodoro
   integration model, and current design debt backlog.
