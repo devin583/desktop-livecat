@@ -1,6 +1,6 @@
 # Desktop LiveCat Interaction UX Knowledge
 
-Version: 0.3.0
+Version: 0.3.1
 Updated: 2026-06-05
 Last reviewed: 2026-06-05
 Review cadence: every 5 hours through the pet knowledge automation
@@ -99,8 +99,26 @@ Confidence: high for information architecture and interaction hierarchy; medium 
 Confidence: high for interaction clarity; medium for final cuteness because the
 underlying V2 sheets still lack dedicated action poses.
 
+## 0.9.5 Layout Decision
+
+- Opening the full control panel must not translate the whole pet layer out of
+  frame. The pet remains visually grounded in the desktop window.
+- The full panel owns configuration and detailed state while it is open, so
+  duplicate floating action buttons, timer bubble, and tomato overlay should be
+  suppressed.
+- Visible tab labels do not need hover tooltips. Tooltips over the tab row create
+  visual noise and can be captured as black boxes in ordinary use.
+- The floating settings gear should not overlap the full panel. Put close affordance
+  inside the panel instead.
+
+Confidence: high. This was verified against a 560 x 620 viewport matching the
+Tauri desktop window.
+
 ## Version Log
 
+- 0.3.1, 2026-06-05: Added the v0.9.5 layout decision for full-panel behavior:
+  no pet-layer translation, no duplicate overlays while the panel is open, and
+  no tab-row tooltip clutter.
 - 0.3.0, 2026-06-05: Added the v0.9.4 interaction decision for active care
   states, pet-owned tomato focus, growth rewards, and abandon/failure feedback.
 - 0.2.0, 2026-06-03: Added explicit versioning and linked this document to the

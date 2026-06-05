@@ -46,6 +46,7 @@ import {
   SkipForward,
   TimerReset,
   Trash2,
+  X,
 } from "lucide-react";
 import { Live2DCanvas } from "./Live2DCanvas";
 import { SpritesheetPet } from "./SpritesheetPet";
@@ -177,6 +178,7 @@ const copy = {
     binding: "绑定中",
     break: "休息",
     clickThrough: "预览点击穿透 10 秒",
+    closeControls: "收起面板",
     controls: "设置",
     controlPet: "角色",
     controlInteract: "互动",
@@ -303,6 +305,7 @@ const copy = {
     binding: "Binding",
     break: "Break",
     clickThrough: "Preview click-through for 10 seconds",
+    closeControls: "Close panel",
     controls: "Settings",
     controlPet: "Pet",
     controlInteract: "Interact",
@@ -2591,6 +2594,18 @@ function App() {
           className={`control-strip ${state.controlsOpen ? "open" : ""}`}
           onPointerDown={(event) => event.stopPropagation()}
         >
+          <div className="control-strip-head">
+            <span>{selectedPet.name}</span>
+            <button
+              type="button"
+              className="control-strip-close"
+              aria-label={t.closeControls}
+              title={t.closeControls}
+              onClick={() => setState((current) => ({ ...current, controlsOpen: false }))}
+            >
+              <X size={15} />
+            </button>
+          </div>
           <div className="control-tabs" role="tablist" aria-label={t.controls}>
             {[
               ["pet", Cat, t.controlPet],

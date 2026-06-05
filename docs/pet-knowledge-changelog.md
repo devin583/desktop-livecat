@@ -6,6 +6,27 @@ asset thinking.
 
 ## 2026-06-05
 
+Version: 0.3.0
+Confidence: high that v0.9.5 fixes the control-panel layout regression visible
+in the Win11 desktop photo
+
+Changes:
+
+- Fixed the control panel layout regression where opening the panel translated
+  the full pet layer left and made the cat, timer bubble, action dock, and panel
+  feel detached.
+- Added an in-panel close button and hid the floating settings gear while the
+  panel is open, so the gear no longer overlaps the tab row.
+- Suppressed duplicate floating action buttons, timer bubble, and tomato prop
+  while the full control panel is open. The panel already contains those controls
+  and status details.
+- Disabled hover tooltips on visible control tabs so labels such as `互动` no
+  longer appear as black boxes over the tab row.
+- Normalized persisted pet scale to the same maximum as the settings slider
+  (`1.25`) so stale state cannot reopen an oversized, cramped desktop pet.
+
+## 2026-06-05
+
 Version: 0.2.0
 Confidence: high that v0.9.4 improves runtime interaction clarity; medium that
 the current V2 spritesheets can reach the desired cuteness without new

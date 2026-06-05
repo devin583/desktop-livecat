@@ -202,7 +202,7 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   next.petCare.streak = clampMinutes(next.petCare.streak, 0, 9999, initialPetCare.streak);
   next.petCare.lastFocusDay = normalizeDayString(next.petCare.lastFocusDay);
   next.petCare.lastInteractionAt = normalizeDateString(next.petCare.lastInteractionAt);
-  next.scale = Math.min(1.4, Math.max(0.65, Number(next.scale) || 1));
+  next.scale = Math.min(1.25, Math.max(0.65, Number(next.scale) || 1));
   next.controlsOpen = Boolean(next.controlsOpen);
   next.pomodoro.focusMinutes = clampMinutes(next.pomodoro.focusMinutes, 1, 180, 25);
   next.pomodoro.breakMinutes = clampMinutes(next.pomodoro.breakMinutes, 1, 90, 5);
