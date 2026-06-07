@@ -6,6 +6,27 @@ asset thinking.
 
 ## 2026-06-07
 
+Version: 0.7.0
+Confidence: high that the fixed-corner control panel was the wrong spatial
+model; high that mouse-anchored placement better matches Windows context-menu
+expectations for this desktop-pet surface
+
+Changes:
+
+- Replaced fixed top-right control-panel placement for click/context launches
+  with mouse-anchored floating placement and edge flipping.
+- Reused the same placement helper for pet right-click menus and full control
+  panels so Chat and Settings no longer jump away from the triggering command.
+- Verified in browser coordinates that right-click Chat opened the full panel
+  near the context command (`topRightFixed=false`) and selected the Chat tab.
+- Verified right-click Settings opened the full panel near the settings command
+  (`topRightFixed=false`) and selected the Settings tab.
+- Updated `docs/pet-brain-body-roadmap.md` with the next Windows-mainline plan:
+  AI-backed Pet Brain adapter, memory v2, motion queue v2, surface polish, and
+  one premium layered-body proof.
+
+## 2026-06-07
+
 Version: 0.6.0
 Confidence: high that v0.9.7 closes the first chat/memory runtime loop; medium
 that the next best body-runtime step should be Live2D before more spritesheet

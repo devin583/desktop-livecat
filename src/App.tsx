@@ -903,6 +903,17 @@ type PetContextMenuState = {
   maxHeight: number;
 };
 
+type FloatingPanelPlacement = {
+  x: number;
+  y: number;
+  maxHeight: number;
+  transformOrigin: string;
+};
+
+const stagePanelMargin = 10;
+const contextMenuWidth = 252;
+const controlPanelWidth = 316;
+
 const interactionDurationMs: Record<InteractionMood, number> = {
   focus: 4600,
   petting: 5200,
@@ -1082,6 +1093,40 @@ function withTodayDiary(
   };
 }
 
+function floatingPanelPlacement(
+  stageRect: DOMRect,
+  clientX: number,
+  clientY: number,
+  width: number,
+  estimatedHeight: number,
+): FloatingPanelPlacement {
+  const availableWidth = Math.max(0, stageRect.width - stagePanelMargin * 2);
+  const panelWidth = Math.min(width, availableWidth);
+  const availableHeight = Math.max(240, stageRect.height - stagePanelMargin * 2);
+  const panelHeight = Math.min(estimatedHeight, availableHeight);
+  const localX = clientX - stageRect.left;
+  const localY = clientY - stageRect.top;
+  const opensLeft = localX + panelWidth + stagePanelMargin > stageRect.width;
+  const opensUp = localY + panelHeight + stagePanelMargin > stageRect.height;
+  const rawX = opensLeft ? localX - panelWidth : localX;
+  const rawY = opensUp ? localY - panelHeight : localY;
+  const maxX = Math.max(stagePanelMargin, stageRect.width - panelWidth - stagePanelMargin);
+  const maxY = Math.max(stagePanelMargin, stageRect.height - panelHeight - stagePanelMargin);
+  const x = Math.min(Math.max(stagePanelMargin, rawX), maxX);
+  const y = Math.min(Math.max(stagePanelMargin, rawY), maxY);
+
+  return {
+    x,
+    y,
+    maxHeight: Math.max(240, Math.min(availableHeight, stageRect.height - y - stagePanelMargin)),
+    transformOrigin: `${opensLeft ? "right" : "left"} ${opensUp ? "bottom" : "top"}`,
+  };
+}
+
+function stageElementFromEvent(event: MouseEvent<HTMLElement>) {
+  return event.currentTarget.closest(".pet-stage") as HTMLElement | null;
+}
+
 const dragIntentDelayMs = 160;
 const dragIntentDistancePx = 28;
 
@@ -1109,6 +1154,7 @@ function App() {
   const [lastMouseActivity, setLastMouseActivity] = useState(0);
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
   const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
+  const [controlPanelPlacement, setControlPanelPlacement] = useState<FloatingPanelPlacement | null>(null);
   const [chatDraft, setChatDraft] = useState("");
   const [dragged, setDragged] = useState(false);
   const [installInput, setInstallInput] = useState("");
@@ -2265,6 +2311,47 @@ function App() {
     });
   };
 
+  const placeControlsAt = useCallback((event: MouseEvent<HTMLElement>) => {
+    const stage = stageElementFromEvent(event);
+    if (!stage) {
+      setControlPanelPlacement(null);
+      return;
+    }
+    setControlPanelPlacement(
+      floatingPanelPlacement(
+        stage.getBoundingClientRect(),
+        event.clientX,
+        event.clientY,
+        controlPanelWidth,
+        520,
+      ),
+    );
+  }, []);
+
+  const openControlsAt = useCallback(
+    (event: MouseEvent<HTMLElement>, tab?: ControlPanelTab) => {
+      placeControlsAt(event);
+      setPetMenu(null);
+      setState((current) => ({
+        ...current,
+        controlsOpen: true,
+        controlPanelTab: tab ?? current.controlPanelTab,
+      }));
+    },
+    [placeControlsAt, setState],
+  );
+
+  const toggleControlsAt = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      if (state.controlsOpen) {
+        setState((current) => ({ ...current, controlsOpen: false }));
+        return;
+      }
+      openControlsAt(event);
+    },
+    [openControlsAt, setState, state.controlsOpen],
+  );
+
   useEffect(() => {
     const listeners = [
       safeListen("tray://timer-toggle", () => pomodoroAction("toggle")),
@@ -2274,6 +2361,7 @@ function App() {
       safeListen("tray://check-updates", () => checkForUpdates(true)),
       safeListen("tray://next-pet", selectNextPet),
       safeListen("tray://toggle-controls", () => {
+        setControlPanelPlacement(null);
         setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }));
       }),
       safeListen("tray://click-through-off", () => {
@@ -2300,14 +2388,16 @@ function App() {
     if (target.closest(nonPetPointerSelector) && !target.closest(".live2d-layer")) return;
     if (!target.closest(".live2d-layer")) return;
     event.preventDefault();
-    const rect = event.currentTarget.getBoundingClientRect();
-    const menuWidth = 252;
     const menuHeight = timerHasContext ? 580 : 490;
-    const x = Math.min(Math.max(10, event.clientX - rect.left), Math.max(10, rect.width - menuWidth - 10));
-    const y = Math.min(Math.max(10, event.clientY - rect.top), Math.max(10, rect.height - menuHeight - 10));
-    const maxHeight = Math.max(240, rect.height - y - 10);
+    const menu = floatingPanelPlacement(
+      event.currentTarget.getBoundingClientRect(),
+      event.clientX,
+      event.clientY,
+      contextMenuWidth,
+      menuHeight,
+    );
     setState((current) => ({ ...current, controlsOpen: false }));
-    setPetMenu({ x, y, maxHeight });
+    setPetMenu({ x: menu.x, y: menu.y, maxHeight: menu.maxHeight });
   };
 
   const updateLook = (event: PointerEvent<HTMLElement>) => {
@@ -2632,14 +2722,7 @@ function App() {
               <div className="context-action-grid context-chat-grid">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPetMenu(null);
-                    setState((current) => ({
-                      ...current,
-                      controlsOpen: true,
-                      controlPanelTab: "chat",
-                    }));
-                  }}
+                  onClick={(event) => openControlsAt(event, "chat")}
                 >
                   <MessageCircle size={15} />
                   <span>{t.controlChat}</span>
@@ -2781,10 +2864,7 @@ function App() {
                 <button
                   type="button"
                   title={t.menuOpenControls}
-                  onClick={() => {
-                    setPetMenu(null);
-                    setState((current) => ({ ...current, controlsOpen: true }));
-                  }}
+                  onClick={(event) => openControlsAt(event, "settings")}
                 >
                   <Settings2 size={15} />
                 </button>
@@ -2818,15 +2898,24 @@ function App() {
           aria-label={t.controls}
           title={t.controls}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={() =>
-            setState((current) => ({ ...current, controlsOpen: !current.controlsOpen }))
-          }
+          onClick={toggleControlsAt}
         >
           <Settings size={16} />
         </button>
 
         <aside
           className={`control-strip ${state.controlsOpen ? "open" : ""}`}
+          style={
+            controlPanelPlacement
+              ? ({
+                  left: controlPanelPlacement.x,
+                  top: controlPanelPlacement.y,
+                  right: "auto",
+                  maxHeight: controlPanelPlacement.maxHeight,
+                  transformOrigin: controlPanelPlacement.transformOrigin,
+                } as CSSProperties)
+              : undefined
+          }
           onPointerDown={(event) => event.stopPropagation()}
         >
           <div className="control-strip-head">

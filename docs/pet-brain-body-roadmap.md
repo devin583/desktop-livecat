@@ -1,6 +1,6 @@
 # Desktop LiveCat Pet Brain And Body Roadmap
 
-Version: 0.2.0
+Version: 0.3.0
 Created: 2026-06-07
 Confidence: high for architecture direction, medium for final AI provider choice
 
@@ -10,12 +10,13 @@ whose body, speech, memory, focus loop, and growth loop reinforce each other.
 
 ## Current Gap
 
-Desktop LiveCat v0.9.7 has useful foundations:
+Desktop LiveCat v0.9.8 has useful foundations:
 
 - validated V2 cat spritesheets;
 - local care actions;
 - compact local chat entry;
 - local chat history, memory events, and a daily diary;
+- mouse-anchored right-click and full-panel placement with edge flipping;
 - pet-owned Pomodoro props and rewards;
 - context menu and panel separation;
 - document-level asset standards.
@@ -104,6 +105,22 @@ window. The full chat panel owns history and long-form interaction.
 
 ## Milestones
 
+### Immediate Windows Mainline Plan
+
+1. AI-backed chat adapter behind the existing Pet Brain schema: model output
+   can propose speech, emotion, motion, and memory writes, but runtime state
+   still accepts only validated structured responses.
+2. Memory v2: split short event history, durable user preferences, pet diary,
+   and relationship facts so "chatting" can reference care/focus history without
+   storing arbitrary desktop content.
+3. Motion queue v2: add interrupt rules, cooldowns, anticipation/settle phases,
+   and per-event recovery paths so clicks, care, timer completion, and chat do
+   not fight over the same body state.
+4. Windows surface polish: keep every context menu, quick action, and full panel
+   anchored to its trigger point, with edge flipping and max-height constraints.
+5. Premium body path: prepare one V2 cat for layered Live2D-style control, then
+   prove petting can move head/ears/eyes without moving the keyboard.
+
 ### Milestone 1: Local Pet Brain Foundation
 
 Acceptance:
@@ -167,6 +184,9 @@ share one state model. Separate panels and disconnected animations do not count.
 
 ## Version Log
 
+- 0.3.0, 2026-06-07: Added v0.9.8 anchored floating-surface decision and the
+  next Windows-mainline execution plan: AI-backed chat adapter, memory v2,
+  motion queue v2, surface polish, and premium layered body work.
 - 0.2.0, 2026-06-07: Marked v0.9.7 completion of the compact local chat entry,
   shared Pet Brain chat responses, local conversation history, memory events,
   and daily diary. Kept AI-backed replies and premium body control as explicit
