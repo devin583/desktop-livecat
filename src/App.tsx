@@ -56,13 +56,14 @@ import { SpritesheetPet } from "./SpritesheetPet";
 import type { Live2DRuntimeProbe } from "./live2dRuntime";
 import {
   composePetBrainCareResponse,
-  composePetBrainChatResponse,
   composePetBrainDiary,
+  resolvePetBrainChatResponse,
   type PetBrainMotionCue,
   type PetBrainResponse,
 } from "./petBrain";
 import {
   fallbackPet,
+  initialPetMemory,
   initialState,
   nextPomodoroMode,
   normalizeState,
@@ -73,6 +74,7 @@ import {
   todayKey,
   trimPetChatMessages,
   trimPetDiaryEntries,
+  trimPetMemoryFacts,
   trimPetMemoryEvents,
   trimFocusRecords,
 } from "./petState";
@@ -88,6 +90,8 @@ import type {
   KeyboardStatus,
   PetAnimationState,
   PetCareState,
+  PetMemoryFact,
+  PetMemoryProfile,
   PetMemoryState,
   PetMood,
   PetPack,
@@ -1093,6 +1097,86 @@ function withTodayDiary(
   };
 }
 
+function updateProfileFromChat(
+  profile: PetMemoryProfile,
+  message: string,
+  language: AppLanguage,
+  at: string,
+  sourceEventId: string,
+): PetMemoryProfile {
+  const extracted = extractProfileFacts(message, language, at, sourceEventId);
+  if (!extracted.userName && extracted.facts.length === 0) return profile;
+  const facts = mergeMemoryFacts(profile.facts, extracted.facts);
+  return {
+    userName: extracted.userName ?? profile.userName,
+    facts,
+    updatedAt: at,
+  };
+}
+
+function extractProfileFacts(
+  message: string,
+  language: AppLanguage,
+  at: string,
+  sourceEventId: string,
+): { userName: string | null; facts: PetMemoryFact[] } {
+  const text = message.trim();
+  const userName = extractUserName(text, language);
+  const preference = extractPreference(text, language);
+  const facts: PetMemoryFact[] = [];
+
+  if (userName) {
+    facts.push({
+      id: createMemoryId("fact"),
+      type: "user_name",
+      value: userName,
+      confidence: "explicit",
+      updatedAt: at,
+      sourceEventId,
+    });
+  }
+  if (preference) {
+    facts.push({
+      id: createMemoryId("fact"),
+      type: "preference",
+      value: preference,
+      confidence: "explicit",
+      updatedAt: at,
+      sourceEventId,
+    });
+  }
+
+  return { userName, facts };
+}
+
+function extractUserName(text: string, language: AppLanguage) {
+  const normalized = text.replace(/[。！!？?，,]/g, " ").trim();
+  const zhMatch = normalized.match(/(?:我叫|我是|叫我)\s*([\u4e00-\u9fa5A-Za-z0-9_-]{1,18})/);
+  if (language === "zh-CN" && zhMatch?.[1]) {
+    const candidate = zhMatch[1].slice(0, 18);
+    if (!["谁", "什么", "哪位", "哪个"].includes(candidate)) return candidate;
+  }
+  const enMatch = normalized.match(/(?:my name is|i am|i'm|call me)\s+([A-Za-z][A-Za-z0-9 _-]{0,28})/i);
+  const candidate = enMatch?.[1]?.trim().slice(0, 28) ?? null;
+  if (!candidate || /^(who|what|which)$/i.test(candidate)) return null;
+  return candidate;
+}
+
+function extractPreference(text: string, language: AppLanguage) {
+  const normalized = text.trim();
+  const zhMatch = normalized.match(/(?:记住)?我(?:喜欢|偏好|想要)\s*([^。！？!?]{1,42})/);
+  if (language === "zh-CN" && zhMatch?.[1]) return zhMatch[1].trim().slice(0, 42);
+  const enMatch = normalized.match(/(?:remember )?(?:i like|i prefer|i want)\s+([^.!?]{1,70})/i);
+  return enMatch?.[1]?.trim().slice(0, 70) ?? null;
+}
+
+function mergeMemoryFacts(existing: PetMemoryFact[], incoming: PetMemoryFact[]) {
+  const keyed = new Map<string, PetMemoryFact>();
+  for (const fact of existing) keyed.set(`${fact.type}:${fact.value.toLowerCase()}`, fact);
+  for (const fact of incoming) keyed.set(`${fact.type}:${fact.value.toLowerCase()}`, fact);
+  return trimPetMemoryFacts(Array.from(keyed.values()));
+}
+
 function floatingPanelPlacement(
   stageRect: DOMRect,
   clientX: number,
@@ -1202,6 +1286,28 @@ function App() {
     () => state.petMemory.diary.find((entry) => entry.day === todayKey()) ?? null,
     [state.petMemory.diary],
   );
+  const memoryProfileLabel = useMemo(() => {
+    const parts: string[] = [];
+    if (state.petMemory.profile.userName) {
+      parts.push(
+        state.language === "zh-CN"
+          ? `记得你是 ${state.petMemory.profile.userName}`
+          : `Remembers you as ${state.petMemory.profile.userName}`,
+      );
+    }
+    const preferences = state.petMemory.profile.facts
+      .filter((fact) => fact.type === "preference")
+      .slice(-2)
+      .map((fact) => fact.value);
+    if (preferences.length) {
+      parts.push(
+        state.language === "zh-CN"
+          ? `偏好：${preferences.join(" / ")}`
+          : `Prefs: ${preferences.join(" / ")}`,
+      );
+    }
+    return parts.join(" · ");
+  }, [state.language, state.petMemory.profile]);
   const timerStageLabel =
     state.pomodoro.focusMode === "stopwatch"
       ? t.focusModeStopwatch
@@ -1658,26 +1764,36 @@ function App() {
   );
 
   const sendPetChat = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const message = chatDraft.trim().slice(0, 240);
       if (!message) return;
-      const response = composePetBrainChatResponse({
+      setChatDraft("");
+      const response = await resolvePetBrainChatResponse({
         care: state.petCare,
         focusMinutesToday: minutesFromSeconds(todayFocusSeconds),
         language: state.language,
         message,
         pet: selectedPet,
+        profile: state.petMemory.profile,
         recentEvents: state.petMemory.events.slice(-8),
         runningFocus: state.pomodoro.running && state.pomodoro.mode === "focus",
         taskTitle: state.pomodoro.currentTask.trim(),
       });
       const at = new Date().toISOString();
+      const chatEventId = createMemoryId("chat");
       showPetBrainResponse(response);
-      setChatDraft("");
       setState((current) => {
+        const profile = updateProfileFromChat(
+          current.petMemory.profile,
+          message,
+          current.language,
+          at,
+          chatEventId,
+        );
         const memory: PetMemoryState = {
           ...current.petMemory,
+          profile,
           chat: trimPetChatMessages([
             ...current.petMemory.chat,
             { id: createMemoryId("user"), role: "user", text: message, at },
@@ -1693,7 +1809,7 @@ function App() {
           events: trimPetMemoryEvents([
             ...current.petMemory.events,
             {
-              id: createMemoryId("chat"),
+              id: chatEventId,
               type: "chat",
               at,
               petId: selectedPet.id,
@@ -1724,6 +1840,7 @@ function App() {
       state.language,
       state.petCare,
       state.petMemory.events,
+      state.petMemory.profile,
       state.pomodoro.currentTask,
       state.pomodoro.mode,
       state.pomodoro.running,
@@ -1735,12 +1852,7 @@ function App() {
     setChatDraft("");
     setState((current) => ({
       ...current,
-      petMemory: {
-        events: [],
-        chat: [],
-        diary: [],
-        lastDiaryDay: null,
-      },
+      petMemory: initialPetMemory,
     }));
   }, [setState]);
 
@@ -3320,6 +3432,11 @@ function App() {
               <div className="chat-diary-card">
                 <b>{t.chatDiary}</b>
                 <span>{todayDiary?.summary ?? t.chatEmpty}</span>
+              </div>
+
+              <div className="chat-memory-card">
+                <b>{t.chatMemory}</b>
+                <span>{memoryProfileLabel || t.chatEmpty}</span>
               </div>
 
               <div className="chat-log" aria-live="polite">

@@ -8,6 +8,8 @@ import type {
   PetChatMessage,
   PetDiaryEntry,
   PetMemoryEvent,
+  PetMemoryFact,
+  PetMemoryProfile,
   PetMemoryState,
   PetPack,
   PomodoroMode,
@@ -42,6 +44,7 @@ const maxRecords = 500;
 const maxPetMemoryEvents = 160;
 const maxPetChatMessages = 80;
 const maxPetDiaryEntries = 45;
+const maxPetMemoryFacts = 80;
 const deprecatedPetReplacement: Record<string, string> = {
   "gray-british-keyboard": "gray-british-keyboard-v2",
   "orange-tabby-keyboard": "orange-tabby-keyboard-v2",
@@ -113,6 +116,11 @@ export const initialPetMemory: PetMemoryState = {
   events: [],
   chat: [],
   diary: [],
+  profile: {
+    userName: null,
+    facts: [],
+    updatedAt: null,
+  },
   lastDiaryDay: null,
 };
 
@@ -158,6 +166,10 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     petMemory: {
       ...initialPetMemory,
       ...(input?.petMemory ?? {}),
+      profile: {
+        ...initialPetMemory.profile,
+        ...(input?.petMemory?.profile ?? {}),
+      },
     },
   };
 
@@ -224,6 +236,7 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   next.petMemory.events = normalizePetMemoryEvents(next.petMemory.events);
   next.petMemory.chat = normalizePetChatMessages(next.petMemory.chat);
   next.petMemory.diary = normalizePetDiary(next.petMemory.diary);
+  next.petMemory.profile = normalizePetMemoryProfile(next.petMemory.profile);
   next.petMemory.lastDiaryDay = normalizeDayString(next.petMemory.lastDiaryDay);
   next.scale = Math.min(1.25, Math.max(0.65, Number(next.scale) || 1));
   next.controlsOpen = Boolean(next.controlsOpen);
@@ -340,6 +353,10 @@ export function trimPetChatMessages(messages: PetChatMessage[]) {
 
 export function trimPetDiaryEntries(entries: PetDiaryEntry[]) {
   return entries.slice(-maxPetDiaryEntries);
+}
+
+export function trimPetMemoryFacts(facts: PetMemoryFact[]) {
+  return facts.slice(-maxPetMemoryFacts);
 }
 
 function normalizeFocusRecords(input: PomodoroState["records"] | unknown): FocusRecord[] {
@@ -460,6 +477,47 @@ function normalizePetDiaryEntry(input: unknown): PetDiaryEntry | null {
     careEvents: clampMinutes(entry.careEvents, 0, 999, 0),
     mood: String(entry.mood ?? "").slice(0, 48),
     updatedAt,
+  };
+}
+
+function normalizePetMemoryProfile(input: PetMemoryProfile | unknown): PetMemoryProfile {
+  if (!input || typeof input !== "object") return initialPetMemory.profile;
+  const profile = input as Partial<PetMemoryProfile>;
+  return {
+    userName: normalizeNullableString(profile.userName, 40),
+    facts: normalizePetMemoryFacts(profile.facts),
+    updatedAt: normalizeDateString(profile.updatedAt),
+  };
+}
+
+function normalizePetMemoryFacts(input: PetMemoryProfile["facts"] | unknown): PetMemoryFact[] {
+  if (!Array.isArray(input)) return [];
+  return trimPetMemoryFacts(input.map(normalizePetMemoryFact).filter(Boolean) as PetMemoryFact[]);
+}
+
+function normalizePetMemoryFact(input: unknown): PetMemoryFact | null {
+  if (!input || typeof input !== "object") return null;
+  const fact = input as Partial<PetMemoryFact>;
+  const id = String(fact.id ?? "").slice(0, 80);
+  const updatedAt = normalizeDateString(fact.updatedAt);
+  const type =
+    fact.type === "user_name" ||
+    fact.type === "preference" ||
+    fact.type === "relationship" ||
+    fact.type === "note"
+      ? fact.type
+      : null;
+  const confidence =
+    fact.confidence === "explicit" || fact.confidence === "inferred" ? fact.confidence : null;
+  const value = String(fact.value ?? "").trim().slice(0, 160);
+  if (!id || !updatedAt || !type || !confidence || !value) return null;
+  return {
+    id,
+    type,
+    value,
+    confidence,
+    updatedAt,
+    sourceEventId: normalizeNullableString(fact.sourceEventId, 80) ?? undefined,
   };
 }
 

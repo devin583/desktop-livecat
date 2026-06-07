@@ -187,10 +187,26 @@ export type PetDiaryEntry = {
   updatedAt: string;
 };
 
+export type PetMemoryFact = {
+  id: string;
+  type: "user_name" | "preference" | "relationship" | "note";
+  value: string;
+  confidence: "explicit" | "inferred";
+  updatedAt: string;
+  sourceEventId?: string;
+};
+
+export type PetMemoryProfile = {
+  userName: string | null;
+  facts: PetMemoryFact[];
+  updatedAt: string | null;
+};
+
 export type PetMemoryState = {
   events: PetMemoryEvent[];
   chat: PetChatMessage[];
   diary: PetDiaryEntry[];
+  profile: PetMemoryProfile;
   lastDiaryDay: string | null;
 };
 

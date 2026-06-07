@@ -1,4 +1,4 @@
-import type { AppLanguage, PetCareState, PetMemoryEvent, PetPack } from "./types";
+import type { AppLanguage, PetCareState, PetMemoryEvent, PetMemoryProfile, PetPack } from "./types";
 
 export type PetBrainEmotion =
   | "calm"
@@ -38,6 +38,11 @@ export type PetBrainResponse = {
   memoryHints: string[];
 };
 
+export type PetBrainProvider = {
+  id: string;
+  resolveChat(input: PetBrainChatInput): Promise<PetBrainResponse | null> | PetBrainResponse | null;
+};
+
 type CareDelta = Partial<Record<Exclude<keyof PetCareState, "lastInteractionAt">, number>>;
 
 type ComposeCareResponseInput = {
@@ -47,12 +52,13 @@ type ComposeCareResponseInput = {
   pet: PetPack;
 };
 
-type ComposeChatResponseInput = {
+export type PetBrainChatInput = {
   care: PetCareState;
   focusMinutesToday: number;
   language: AppLanguage;
   message: string;
   pet: PetPack;
+  profile: PetMemoryProfile;
   recentEvents: PetMemoryEvent[];
   runningFocus: boolean;
   taskTitle: string;
@@ -100,6 +106,33 @@ const emotionByMood: Record<PetBrainCareMood, PetBrainEmotion> = {
   failed: "sad",
 };
 
+const allowedEmotions = new Set<PetBrainEmotion>([
+  "calm",
+  "curious",
+  "focused",
+  "happy",
+  "playful",
+  "proud",
+  "relieved",
+  "sad",
+]);
+
+const allowedMotions = new Set<PetBrainMotionCue>([
+  "attention_call",
+  "cleaning",
+  "feeding",
+  "focus",
+  "failed",
+  "petting",
+  "playing",
+  "praised",
+]);
+
+export const localPetBrainProvider: PetBrainProvider = {
+  id: "local-deterministic",
+  resolveChat: composePetBrainChatResponse,
+};
+
 export function composePetBrainCareResponse(input: ComposeCareResponseInput): PetBrainResponse {
   const options = input.language === "zh-CN" ? zhSpeech[input.mood] : enSpeech[input.mood];
   const speech = `${pickStable(options, input.pet.id)}${careDeltaSuffix(input.delta, input.language)}`;
@@ -113,17 +146,68 @@ export function composePetBrainCareResponse(input: ComposeCareResponseInput): Pe
   };
 }
 
-export function composePetBrainChatResponse(input: ComposeChatResponseInput): PetBrainResponse {
+export async function resolvePetBrainChatResponse(
+  input: PetBrainChatInput,
+  providers: PetBrainProvider[] = [localPetBrainProvider],
+): Promise<PetBrainResponse> {
+  const fallback = composePetBrainChatResponse(input);
+  for (const provider of providers) {
+    try {
+      const response = await provider.resolveChat(input);
+      if (!response) continue;
+      return normalizePetBrainResponse(response, fallback);
+    } catch {
+      continue;
+    }
+  }
+  return fallback;
+}
+
+export function normalizePetBrainResponse(
+  candidate: unknown,
+  fallback: PetBrainResponse,
+): PetBrainResponse {
+  if (!candidate || typeof candidate !== "object") return fallback;
+  const value = candidate as Partial<PetBrainResponse>;
+  const speech = String(value.speech ?? "").trim().slice(0, 220);
+  const emotion = allowedEmotions.has(value.emotion as PetBrainEmotion)
+    ? (value.emotion as PetBrainEmotion)
+    : fallback.emotion;
+  const motion = allowedMotions.has(value.motion as PetBrainMotionCue)
+    ? (value.motion as PetBrainMotionCue)
+    : fallback.motion;
+  const duration = Number(value.bubbleDurationMs);
+  const memoryHints = Array.isArray(value.memoryHints)
+    ? value.memoryHints
+        .map((hint) => String(hint ?? "").trim().slice(0, 80))
+        .filter(Boolean)
+        .slice(0, 12)
+    : fallback.memoryHints;
+
+  return {
+    speech: speech || fallback.speech,
+    emotion,
+    motion,
+    bubbleDurationMs: Number.isFinite(duration)
+      ? Math.min(9000, Math.max(2600, Math.round(duration)))
+      : fallback.bubbleDurationMs,
+    memoryHints,
+  };
+}
+
+export function composePetBrainChatResponse(input: PetBrainChatInput): PetBrainResponse {
   const text = input.message.trim().toLowerCase();
   const zh = input.language === "zh-CN";
   const petName = input.pet.persona?.name || input.pet.name;
   const recentCare = input.recentEvents.filter((event) => event.type === "care").slice(-2);
+  const userName = input.profile.userName;
+  const address = userName ? (zh ? `${userName}，` : `${userName}, `) : "";
 
   if (matches(text, ["番茄", "专注", "focus", "timer", "pomo"])) {
     return {
       speech: zh
-        ? `${input.runningFocus ? "我正在陪你守这颗番茄。" : "现在可以开一颗番茄。"}今天已经专注 ${input.focusMinutesToday} 分钟${input.taskTitle ? `，当前任务是「${input.taskTitle}」` : ""}。`
-        : `${input.runningFocus ? "I am guarding this tomato with you." : "We can start a tomato now."} You have focused for ${input.focusMinutesToday}m today${input.taskTitle ? ` on "${input.taskTitle}"` : ""}.`,
+        ? `${address}${input.runningFocus ? "我正在陪你守这颗番茄。" : "现在可以开一颗番茄。"}今天已经专注 ${input.focusMinutesToday} 分钟${input.taskTitle ? `，当前任务是「${input.taskTitle}」` : ""}。`
+        : `${address}${input.runningFocus ? "I am guarding this tomato with you." : "We can start a tomato now."} You have focused for ${input.focusMinutesToday}m today${input.taskTitle ? ` on "${input.taskTitle}"` : ""}.`,
       emotion: "focused",
       motion: "focus",
       bubbleDurationMs: 5600,
@@ -134,8 +218,8 @@ export function composePetBrainChatResponse(input: ComposeChatResponseInput): Pe
   if (matches(text, ["状态", "心情", "饿", "累", "status", "mood", "hungry", "tired"])) {
     return {
       speech: zh
-        ? `我现在开心 ${input.care.happiness}，饱腹 ${input.care.fullness}，精力 ${input.care.energy}。${careSuggestion(input.care, input.language)}`
-        : `I am at ${input.care.happiness} happy, ${input.care.fullness} full, and ${input.care.energy} energy. ${careSuggestion(input.care, input.language)}`,
+        ? `${address}我现在开心 ${input.care.happiness}，饱腹 ${input.care.fullness}，精力 ${input.care.energy}。${careSuggestion(input.care, input.language)}`
+        : `${address}I am at ${input.care.happiness} happy, ${input.care.fullness} full, and ${input.care.energy} energy. ${careSuggestion(input.care, input.language)}`,
       emotion: "curious",
       motion: "attention_call",
       bubbleDurationMs: 5400,
@@ -155,11 +239,27 @@ export function composePetBrainChatResponse(input: ComposeChatResponseInput): Pe
     };
   }
 
+  if (matches(text, ["我是谁", "记得我", "你记得我吗", "who am i", "remember me"])) {
+    return {
+      speech: zh
+        ? userName
+          ? `我记得你是 ${userName}。这会进长期记忆，不只是今天的气泡。`
+          : "我还不知道你的称呼。你可以说“我叫……”，我会记下来。"
+        : userName
+          ? `I remember you as ${userName}. That is a profile memory, not just today's bubble.`
+          : "I do not know your name yet. Say \"my name is ...\" and I will remember it.",
+      emotion: userName ? "proud" : "curious",
+      motion: userName ? "praised" : "attention_call",
+      bubbleDurationMs: 5600,
+      memoryHints: ["chat:profile", `pet:${input.pet.id}`],
+    };
+  }
+
   if (matches(text, ["记住", "记得", "remember", "memory"])) {
     return {
       speech: zh
-        ? "我先把这句当成今天的记忆线索。以后接上模型时，会把它变成更稳定的长期记忆。"
-        : "I will keep this as a memory hint for today. When the model layer lands, it can become longer-term memory.",
+        ? "我会把这句拆成可验证的记忆线索。称呼和明确偏好会进入长期记忆，普通闲聊只留在今天。"
+        : "I will split this into verified memory hints. Names and explicit preferences become profile memory; casual chat stays in today's context.",
       emotion: "calm",
       motion: "attention_call",
       bubbleDurationMs: 5600,
@@ -169,8 +269,8 @@ export function composePetBrainChatResponse(input: ComposeChatResponseInput): Pe
 
   return {
     speech: zh
-      ? `${recentCare.length ? "我记得刚才你照顾过我。 " : ""}我现在还不是联网 AI，但已经可以把聊天、动作和记忆线索连起来。你可以问我今天专注多久、我的状态、或者让我记住一句话。`
-      : `${recentCare.length ? "I remember you cared for me earlier. " : ""}I am not an online AI yet, but chat, motion, and memory hints are now wired together. Ask about focus, my status, or tell me something to remember.`,
+      ? `${address}${recentCare.length ? "我记得刚才你照顾过我。 " : ""}我现在走的是可验证 Pet Brain 适配器：聊天、动作、记忆线索会先过 schema，再影响身体和状态。`
+      : `${address}${recentCare.length ? "I remember you cared for me earlier. " : ""}I am running through the validated Pet Brain adapter now: chat, motion, and memory hints must pass schema before they touch body state.`,
     emotion: "curious",
     motion: "attention_call",
     bubbleDurationMs: 6200,

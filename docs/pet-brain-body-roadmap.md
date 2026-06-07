@@ -1,6 +1,6 @@
 # Desktop LiveCat Pet Brain And Body Roadmap
 
-Version: 0.3.0
+Version: 0.4.0
 Created: 2026-06-07
 Confidence: high for architecture direction, medium for final AI provider choice
 
@@ -10,12 +10,14 @@ whose body, speech, memory, focus loop, and growth loop reinforce each other.
 
 ## Current Gap
 
-Desktop LiveCat v0.9.8 has useful foundations:
+Desktop LiveCat v0.9.9 has useful foundations:
 
 - validated V2 cat spritesheets;
 - local care actions;
 - compact local chat entry;
 - local chat history, memory events, and a daily diary;
+- provider-ready Pet Brain chat adapter with response schema normalization;
+- first durable profile-memory facts for explicit user name and preferences;
 - mouse-anchored right-click and full-panel placement with edge flipping;
 - pet-owned Pomodoro props and rewards;
 - context menu and panel separation;
@@ -23,8 +25,9 @@ Desktop LiveCat v0.9.8 has useful foundations:
 
 It is still behind strong desktop companions because it lacks:
 
-- AI-backed conversation and schema validation around model output;
-- durable long-term memory beyond the current local event diary;
+- a configured AI-backed provider behind the validated Pet Brain schema;
+- richer long-term relationship memory beyond user name and explicit
+  preferences;
 - Live2D or equivalent layered body control;
 - a visible automation loop that makes five-hour design review outputs land in
   the main repository.
@@ -107,12 +110,13 @@ window. The full chat panel owns history and long-form interaction.
 
 ### Immediate Windows Mainline Plan
 
-1. AI-backed chat adapter behind the existing Pet Brain schema: model output
-   can propose speech, emotion, motion, and memory writes, but runtime state
-   still accepts only validated structured responses.
-2. Memory v2: split short event history, durable user preferences, pet diary,
-   and relationship facts so "chatting" can reference care/focus history without
-   storing arbitrary desktop content.
+1. AI-backed provider configuration behind the existing Pet Brain schema:
+   external or local model output can propose speech, emotion, motion, and
+   memory writes, but runtime state must keep accepting only validated
+   structured responses.
+2. Memory v2 expansion: add relationship facts, decay/reinforcement rules, and
+   explicit memory review controls while keeping arbitrary desktop content out
+   of storage.
 3. Motion queue v2: add interrupt rules, cooldowns, anticipation/settle phases,
    and per-event recovery paths so clicks, care, timer completion, and chat do
    not fight over the same body state.
@@ -184,6 +188,11 @@ share one state model. Separate panels and disconnected animations do not count.
 
 ## Version Log
 
+- 0.4.0, 2026-06-07: Marked v0.9.9 completion of the provider-ready Pet Brain
+  chat adapter, response schema normalizer, and the first durable profile memory
+  slice for explicit user names and preferences. Kept actual AI provider config,
+  richer relationship memory, and motion queue v2 as the next Windows-mainline
+  work.
 - 0.3.0, 2026-06-07: Added v0.9.8 anchored floating-surface decision and the
   next Windows-mainline execution plan: AI-backed chat adapter, memory v2,
   motion queue v2, surface polish, and premium layered body work.

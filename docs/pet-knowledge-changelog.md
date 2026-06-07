@@ -6,6 +6,35 @@ asset thinking.
 
 ## 2026-06-07
 
+Version: 0.8.0
+Confidence: high that v0.9.9 is the correct Pet Brain foundation before adding
+any cloud or local model provider; high that explicit profile facts should be
+separated from volatile chat history; medium that the current regex extraction is
+enough only for the first local slice, not for full memory intelligence
+
+Changes:
+
+- Added a provider-ready Pet Brain chat adapter and schema normalizer. Candidate
+  responses must resolve to bounded speech, known emotion, known motion, bounded
+  bubble duration, and short memory hints before the UI uses them.
+- Kept the deterministic local provider as the default so the app remains
+  offline and testable while the runtime contract is hardened for future AI
+  providers.
+- Added the first Memory v2 profile slice: explicit user names and preferences
+  persist as bounded facts separate from transient chat events and the daily
+  diary.
+- Surfaced profile memory in the Chat tab so the user can see what the pet
+  thinks it remembers instead of hiding it in local state.
+- Browser-verified that telling the pet "我叫杜比，我喜欢安静的提醒" writes the
+  expected name and preference, and asking "我是谁？" replies with "我记得你是
+  杜比" without corrupting the stored name to "谁".
+- Proposed an automation update so the five-hour review can make low-risk,
+  scoped product iterations after research, validation, and changelog updates.
+  The Codex App requires this worktree automation change to be approved as a
+  suggested update rather than applied immediately.
+
+## 2026-06-07
+
 Version: 0.7.0
 Confidence: high that the fixed-corner control panel was the wrong spatial
 model; high that mouse-anchored placement better matches Windows context-menu
