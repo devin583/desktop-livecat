@@ -10,7 +10,7 @@ whose body, speech, memory, focus loop, and growth loop reinforce each other.
 
 ## Current Gap
 
-Desktop LiveCat v0.9.5 has useful foundations:
+Desktop LiveCat v0.9.6 has useful foundations:
 
 - validated V2 cat spritesheets;
 - local care actions;

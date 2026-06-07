@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Desktop LiveCat",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "identifier": "com.dubhe.desktoplivecat",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -48,8 +48,10 @@
       "../docs/live2d-art-brief.md",
       "../docs/live2d-rigging-handoff.md",
       "../docs/live2d-tooling.md",
+      "../docs/pet-brain-body-roadmap.md",
       "../docs/pet-asset-pipeline-standards.md",
       "../docs/pet-interaction-ux-knowledge.md",
+      "../docs/pet-knowledge-automation.md",
       "../docs/pet-product-design-knowledge.md",
       "../docs/pet-knowledge-changelog.md",
       "../docs/roadmap.md",
