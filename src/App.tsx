@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type FormEvent,
   type MouseEvent,
   type PointerEvent,
 } from "react";
@@ -31,6 +32,7 @@ import {
   Keyboard,
   Languages,
   ListChecks,
+  MessageCircle,
   MousePointer2,
   Pause,
   Play,
@@ -44,6 +46,7 @@ import {
   RotateCcw,
   Settings,
   SkipForward,
+  Send,
   TimerReset,
   Trash2,
   X,
@@ -51,7 +54,13 @@ import {
 import { Live2DCanvas } from "./Live2DCanvas";
 import { SpritesheetPet } from "./SpritesheetPet";
 import type { Live2DRuntimeProbe } from "./live2dRuntime";
-import { composePetBrainCareResponse, type PetBrainResponse } from "./petBrain";
+import {
+  composePetBrainCareResponse,
+  composePetBrainChatResponse,
+  composePetBrainDiary,
+  type PetBrainMotionCue,
+  type PetBrainResponse,
+} from "./petBrain";
 import {
   fallbackPet,
   initialState,
@@ -62,6 +71,9 @@ import {
   secondsToClock,
   shouldAutoRunNext,
   todayKey,
+  trimPetChatMessages,
+  trimPetDiaryEntries,
+  trimPetMemoryEvents,
   trimFocusRecords,
 } from "./petState";
 import { safeInvoke, safeListen } from "./tauriBridge";
@@ -76,6 +88,7 @@ import type {
   KeyboardStatus,
   PetAnimationState,
   PetCareState,
+  PetMemoryState,
   PetMood,
   PetPack,
   PomodoroMode,
@@ -183,6 +196,7 @@ const copy = {
     controls: "设置",
     controlPet: "角色",
     controlInteract: "互动",
+    controlChat: "聊天",
     controlFocus: "专注",
     controlSettings: "设置",
     statusIdle: "猫咪空闲",
@@ -228,6 +242,14 @@ const copy = {
     interactPraise: "夸奖",
     interactCall: "提醒休息",
     interactHint: "互动会短暂触发动作，不会打断工作。",
+    chatTitle: "猫猫聊天",
+    chatSend: "发送",
+    chatPlaceholder: "问猫猫一句",
+    chatEmpty: "还没有聊天",
+    chatMemory: "记忆",
+    chatDiary: "今日小记",
+    chatClear: "清空记忆",
+    chatRecent: "最近线索",
     compactStatus: "状态",
     advancedTimer: "高级计时设置",
     currentPet: "打开当前角色",
@@ -310,6 +332,7 @@ const copy = {
     controls: "Settings",
     controlPet: "Pet",
     controlInteract: "Interact",
+    controlChat: "Chat",
     controlFocus: "Focus",
     controlSettings: "Settings",
     statusIdle: "Idle cat",
@@ -355,6 +378,14 @@ const copy = {
     interactPraise: "Praise",
     interactCall: "Break nudge",
     interactHint: "Interactions play short motions and stay out of the way.",
+    chatTitle: "Pet chat",
+    chatSend: "Send",
+    chatPlaceholder: "Ask the pet",
+    chatEmpty: "No chat yet",
+    chatMemory: "Memory",
+    chatDiary: "Today diary",
+    chatClear: "Clear memory",
+    chatRecent: "Recent hints",
     compactStatus: "Status",
     advancedTimer: "Advanced timer",
     currentPet: "Open current pet",
@@ -994,6 +1025,63 @@ function levelProgressPercent(care: PetCareState) {
   return Math.min(100, Math.round((care.experience / levelRequirement(care.level)) * 100));
 }
 
+function createMemoryId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function motionProp(motion: PetBrainMotionCue): ActiveInteraction["prop"] {
+  if (motion === "feeding") return "fish";
+  if (motion === "playing") return "wand";
+  if (motion === "cleaning") return "brush";
+  if (motion === "attention_call") return "bell";
+  if (motion === "focus") return "tomato";
+  if (motion === "failed") return "wiltedTomato";
+  return "heart";
+}
+
+function memoryDay(at: string) {
+  const date = new Date(at);
+  if (!Number.isFinite(date.getTime())) return "";
+  return todayKey(date);
+}
+
+function withTodayDiary(
+  memory: PetMemoryState,
+  care: PetCareState,
+  focusSecondsToday: number,
+  language: AppLanguage,
+  pet: PetPack,
+): PetMemoryState {
+  const day = todayKey();
+  const careEvents = memory.events.filter(
+    (event) => event.type === "care" && memoryDay(event.at) === day,
+  ).length;
+  const focusMinutes = minutesFromSeconds(focusSecondsToday);
+  const diary = composePetBrainDiary({
+    care,
+    careEvents,
+    day,
+    focusMinutes,
+    language,
+    pet,
+  });
+  return {
+    ...memory,
+    diary: trimPetDiaryEntries([
+      ...memory.diary.filter((entry) => entry.day !== day),
+      {
+        day,
+        summary: diary.summary,
+        focusMinutes,
+        careEvents,
+        mood: diary.mood,
+        updatedAt: new Date().toISOString(),
+      },
+    ]),
+    lastDiaryDay: day,
+  };
+}
+
 const dragIntentDelayMs = 160;
 const dragIntentDistancePx = 28;
 
@@ -1021,6 +1109,7 @@ function App() {
   const [lastMouseActivity, setLastMouseActivity] = useState(0);
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
   const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
+  const [chatDraft, setChatDraft] = useState("");
   const [dragged, setDragged] = useState(false);
   const [installInput, setInstallInput] = useState("");
   const [installStatus, setInstallStatus] = useState("");
@@ -1057,6 +1146,15 @@ function App() {
   const latestRecords = useMemo(
     () => state.pomodoro.records.slice(-6).reverse(),
     [state.pomodoro.records],
+  );
+  const latestChat = useMemo(() => state.petMemory.chat.slice(-8), [state.petMemory.chat]);
+  const recentMemoryEvents = useMemo(
+    () => state.petMemory.events.slice(-5).reverse(),
+    [state.petMemory.events],
+  );
+  const todayDiary = useMemo(
+    () => state.petMemory.diary.find((entry) => entry.day === todayKey()) ?? null,
+    [state.petMemory.diary],
   );
   const timerStageLabel =
     state.pomodoro.focusMode === "stopwatch"
@@ -1396,6 +1494,28 @@ function App() {
     );
   }, [state.language, state.pomodoro.completionReview, t.focusDoneTitle, t.untitledTask]);
 
+  const showPetBrainResponse = useCallback((response: PetBrainResponse) => {
+    if (interactionTimeoutRef.current) {
+      window.clearTimeout(interactionTimeoutRef.current);
+    }
+    const id = interactionIdRef.current + 1;
+    interactionIdRef.current = id;
+    setActiveInteraction({
+      id,
+      emotion: response.emotion,
+      mood: response.motion,
+      motion: response.motion,
+      prop: motionProp(response.motion),
+      reaction: response.speech,
+      durationMs: response.bubbleDurationMs,
+      until: Date.now() + response.bubbleDurationMs,
+    });
+    interactionTimeoutRef.current = window.setTimeout(() => {
+      setActiveInteraction(null);
+      interactionTimeoutRef.current = null;
+    }, response.bubbleDurationMs);
+  }, []);
+
   const triggerInteraction = useCallback(
     (
       mood: InteractionMood,
@@ -1425,9 +1545,61 @@ function App() {
         until: Date.now() + durationMs,
       });
       if (options.adjustCare !== false) {
+        setState((current) => {
+          const nextCare = applyCareDelta(current.petCare, interactionCareDelta[mood]);
+          const memory: PetMemoryState = {
+            ...current.petMemory,
+            events: trimPetMemoryEvents([
+              ...current.petMemory.events,
+              {
+                id: createMemoryId("care"),
+                type: mood === "focus" || mood === "failed" ? "focus" : "care",
+                at: new Date().toISOString(),
+                petId: selectedPet.id,
+                label: options.reaction ?? brainResponse.speech,
+                emotion: brainResponse.emotion,
+                motion: brainResponse.motion,
+                hints: brainResponse.memoryHints,
+              },
+            ]),
+          };
+          return {
+            ...current,
+            petCare: nextCare,
+            petMemory: withTodayDiary(
+              memory,
+              nextCare,
+              current.pomodoro.focusSecondsToday,
+              current.language,
+              selectedPet,
+            ),
+          };
+        });
+      } else {
         setState((current) => ({
           ...current,
-          petCare: applyCareDelta(current.petCare, interactionCareDelta[mood]),
+          petMemory: withTodayDiary(
+            {
+              ...current.petMemory,
+              events: trimPetMemoryEvents([
+                ...current.petMemory.events,
+                {
+                  id: createMemoryId("focus"),
+                  type: "focus",
+                  at: new Date().toISOString(),
+                  petId: selectedPet.id,
+                  label: options.reaction ?? brainResponse.speech,
+                  emotion: brainResponse.emotion,
+                  motion: brainResponse.motion,
+                  hints: brainResponse.memoryHints,
+                },
+              ]),
+            },
+            current.petCare,
+            current.pomodoro.focusSecondsToday,
+            current.language,
+            selectedPet,
+          ),
         }));
       }
       if (options.closeMenu !== false) setPetMenu(null);
@@ -1438,6 +1610,93 @@ function App() {
     },
     [selectedPet, setState, state.language],
   );
+
+  const sendPetChat = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const message = chatDraft.trim().slice(0, 240);
+      if (!message) return;
+      const response = composePetBrainChatResponse({
+        care: state.petCare,
+        focusMinutesToday: minutesFromSeconds(todayFocusSeconds),
+        language: state.language,
+        message,
+        pet: selectedPet,
+        recentEvents: state.petMemory.events.slice(-8),
+        runningFocus: state.pomodoro.running && state.pomodoro.mode === "focus",
+        taskTitle: state.pomodoro.currentTask.trim(),
+      });
+      const at = new Date().toISOString();
+      showPetBrainResponse(response);
+      setChatDraft("");
+      setState((current) => {
+        const memory: PetMemoryState = {
+          ...current.petMemory,
+          chat: trimPetChatMessages([
+            ...current.petMemory.chat,
+            { id: createMemoryId("user"), role: "user", text: message, at },
+            {
+              id: createMemoryId("pet"),
+              role: "pet",
+              text: response.speech,
+              at: new Date().toISOString(),
+              emotion: response.emotion,
+              motion: response.motion,
+            },
+          ]),
+          events: trimPetMemoryEvents([
+            ...current.petMemory.events,
+            {
+              id: createMemoryId("chat"),
+              type: "chat",
+              at,
+              petId: selectedPet.id,
+              label: message,
+              emotion: response.emotion,
+              motion: response.motion,
+              hints: response.memoryHints,
+            },
+          ]),
+        };
+        return {
+          ...current,
+          petMemory: withTodayDiary(
+            memory,
+            current.petCare,
+            current.pomodoro.focusSecondsToday,
+            current.language,
+            selectedPet,
+          ),
+        };
+      });
+    },
+    [
+      chatDraft,
+      selectedPet,
+      setState,
+      showPetBrainResponse,
+      state.language,
+      state.petCare,
+      state.petMemory.events,
+      state.pomodoro.currentTask,
+      state.pomodoro.mode,
+      state.pomodoro.running,
+      todayFocusSeconds,
+    ],
+  );
+
+  const clearPetMemory = useCallback(() => {
+    setChatDraft("");
+    setState((current) => ({
+      ...current,
+      petMemory: {
+        events: [],
+        chat: [],
+        diary: [],
+        lastDiaryDay: null,
+      },
+    }));
+  }, [setState]);
 
   useEffect(() => {
     const review = state.pomodoro.completionReview;
@@ -2043,7 +2302,7 @@ function App() {
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
     const menuWidth = 252;
-    const menuHeight = timerHasContext ? 520 : 430;
+    const menuHeight = timerHasContext ? 580 : 490;
     const x = Math.min(Math.max(10, event.clientX - rect.left), Math.max(10, rect.width - menuWidth - 10));
     const y = Math.min(Math.max(10, event.clientY - rect.top), Math.max(10, rect.height - menuHeight - 10));
     const maxHeight = Math.max(240, rect.height - y - 10);
@@ -2368,6 +2627,26 @@ function App() {
               <b>{moodStatusLabel(petMood, state.language)}</b>
             </div>
 
+            <div className="pet-context-section">
+              <div className="pet-context-label">{t.chatTitle}</div>
+              <div className="context-action-grid context-chat-grid">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPetMenu(null);
+                    setState((current) => ({
+                      ...current,
+                      controlsOpen: true,
+                      controlPanelTab: "chat",
+                    }));
+                  }}
+                >
+                  <MessageCircle size={15} />
+                  <span>{t.controlChat}</span>
+                </button>
+              </div>
+            </div>
+
             {timerHasContext ? (
               <div className="pet-context-section timer-quick-section">
                 <div className="pet-context-label">{t.menuFocus}</div>
@@ -2566,6 +2845,7 @@ function App() {
             {[
               ["pet", Cat, t.controlPet],
               ["interact", HandHeart, t.controlInteract],
+              ["chat", MessageCircle, t.controlChat],
               ["focus", TimerReset, t.controlFocus],
               ["settings", Settings2, t.controlSettings],
             ].map(([tab, Icon, label]) => {
@@ -2931,6 +3211,72 @@ function App() {
                   <Smile size={16} />
                   <span>{t.interactCall}</span>
                 </button>
+              </div>
+            </div>
+          ) : null}
+
+          {state.controlPanelTab === "chat" ? (
+            <div className="chat-panel">
+              <div className="chat-head">
+                <span>
+                  <MessageCircle size={14} />
+                  {t.chatTitle}
+                </span>
+                <button type="button" aria-label={t.chatClear} title={t.chatClear} onClick={clearPetMemory}>
+                  <Trash2 size={13} />
+                  <span>{t.chatClear}</span>
+                </button>
+              </div>
+
+              <div className="chat-diary-card">
+                <b>{t.chatDiary}</b>
+                <span>{todayDiary?.summary ?? t.chatEmpty}</span>
+              </div>
+
+              <div className="chat-log" aria-live="polite">
+                {latestChat.length ? (
+                  latestChat.map((message) => (
+                    <div
+                      className={`chat-message chat-message-${message.role}`}
+                      key={message.id}
+                      data-emotion={message.emotion}
+                      data-motion={message.motion}
+                    >
+                      <span>{message.text}</span>
+                      <small>{new Date(message.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small>
+                    </div>
+                  ))
+                ) : (
+                  <div className="chat-empty">{t.chatEmpty}</div>
+                )}
+              </div>
+
+              <form className="chat-input-row" onSubmit={sendPetChat}>
+                <input
+                  aria-label={t.chatPlaceholder}
+                  maxLength={240}
+                  placeholder={t.chatPlaceholder}
+                  value={chatDraft}
+                  onChange={(event) => setChatDraft(event.currentTarget.value)}
+                />
+                <button type="submit" aria-label={t.chatSend} title={t.chatSend}>
+                  <Send size={15} />
+                </button>
+              </form>
+
+              <div className="chat-memory-card">
+                <b>{t.chatRecent}</b>
+                {recentMemoryEvents.length ? (
+                  <div className="chat-memory-list">
+                    {recentMemoryEvents.map((event) => (
+                      <span key={event.id}>
+                        {event.label}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span>{t.chatEmpty}</span>
+                )}
               </div>
             </div>
           ) : null}

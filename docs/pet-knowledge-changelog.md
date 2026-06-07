@@ -6,6 +6,30 @@ asset thinking.
 
 ## 2026-06-07
 
+Version: 0.6.0
+Confidence: high that v0.9.7 closes the first chat/memory runtime loop; medium
+that the next best body-runtime step should be Live2D before more spritesheet
+iteration
+
+Changes:
+
+- Added a compact Chat tab to the desktop control panel and kept it inside the
+  small pet surface instead of adding another detached utility window.
+- Added a right-click pet command that opens the Chat tab, keeping Talk/Ask Pet
+  reachable from the character body rather than only from the full panel.
+- Added local chat replies through the same Pet Brain response contract used by
+  care and focus actions, so chat can trigger speech bubbles, emotion, motion,
+  duration, and memory hints without granting raw text direct UI control.
+- Added persisted local `petMemory` with bounded care/chat/focus events, short
+  chat history, daily pet diary entries, and a user-visible clear-memory command.
+- Routed care and focus interactions into memory events so the chat surface can
+  refer to recent pet context instead of behaving like an isolated text box.
+- Browser-verified the Windows-first local preview at
+  `http://127.0.0.1:1420/`; the chat tab wrote conversation history, updated the
+  diary, stored a recent memory clue, and triggered a focus bubble.
+
+## 2026-06-07
+
 Version: 0.5.0
 Confidence: high that the first Pet Brain and visible review-loop foundation is
 the correct next implementation layer; medium that the final chat provider and

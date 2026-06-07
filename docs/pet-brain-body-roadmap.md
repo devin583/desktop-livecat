@@ -1,6 +1,6 @@
 # Desktop LiveCat Pet Brain And Body Roadmap
 
-Version: 0.1.0
+Version: 0.2.0
 Created: 2026-06-07
 Confidence: high for architecture direction, medium for final AI provider choice
 
@@ -10,19 +10,20 @@ whose body, speech, memory, focus loop, and growth loop reinforce each other.
 
 ## Current Gap
 
-Desktop LiveCat v0.9.6 has useful foundations:
+Desktop LiveCat v0.9.7 has useful foundations:
 
 - validated V2 cat spritesheets;
 - local care actions;
+- compact local chat entry;
+- local chat history, memory events, and a daily diary;
 - pet-owned Pomodoro props and rewards;
 - context menu and panel separation;
 - document-level asset standards.
 
 It is still behind strong desktop companions because it lacks:
 
-- a Pet Brain abstraction that chooses speech, emotion, motion, and memory;
-- real chat entry and conversation history;
-- long-term pet memory and diary;
+- AI-backed conversation and schema validation around model output;
+- durable long-term memory beyond the current local event diary;
 - Live2D or equivalent layered body control;
 - a visible automation loop that makes five-hour design review outputs land in
   the main repository.
@@ -166,6 +167,10 @@ share one state model. Separate panels and disconnected animations do not count.
 
 ## Version Log
 
+- 0.2.0, 2026-06-07: Marked v0.9.7 completion of the compact local chat entry,
+  shared Pet Brain chat responses, local conversation history, memory events,
+  and daily diary. Kept AI-backed replies and premium body control as explicit
+  future work instead of treating the deterministic layer as finished chat AI.
 - 0.1.0, 2026-06-07: Created the Pet Brain and Body implementation roadmap and
   defined acceptance gates for local brain, visible automation, chat, memory,
   and premium body work.

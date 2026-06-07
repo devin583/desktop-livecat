@@ -1,4 +1,4 @@
-import type { AppLanguage, PetCareState, PetPack } from "./types";
+import type { AppLanguage, PetCareState, PetMemoryEvent, PetPack } from "./types";
 
 export type PetBrainEmotion =
   | "calm"
@@ -44,6 +44,26 @@ type ComposeCareResponseInput = {
   delta: CareDelta;
   language: AppLanguage;
   mood: PetBrainCareMood;
+  pet: PetPack;
+};
+
+type ComposeChatResponseInput = {
+  care: PetCareState;
+  focusMinutesToday: number;
+  language: AppLanguage;
+  message: string;
+  pet: PetPack;
+  recentEvents: PetMemoryEvent[];
+  runningFocus: boolean;
+  taskTitle: string;
+};
+
+type ComposeDiaryInput = {
+  care: PetCareState;
+  careEvents: number;
+  day: string;
+  focusMinutes: number;
+  language: AppLanguage;
   pet: PetPack;
 };
 
@@ -93,6 +113,92 @@ export function composePetBrainCareResponse(input: ComposeCareResponseInput): Pe
   };
 }
 
+export function composePetBrainChatResponse(input: ComposeChatResponseInput): PetBrainResponse {
+  const text = input.message.trim().toLowerCase();
+  const zh = input.language === "zh-CN";
+  const petName = input.pet.persona?.name || input.pet.name;
+  const recentCare = input.recentEvents.filter((event) => event.type === "care").slice(-2);
+
+  if (matches(text, ["番茄", "专注", "focus", "timer", "pomo"])) {
+    return {
+      speech: zh
+        ? `${input.runningFocus ? "我正在陪你守这颗番茄。" : "现在可以开一颗番茄。"}今天已经专注 ${input.focusMinutesToday} 分钟${input.taskTitle ? `，当前任务是「${input.taskTitle}」` : ""}。`
+        : `${input.runningFocus ? "I am guarding this tomato with you." : "We can start a tomato now."} You have focused for ${input.focusMinutesToday}m today${input.taskTitle ? ` on "${input.taskTitle}"` : ""}.`,
+      emotion: "focused",
+      motion: "focus",
+      bubbleDurationMs: 5600,
+      memoryHints: ["chat:focus", `pet:${input.pet.id}`],
+    };
+  }
+
+  if (matches(text, ["状态", "心情", "饿", "累", "status", "mood", "hungry", "tired"])) {
+    return {
+      speech: zh
+        ? `我现在开心 ${input.care.happiness}，饱腹 ${input.care.fullness}，精力 ${input.care.energy}。${careSuggestion(input.care, input.language)}`
+        : `I am at ${input.care.happiness} happy, ${input.care.fullness} full, and ${input.care.energy} energy. ${careSuggestion(input.care, input.language)}`,
+      emotion: "curious",
+      motion: "attention_call",
+      bubbleDurationMs: 5400,
+      memoryHints: ["chat:status", `pet:${input.pet.id}`],
+    };
+  }
+
+  if (matches(text, ["你是谁", "名字", "性格", "who are you", "name", "personality"])) {
+    return {
+      speech: zh
+        ? `我是 ${petName}。${input.pet.persona?.personality || "我会陪你打字、专注和休息。"}`
+        : `I am ${petName}. ${input.pet.persona?.personality || "I keep you company while you type, focus, and rest."}`,
+      emotion: "proud",
+      motion: "praised",
+      bubbleDurationMs: 5200,
+      memoryHints: ["chat:identity", `pet:${input.pet.id}`],
+    };
+  }
+
+  if (matches(text, ["记住", "记得", "remember", "memory"])) {
+    return {
+      speech: zh
+        ? "我先把这句当成今天的记忆线索。以后接上模型时，会把它变成更稳定的长期记忆。"
+        : "I will keep this as a memory hint for today. When the model layer lands, it can become longer-term memory.",
+      emotion: "calm",
+      motion: "attention_call",
+      bubbleDurationMs: 5600,
+      memoryHints: ["chat:memory-request", `pet:${input.pet.id}`],
+    };
+  }
+
+  return {
+    speech: zh
+      ? `${recentCare.length ? "我记得刚才你照顾过我。 " : ""}我现在还不是联网 AI，但已经可以把聊天、动作和记忆线索连起来。你可以问我今天专注多久、我的状态、或者让我记住一句话。`
+      : `${recentCare.length ? "I remember you cared for me earlier. " : ""}I am not an online AI yet, but chat, motion, and memory hints are now wired together. Ask about focus, my status, or tell me something to remember.`,
+    emotion: "curious",
+    motion: "attention_call",
+    bubbleDurationMs: 6200,
+    memoryHints: ["chat:general", `pet:${input.pet.id}`],
+  };
+}
+
+export function composePetBrainDiary(input: ComposeDiaryInput) {
+  const zh = input.language === "zh-CN";
+  const mood =
+    input.care.happiness >= 78
+      ? zh
+        ? "开心"
+        : "happy"
+      : input.care.energy <= 35
+        ? zh
+          ? "困"
+          : "sleepy"
+        : zh
+          ? "安静"
+          : "calm";
+  const summary = zh
+    ? `${input.pet.name} 今天陪你专注 ${input.focusMinutes} 分钟，被照顾 ${input.careEvents} 次。心情偏${mood}，亲密度 ${input.care.bond}。`
+    : `${input.pet.name} kept you company for ${input.focusMinutes}m of focus and received ${input.careEvents} care actions today. Mood is ${mood}; bond is ${input.care.bond}.`;
+
+  return { mood, summary };
+}
+
 function pickStable(options: string[], seed: string) {
   if (options.length <= 1) return options[0] ?? "";
   let total = 0;
@@ -116,6 +222,17 @@ function careDeltaSuffix(delta: CareDelta, language: AppLanguage) {
     metricEntry("bond", delta.bond, language),
   ].filter(Boolean);
   return entries.length ? ` ${entries.slice(0, 2).join(" · ")}` : "";
+}
+
+function matches(text: string, terms: string[]) {
+  return terms.some((term) => text.includes(term));
+}
+
+function careSuggestion(care: PetCareState, language: AppLanguage) {
+  if (care.fullness < 38) return language === "zh-CN" ? "可以喂我一口。" : "A snack would help.";
+  if (care.cleanliness < 42) return language === "zh-CN" ? "毛毛该整理一下。" : "My fur could use grooming.";
+  if (care.energy < 35) return language === "zh-CN" ? "我有点困，适合休息。" : "I am sleepy; a break fits.";
+  return language === "zh-CN" ? "状态稳定，可以继续陪你。" : "Stable enough to keep going.";
 }
 
 function metricEntry(

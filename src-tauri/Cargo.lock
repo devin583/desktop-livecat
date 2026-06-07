@@ -700,7 +700,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-livecat"
-version = "0.9.6"
+version = "0.9.7"
 dependencies = [
  "base64 0.22.1",
  "serde",

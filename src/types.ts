@@ -103,7 +103,7 @@ export type FocusTimerMode = "pomo" | "stopwatch";
 
 export type FocusPanelTab = "timer" | "stats" | "records";
 
-export type ControlPanelTab = "pet" | "interact" | "focus" | "settings";
+export type ControlPanelTab = "pet" | "interact" | "chat" | "focus" | "settings";
 
 export type PetCareState = {
   happiness: number;
@@ -158,6 +158,42 @@ export type FocusCompletionReview = {
   completedAt: string;
 };
 
+export type PetMemoryEvent = {
+  id: string;
+  type: "care" | "chat" | "focus" | "system";
+  at: string;
+  petId: string;
+  label: string;
+  emotion?: string;
+  motion?: string;
+  hints: string[];
+};
+
+export type PetChatMessage = {
+  id: string;
+  role: "user" | "pet";
+  text: string;
+  at: string;
+  emotion?: string;
+  motion?: string;
+};
+
+export type PetDiaryEntry = {
+  day: string;
+  summary: string;
+  focusMinutes: number;
+  careEvents: number;
+  mood: string;
+  updatedAt: string;
+};
+
+export type PetMemoryState = {
+  events: PetMemoryEvent[];
+  chat: PetChatMessage[];
+  diary: PetDiaryEntry[];
+  lastDiaryDay: string | null;
+};
+
 export type PomodoroState = {
   focusMode: FocusTimerMode;
   mode: PomodoroMode;
@@ -193,6 +229,7 @@ export type AppState = {
   language: AppLanguage;
   controlPanelTab: ControlPanelTab;
   petCare: PetCareState;
+  petMemory: PetMemoryState;
   scale: number;
   controlsOpen: boolean;
   clickThrough: boolean;

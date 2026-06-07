@@ -32,7 +32,7 @@
 ## Update Still Shows Old Behavior
 
 - Confirm the zip filename includes the expected version, for example
-  `desktop-livecat-v0.9.6-win11-x64-portable.zip`.
+  `desktop-livecat-v0.9.7-win11-x64-portable.zip`.
 - Close every running Desktop LiveCat process before extracting the new package.
 - Keep `data/` and custom `pets/`, but let bundled app files come from the new
   zip.

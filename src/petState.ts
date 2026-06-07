@@ -5,6 +5,10 @@ import type {
   FocusRecord,
   FocusTimerMode,
   PetCareState,
+  PetChatMessage,
+  PetDiaryEntry,
+  PetMemoryEvent,
+  PetMemoryState,
   PetPack,
   PomodoroMode,
   PomodoroState,
@@ -35,6 +39,9 @@ export const fallbackPet: PetPack = {
 
 const maxDaySeconds = 24 * 60 * 60;
 const maxRecords = 500;
+const maxPetMemoryEvents = 160;
+const maxPetChatMessages = 80;
+const maxPetDiaryEntries = 45;
 const deprecatedPetReplacement: Record<string, string> = {
   "gray-british-keyboard": "gray-british-keyboard-v2",
   "orange-tabby-keyboard": "orange-tabby-keyboard-v2",
@@ -102,11 +109,19 @@ export const initialPetCare: PetCareState = {
   lastInteractionAt: null,
 };
 
+export const initialPetMemory: PetMemoryState = {
+  events: [],
+  chat: [],
+  diary: [],
+  lastDiaryDay: null,
+};
+
 export const initialState: AppState = {
   selectedPetId: "orange-tabby-keyboard-v2",
   language: "zh-CN",
   controlPanelTab: "interact",
   petCare: initialPetCare,
+  petMemory: initialPetMemory,
   scale: 0.92,
   controlsOpen: false,
   clickThrough: false,
@@ -139,6 +154,10 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
     petCare: {
       ...initialPetCare,
       ...(input?.petCare ?? {}),
+    },
+    petMemory: {
+      ...initialPetMemory,
+      ...(input?.petMemory ?? {}),
     },
   };
 
@@ -177,7 +196,7 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   if (!["zh-CN", "en-US"].includes(next.language)) {
     next.language = "zh-CN";
   }
-  if (!["pet", "interact", "focus", "settings"].includes(next.controlPanelTab)) {
+  if (!["pet", "interact", "chat", "focus", "settings"].includes(next.controlPanelTab)) {
     next.controlPanelTab = "interact";
   }
 
@@ -202,6 +221,10 @@ export function normalizeState(input: Partial<AppState> | null | undefined): App
   next.petCare.streak = clampMinutes(next.petCare.streak, 0, 9999, initialPetCare.streak);
   next.petCare.lastFocusDay = normalizeDayString(next.petCare.lastFocusDay);
   next.petCare.lastInteractionAt = normalizeDateString(next.petCare.lastInteractionAt);
+  next.petMemory.events = normalizePetMemoryEvents(next.petMemory.events);
+  next.petMemory.chat = normalizePetChatMessages(next.petMemory.chat);
+  next.petMemory.diary = normalizePetDiary(next.petMemory.diary);
+  next.petMemory.lastDiaryDay = normalizeDayString(next.petMemory.lastDiaryDay);
   next.scale = Math.min(1.25, Math.max(0.65, Number(next.scale) || 1));
   next.controlsOpen = Boolean(next.controlsOpen);
   next.pomodoro.focusMinutes = clampMinutes(next.pomodoro.focusMinutes, 1, 180, 25);
@@ -264,6 +287,14 @@ function normalizeNullableString(value: unknown, maxLength: number) {
   return text ? text.slice(0, maxLength) : null;
 }
 
+function normalizeStringList(value: unknown, maxItems: number, maxLength: number) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item ?? "").trim().slice(0, maxLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
 export function resetPomodoroDuration(pomodoro: PomodoroState, mode: PomodoroMode = pomodoro.mode) {
   const minutes =
     mode === "focus"
@@ -297,6 +328,18 @@ export function plannedFocusSeconds(pomodoro: PomodoroState, mode: PomodoroMode 
 
 export function trimFocusRecords(records: FocusRecord[]) {
   return records.slice(-maxRecords);
+}
+
+export function trimPetMemoryEvents(events: PetMemoryEvent[]) {
+  return events.slice(-maxPetMemoryEvents);
+}
+
+export function trimPetChatMessages(messages: PetChatMessage[]) {
+  return messages.slice(-maxPetChatMessages);
+}
+
+export function trimPetDiaryEntries(entries: PetDiaryEntry[]) {
+  return entries.slice(-maxPetDiaryEntries);
 }
 
 function normalizeFocusRecords(input: PomodoroState["records"] | unknown): FocusRecord[] {
@@ -346,6 +389,77 @@ function normalizeCompletionReview(
     plannedSeconds: clampSeconds(review.plannedSeconds),
     nextMode,
     completedAt,
+  };
+}
+
+function normalizePetMemoryEvents(input: PetMemoryState["events"] | unknown): PetMemoryEvent[] {
+  if (!Array.isArray(input)) return [];
+  return trimPetMemoryEvents(input.map(normalizePetMemoryEvent).filter(Boolean) as PetMemoryEvent[]);
+}
+
+function normalizePetMemoryEvent(input: unknown): PetMemoryEvent | null {
+  if (!input || typeof input !== "object") return null;
+  const event = input as Partial<PetMemoryEvent>;
+  const id = String(event.id ?? "").slice(0, 80);
+  const at = normalizeDateString(event.at);
+  const type =
+    event.type === "care" || event.type === "chat" || event.type === "focus" || event.type === "system"
+      ? event.type
+      : null;
+  if (!id || !at || !type) return null;
+  return {
+    id,
+    type,
+    at,
+    petId: String(event.petId ?? "").slice(0, 80),
+    label: String(event.label ?? "").slice(0, 160),
+    emotion: normalizeNullableString(event.emotion, 48) ?? undefined,
+    motion: normalizeNullableString(event.motion, 48) ?? undefined,
+    hints: normalizeStringList(event.hints, 12, 80),
+  };
+}
+
+function normalizePetChatMessages(input: PetMemoryState["chat"] | unknown): PetChatMessage[] {
+  if (!Array.isArray(input)) return [];
+  return trimPetChatMessages(input.map(normalizePetChatMessage).filter(Boolean) as PetChatMessage[]);
+}
+
+function normalizePetChatMessage(input: unknown): PetChatMessage | null {
+  if (!input || typeof input !== "object") return null;
+  const message = input as Partial<PetChatMessage>;
+  const id = String(message.id ?? "").slice(0, 80);
+  const at = normalizeDateString(message.at);
+  const role = message.role === "user" || message.role === "pet" ? message.role : null;
+  const text = String(message.text ?? "").trim().slice(0, 400);
+  if (!id || !at || !role || !text) return null;
+  return {
+    id,
+    role,
+    text,
+    at,
+    emotion: normalizeNullableString(message.emotion, 48) ?? undefined,
+    motion: normalizeNullableString(message.motion, 48) ?? undefined,
+  };
+}
+
+function normalizePetDiary(input: PetMemoryState["diary"] | unknown): PetDiaryEntry[] {
+  if (!Array.isArray(input)) return [];
+  return trimPetDiaryEntries(input.map(normalizePetDiaryEntry).filter(Boolean) as PetDiaryEntry[]);
+}
+
+function normalizePetDiaryEntry(input: unknown): PetDiaryEntry | null {
+  if (!input || typeof input !== "object") return null;
+  const entry = input as Partial<PetDiaryEntry>;
+  const day = normalizeDayString(entry.day);
+  const updatedAt = normalizeDateString(entry.updatedAt);
+  if (!day || !updatedAt) return null;
+  return {
+    day,
+    summary: String(entry.summary ?? "").slice(0, 320),
+    focusMinutes: clampMinutes(entry.focusMinutes, 0, 1440, 0),
+    careEvents: clampMinutes(entry.careEvents, 0, 999, 0),
+    mood: String(entry.mood ?? "").slice(0, 48),
+    updatedAt,
   };
 }
 

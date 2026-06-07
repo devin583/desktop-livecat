@@ -4,7 +4,7 @@ Win11-first portable Live2D desktop cat. The app is built with Tauri v2, Rust,
 React, and TypeScript. It prioritizes direct execution from a zip, offline use,
 copyable resource packs, and high-quality animated cat behavior.
 
-## Current v0.9.6 status
+## Current v0.9.7 status
 
 - Transparent frameless desktop pet window.
 - Tray menu for show, hide, disabling click-through, and quit.
@@ -46,6 +46,9 @@ copyable resource packs, and high-quality animated cat behavior.
 - Care interaction bubbles now route through the local Pet Brain response
   contract, carrying speech, emotion, motion, duration, and memory hints for
   future chat/memory integration.
+- The control panel has a compact Chat tab. Local chat replies now use the same
+  Pet Brain contract as care/focus actions, trigger pet bubbles/motions, write
+  short conversation history, and maintain local memory plus a daily pet diary.
 - Pomodoro state is rendered as a pet-owned tomato/timer overlay near the cat,
   with completion reward, pause/rest styling, and abandoned-focus wilt feedback.
 - The runtime disables synthetic floor shadow for spritesheet cats so baked
@@ -82,7 +85,7 @@ npm run verify:portable
 `npm run tauri:build` intentionally uses `tauri build --no-bundle` so the default
 deliverable stays a portable zip instead of an installer. The packaging script
 uses versioned artifact names such as
-`release/desktop-livecat-v0.9.6-win11-x64-portable.zip` on Windows. To include a
+`release/desktop-livecat-v0.9.7-win11-x64-portable.zip` on Windows. To include a
 Fixed Version WebView2 Runtime in the full-offline folder locally, download and
 extract Microsoft's official CAB, then set:
 
@@ -92,7 +95,7 @@ WEBVIEW2_FIXED_RUNTIME_DIR=/path/to/fixed-webview2 npm run package:portable
 
 Tagged Windows releases run `npm run download:webview2-fixed` first, using
 Microsoft's WebView2 download page as the source, so they also produce
-`desktop-livecat-v0.9.6-win11-x64-full-offline.zip`.
+`desktop-livecat-v0.9.7-win11-x64-full-offline.zip`.
 
 ## Upgrade
 
