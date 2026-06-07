@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "generate:livecat-assets": "node scripts/generate-livecat-assets.mjs",
     "generate:spritesheet-assets": "node scripts/generate-spritesheet-assets.mjs",
+    "knowledge:import": "node scripts/import-knowledge-review.mjs",
     "download:webview2-fixed": "node scripts/download-webview2-fixed-runtime.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",

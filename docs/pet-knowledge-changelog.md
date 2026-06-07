@@ -4,6 +4,92 @@ This file tracks changes to the pet design and asset knowledge base. The
 recurring research automation should append here whenever it updates product or
 asset thinking.
 
+## 2026-06-07
+
+Version: 0.5.0
+Confidence: high that the first Pet Brain and visible review-loop foundation is
+the correct next implementation layer; medium that the final chat provider and
+premium body runtime should be chosen before prototyping
+
+Changes:
+
+- Added `docs/pet-brain-body-roadmap.md` to define the Pet Body, Pet Brain,
+  Pet Memory, and Pet Tools layers, with explicit acceptance gates for local
+  brain, visible automation, chat, memory, and premium body work.
+- Added `src/petBrain.ts` and routed local care interactions through a shared
+  `speech`, `emotion`, `motion`, `bubbleDurationMs`, and `memoryHints` response
+  object. This is the local deterministic contract that later AI chat responses
+  should also satisfy.
+- Added `scripts/import-knowledge-review.mjs` and the `npm run knowledge:import`
+  script so the five-hour Codex knowledge review can be imported into
+  `docs/pet-knowledge-automation.md` instead of staying hidden in an isolated
+  Codex worktree.
+- Imported the latest review from
+  `/Users/dubhe/.codex/automations/desktop-livecat-pet-knowledge-review/memory.md`
+  into the main repository.
+- Updated spritesheet generators and hatch-pet installation so generated
+  manifests include `spritesheet.composition` metadata from the start.
+- Added the new roadmap and automation ledger to the README research/design
+  index.
+
+## 2026-06-07
+
+Version: 0.4.0
+Confidence: high that the menu-scope and asset-source corrections are durable;
+medium that Rive should stay secondary until a vector-first pet variant is
+actually prototyped
+
+Changes:
+
+- Updated `docs/pet-product-design-knowledge.md` with a stricter right-click
+  rule: context menus are command surfaces, not mini panels, and the default
+  top-level action count should stay short.
+- Updated `docs/pet-interaction-ux-knowledge.md` with a new 0.9.6 interaction
+  decision: care-first command-only menus, contextual timer quick actions, and
+  panel-first placement for planning/configuration.
+- Updated `docs/pet-asset-pipeline-standards.md` to harden the Live2D handoff
+  contract around PSD, RGB, 8bit/channel, and sRGB, and to narrow the correct
+  roles of Live2D, Spine, and Rive instead of treating them as interchangeable.
+- Added composition metadata to the current sample/template spritesheet manifests
+  so the knowledge base no longer demands a contract that its own starter packs
+  fail to declare.
+
+Sources reviewed:
+
+- Apple Human Interface Guidelines, context menus:
+  https://developer.apple.com/design/human-interface-guidelines/context-menus
+- Microsoft Windows app guidance, menus and context menus:
+  https://learn.microsoft.com/windows/apps/design/controls/menus-and-context-menus
+- Live2D Cubism, notes on PSD creation:
+  https://docs.live2d.com/en/cubism-editor-manual/precautions-for-psd-data/
+- Spine runtimes:
+  https://us.esotericsoftware.com/spine-runtimes
+- Spine runtimes guide:
+  https://us.esotericsoftware.com/spine-using-runtimes
+- Rive state machine overview:
+  https://rive.app/docs/editor/state-machine/state-machine
+- Unity Sprite Atlas manual:
+  https://docs.unity.cn/Manual/sprite-atlas.html
+- OpenAI image generation guide:
+  https://developers.openai.com/api/docs/guides/image-generation
+- Deskgator product page:
+  https://mydeskgator.com/
+- Idle Pomodoro Pet product page:
+  https://haveanaverageday.itch.io/idle-pomodoro-pet
+- Desktop Pet product page:
+  https://desktoppet.app/
+- Paw-Paw product page:
+  https://paw-paw.pet/
+
+Open questions:
+
+- The resource-pack generators and installer scripts still appear to emit
+  spritesheet manifests without composition metadata. The docs and starter packs
+  are now aligned, but the generation path may still lag behind.
+- The current recommendation keeps Rive secondary for premium raster cats. That
+  should be revisited only after a vector-first pet prototype or a UI-overlay
+  companion variant exists.
+
 ## 2026-06-05
 
 Version: 0.3.0

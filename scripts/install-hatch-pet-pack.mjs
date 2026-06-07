@@ -55,6 +55,12 @@ writeJson(join(targetDir, "manifest.json"), {
     rows: 9,
     frameWidth: 192,
     frameHeight: 208,
+    composition: {
+      baseline: "keyboard",
+      bakedProps: ["computer-keyboard"],
+      detachedEffects: false,
+      runtimeOverlays: ["timer-bubble", "care-props", "reaction-bubble"],
+    },
     statesFile: "spritesheet/states.json",
   },
   privacy: {

@@ -3,6 +3,16 @@ import { join } from "node:path";
 
 const root = process.cwd();
 const frame = { width: 192, height: 208, columns: 8, rows: 9 };
+const composition = {
+  baseline: "keyboard",
+  bakedProps: ["computer-keyboard"],
+  detachedEffects: false,
+  runtimeOverlays: ["timer-bubble", "care-props", "reaction-bubble"],
+};
+const pixelMochiComposition = {
+  ...composition,
+  bakedProps: ["cat-facing-computer-keyboard", "timer-note"],
+};
 const states = {
   idle: stateFrames(0, 6),
   tap_left: stateFrames(1, 5, { loopStartIndex: null, fallback: "typing" }),
@@ -81,6 +91,7 @@ function writePixelMochi() {
           rows: frame.rows,
           frameWidth: frame.width,
           frameHeight: frame.height,
+          composition: pixelMochiComposition,
           statesFile: "spritesheet/states.json",
           states,
         },
@@ -135,6 +146,7 @@ function writeTemplatePack() {
           rows: frame.rows,
           frameWidth: frame.width,
           frameHeight: frame.height,
+          composition,
           statesFile: "spritesheet/states.json",
           states,
         },

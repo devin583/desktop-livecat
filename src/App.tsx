@@ -51,6 +51,7 @@ import {
 import { Live2DCanvas } from "./Live2DCanvas";
 import { SpritesheetPet } from "./SpritesheetPet";
 import type { Live2DRuntimeProbe } from "./live2dRuntime";
+import { composePetBrainCareResponse, type PetBrainResponse } from "./petBrain";
 import {
   fallbackPet,
   initialState,
@@ -856,7 +857,9 @@ type InteractionMood = Extract<
 
 type ActiveInteraction = {
   id: number;
+  emotion: PetBrainResponse["emotion"];
   mood: InteractionMood;
+  motion: PetBrainResponse["motion"];
   prop: "fish" | "wand" | "brush" | "heart" | "bell" | "tomato" | "wiltedTomato" | null;
   reaction: string;
   durationMs: number;
@@ -989,63 +992,6 @@ function focusRewardLabel(seconds: number, language: AppLanguage) {
 
 function levelProgressPercent(care: PetCareState) {
   return Math.min(100, Math.round((care.experience / levelRequirement(care.level)) * 100));
-}
-
-function interactionReactionLabel(
-  mood: InteractionMood,
-  language: AppLanguage,
-  delta = interactionCareDelta[mood],
-) {
-  if (mood === "failed") {
-    return language === "zh-CN" ? "番茄枯萎 · 未获得奖励" : "Tomato wilted · no reward";
-  }
-  if (mood === "focus") {
-    return language === "zh-CN" ? "准备专注" : "Ready to focus";
-  }
-  const positiveMetric =
-    (delta.fullness ?? 0) > 0
-      ? language === "zh-CN"
-        ? "饱腹"
-        : "full"
-      : (delta.cleanliness ?? 0) > 0
-        ? language === "zh-CN"
-          ? "清洁"
-          : "clean"
-        : (delta.energy ?? 0) > 0
-          ? language === "zh-CN"
-            ? "精力"
-            : "energy"
-          : language === "zh-CN"
-            ? "开心"
-            : "happy";
-  const amount = Math.max(
-    delta.happiness ?? 0,
-    delta.fullness ?? 0,
-    delta.cleanliness ?? 0,
-    delta.energy ?? 0,
-    1,
-  );
-  const verb =
-    language === "zh-CN"
-      ? {
-          petting: "舒服",
-          feeding: "吃到啦",
-          playing: "开玩",
-          cleaning: "清爽",
-          praised: "被夸",
-          attention_call: "提醒",
-          focus: "准备",
-        }[mood]
-      : {
-          petting: "Purr",
-          feeding: "Snack",
-          playing: "Play",
-          cleaning: "Groom",
-          praised: "Praised",
-          attention_call: "Nudge",
-          focus: "Ready",
-        }[mood];
-  return language === "zh-CN" ? `${verb} +${amount} ${positiveMetric}` : `${verb} +${amount} ${positiveMetric}`;
 }
 
 const dragIntentDelayMs = 160;
@@ -1461,12 +1407,20 @@ function App() {
       }
       const id = interactionIdRef.current + 1;
       interactionIdRef.current = id;
-      const durationMs = interactionDurationMs[mood];
+      const brainResponse = composePetBrainCareResponse({
+        delta: interactionCareDelta[mood],
+        language: state.language,
+        mood,
+        pet: selectedPet,
+      });
+      const durationMs = options.reaction ? interactionDurationMs[mood] : brainResponse.bubbleDurationMs;
       setActiveInteraction({
         id,
+        emotion: brainResponse.emotion,
         mood,
+        motion: brainResponse.motion,
         prop,
-        reaction: options.reaction ?? interactionReactionLabel(mood, state.language),
+        reaction: options.reaction ?? brainResponse.speech,
         durationMs,
         until: Date.now() + durationMs,
       });
@@ -1482,7 +1436,7 @@ function App() {
         interactionTimeoutRef.current = null;
       }, durationMs);
     },
-    [setState, state.language],
+    [selectedPet, setState, state.language],
   );
 
   useEffect(() => {
@@ -2335,6 +2289,8 @@ function App() {
             <div
               key={`reaction-${activeInteraction.id}`}
               className={`pet-reaction-bubble reaction-${activeInteraction.mood}`}
+              data-emotion={activeInteraction.emotion}
+              data-motion={activeInteraction.motion}
             >
               {activeInteraction.reaction}
             </div>

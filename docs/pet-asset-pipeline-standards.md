@@ -1,9 +1,9 @@
 # Desktop LiveCat Asset Pipeline Standards
 
-Version: 0.3.0
-Last reviewed: 2026-06-05
+Version: 0.4.0
+Last reviewed: 2026-06-07
 Review cadence: every 5 hours through the pet knowledge automation
-Confidence: high for current spritesheet constraints and composition diagnosis, medium for future Live2D/Rive/Spine tooling choice
+Confidence: high for current spritesheet constraints, composition diagnosis, and Live2D source requirements; medium for future Live2D/Rive/Spine tooling choice
 
 This document defines how Desktop LiveCat should classify, request, validate, and
 package pet assets. It replaces the loose "make a cute sheet" approach with a
@@ -72,6 +72,27 @@ A single flat image can be animated with modern tools, but believable movement
 still requires segmentation, pivots, occlusion rules, and identity locking. If
 those are missing, the animation becomes sliding, squashy, or visually fake.
 
+## 2026-06-07 Tooling Clarification
+
+The current official docs make the tool boundaries more concrete than this file
+previously stated.
+
+- Live2D Cubism is not "any layered source is fine." Its official import path is
+  PSD, and the documented safe conditions are RGB and 8bit/channel. The
+  guaranteed-working authoring apps are Adobe Photoshop and Clip Studio Paint.
+- Spine is strongest when the team wants skeletal animation plus explicit runtime
+  control over animation blending, layering, and procedural manipulation. Its
+  export contract is skeleton data plus a texture atlas, which matches the
+  "source asset versus runtime package" split already used by this repo.
+- Rive is strongest when the team wants interactive state machines authored by
+  design and driven by runtime inputs. That is a compelling fit for vector-first
+  pets or overlay widgets, not automatically for painterly raster cat assets.
+
+The previous document was too vague on this last point. For Desktop LiveCat's
+current raster-cat direction, Live2D remains the first premium-rig path, Spine
+is the strongest alternate path when atlas-driven skeletal control matters, and
+Rive is best reserved for vector-native variants or UI-like companion elements.
+
 ## Asset Taxonomy
 
 | Category | Purpose | Required Standard |
@@ -114,6 +135,10 @@ pets/<pet-id>/
 Current V2 spritesheet packs do not need every future folder, but every new
 premium pack should be able to explain which source asset produced the shipped
 runtime artifact.
+
+Starter packs should also stop being metadata-free. Even templates and sample
+spritesheet packs should declare provisional composition metadata so artists and
+validators start from the same contract as production packs.
 
 ## Runtime Composition Contract
 
@@ -170,6 +195,8 @@ Short-term production can keep enhanced spritesheets:
 - Higher source resolution should be at least 4x and downsampled cleanly.
 - No baked detached effects or soft cast shadows.
 - Keyboard baseline fixed unless the state explicitly represents drag or fall.
+- Template and sample packs should already include composition metadata so the
+  artist handoff starts from the correct runtime assumptions.
 
 Long-term premium packs should use a layered rig:
 
@@ -251,11 +278,14 @@ Tool fit:
 - `hatch-pet`: good for Codex-compatible atlases, deterministic frame extraction,
   QA contact sheets, and validation.
 - ChatGPT image generation: useful for canonical art, row strips, prop sheets,
-  and iterative repair when grounded with references.
+  and iterative repair when grounded with references. Current OpenAI image docs
+  also support using one or more reference images, which is useful for identity
+  lock and prop consistency before atlas compilation.
 - Live2D Cubism: best when the source is a clean layered PSD with parts separated
-  for deformation.
+  for deformation. Standardize the handoff as PSD, RGB, 8bit/channel, sRGB.
 - Spine: strong for skeletal 2D animation and atlas packaging.
-- Rive: strong for interactive vector motion and state machines.
+- Rive: strong for interactive vector motion and state machines, but not the
+  default recommendation for current raster-cat premium packs.
 - Unity Sprite Atlas style packaging: useful mental model for treating atlases
   as packed runtime artifacts, not authoring truth.
 
@@ -285,15 +315,25 @@ Tool fit:
   https://m2.material.io/design/motion/speed.html
 - Live2D Cubism manual:
   https://docs.live2d.com/en/cubism-editor-manual/
+- Live2D Cubism, notes on PSD creation:
+  https://docs.live2d.com/en/cubism-editor-manual/precautions-for-psd-data/
 - Spine documentation:
-  https://esotericsoftware.com/spine-documentation
+  https://us.esotericsoftware.com/spine-runtimes
+- Spine runtimes guide:
+  https://us.esotericsoftware.com/spine-using-runtimes
 - Rive documentation:
-  https://rive.app/docs
+  https://rive.app/docs/editor/state-machine/state-machine
 - Unity Sprite Atlas manual:
-  https://docs.unity3d.com/Manual/sprite-atlas.html
+  https://docs.unity.cn/Manual/sprite-atlas.html
+- OpenAI image generation guide:
+  https://developers.openai.com/api/docs/guides/image-generation
 
 ## Version Log
 
+- 0.4.0, 2026-06-07: Tightened the Live2D source spec to PSD/RGB/8bit/sRGB,
+  clarified when Spine or Rive are actually the right premium path, and required
+  template/sample spritesheet packs to carry composition metadata from the
+  start.
 - 0.3.0, 2026-06-05: Added the v0.9.4 runtime patch notes, clarified that
   spritesheet shadow/crop fixes are runtime composition safeguards, and recorded
   the remaining need for action-specific rows or rigged layers.

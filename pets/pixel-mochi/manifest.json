@@ -36,6 +36,19 @@
     "rows": 9,
     "frameWidth": 192,
     "frameHeight": 208,
+    "composition": {
+      "baseline": "keyboard",
+      "bakedProps": [
+        "cat-facing-computer-keyboard",
+        "timer-note"
+      ],
+      "detachedEffects": false,
+      "runtimeOverlays": [
+        "timer-bubble",
+        "care-props",
+        "reaction-bubble"
+      ]
+    },
     "statesFile": "spritesheet/states.json",
     "states": {
       "idle": {

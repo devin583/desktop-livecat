@@ -1,10 +1,10 @@
 # Desktop LiveCat Interaction UX Knowledge
 
-Version: 0.3.1
-Updated: 2026-06-05
-Last reviewed: 2026-06-05
+Version: 0.4.0
+Updated: 2026-06-07
+Last reviewed: 2026-06-07
 Review cadence: every 5 hours through the pet knowledge automation
-Confidence: high for menu hierarchy, medium for final visual style until premium pet-specific poses exist
+Confidence: high for menu hierarchy and context-menu scope, medium for final visual style until premium pet-specific poses exist
 
 ## Sources Read
 
@@ -26,6 +26,8 @@ Confidence: high for menu hierarchy, medium for final visual style until premium
   - https://haveanaverageday.itch.io/idle-pomodoro-pet
   - https://www.kofeflow.com/
   - https://mydeskgator.com/
+  - https://paw-paw.pet/
+  - https://desktoppet.app/
 
 ## Stable Design Conclusions
 
@@ -39,6 +41,12 @@ Confidence: high for menu hierarchy, medium for final visual style until premium
    - Right-clicking the pet may expose high-frequency actions for the pet.
    - If a focus session is active, paused, in break, or complete, right-click may expose quick timer controls.
    - Full timer setup belongs in the focus panel, not in the pet care menu.
+   - Context menus are for commands, not arbitrary content. Microsoft explicitly
+     warns that arbitrary content should use a dialog or flyout instead; Apple
+     frames context menus as direct access to item-related actions.
+   - Default top-level density should stay low. A practical budget is 4-6
+     primary commands, with one optional timer section during active rhythm
+     states.
 
 3. A timer is integrated only when the pet visually owns it.
    - A detached timer card is a parallel app feature, not pet integration.
@@ -68,6 +76,15 @@ Confidence: high for menu hierarchy, medium for final visual style until premium
    - Use 180-280 ms for small UI reveals, 450-900 ms for pet reaction beats, and 1.8-5.5 s for state loops.
    - Use prop arcs and held end poses instead of fast flashes.
    - Avoid moving the whole pet + keyboard as a response to a local touch; local touch should move the pet layer, expression, prop, or overlay.
+
+8. Current market examples still converge on pet-owned state changes.
+   - Idle Pomodoro Pet uses right-click to launch focus, then expresses the
+     loop through the cat's behavior and care prompts, not through a detached
+     planning card.
+   - Deskgator advertises flow animations, break animations, and gentle nudges
+     as part of the companion itself.
+   - Paw-Paw and Desktop Pet continue the same pattern: animated companion
+     first, productivity support second.
 
 ## 0.9.1 Design Decision
 
@@ -114,8 +131,25 @@ underlying V2 sheets still lack dedicated action poses.
 Confidence: high. This was verified against a 560 x 620 viewport matching the
 Tauri desktop window.
 
+## 0.9.6 Interaction Decision
+
+- Keep right-click command-only. Do not place sliders, long text, confirmation
+  dialogs, or mini dashboards inside the menu.
+- Budget the default menu for care-first commands plus one compact timer group
+  when timer context exists.
+- Keep timer setup, records, and planning in the full focus panel.
+- When future features compete for the right-click surface, prefer demotion to
+  the panel over growing a cluttered menu.
+
+Confidence: high. This aligns with current Apple and Microsoft menu guidance and
+matches the interaction shape used by current desktop-pet and Pomodoro-pet
+products.
+
 ## Version Log
 
+- 0.4.0, 2026-06-07: Added the 0.9.6 interaction decision: command-only
+  context menus, a practical top-level menu budget, and confirmation that
+  current desktop-pet products still express focus through pet behavior.
 - 0.3.1, 2026-06-05: Added the v0.9.5 layout decision for full-panel behavior:
   no pet-layer translation, no duplicate overlays while the panel is open, and
   no tab-row tooltip clutter.

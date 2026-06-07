@@ -1,9 +1,9 @@
 # Desktop LiveCat Product Design Knowledge
 
-Version: 0.2.0
-Last reviewed: 2026-06-05
+Version: 0.3.0
+Last reviewed: 2026-06-07
 Review cadence: every 5 hours through the pet knowledge automation
-Confidence: high for interaction hierarchy and runtime integration, medium for final emotional tuning until more custom action assets exist
+Confidence: high for interaction hierarchy, context-menu scope, and runtime integration; medium for final emotional tuning until more custom action assets exist
 
 This document captures the product theory for Desktop LiveCat: how the pet should
 feel alive, how Pomodoro should become part of the pet, and how future iterations
@@ -111,6 +111,14 @@ Right click:
   actions, such as pause, resume, add five minutes, end focus, start break.
 - Settings should be reachable from the context menu but should not look like a
   primary pet action.
+- Right-click remains a command surface, not a micro-panel. Apple and Microsoft
+  both treat context menus as shortcuts to item-related actions, so sliders,
+  long descriptions, confirmations, or arbitrary status cards do not belong
+  there.
+- Keep the default top-level menu short: usually 4 to 6 primary commands plus
+  separators or one contextual timer section. If the user needs planning,
+  explanation, history, or dense configuration, push that into the focus panel
+  or settings.
 
 Focus panel:
 
@@ -142,6 +150,26 @@ Good integration makes the timer a pet-owned story.
 The number can appear above or near the head, but only when it is anchored to the
 pet and visually belongs to the current state. A detached corner timer is a tool
 feature, not pet integration.
+
+## 2026-06-07 Durable Market Read
+
+Current desktop-pet products still support the same product thesis instead of
+refuting it.
+
+- Deskgator positions itself as a desktop companion whose focused work changes
+  the pet's animation state, including a dedicated flow animation and break
+  animation after focused work.
+- Idle Pomodoro Pet makes the right-click menu a compact timer launcher, then
+  turns focus and break into character behavior: sleeping during focus,
+  wandering during breaks, and care/play/feed loops after the timer.
+- Desktop Pet app and similar current products keep advertising the same bundle:
+  cute animated companion, Pomodoro timer, reminders, and soft productivity
+  cues. The market is not rewarding "plain timer with mascot skin"; it keeps
+  rewarding a joined pet-plus-focus loop.
+
+This does not mean copying those products. It means the present market still
+supports the same structural bet: pet behavior is the product, timer controls
+are only one subsystem.
 
 ## v0.9.4 Runtime Decision
 
@@ -187,6 +215,9 @@ using generic row aliases plus CSS props.
 - Add anchor-based timer and prop placement so bubbles follow the pet instead of
   fixed coordinates.
 - Add a richer growth layer: energy, mood, XP, coins, streak, and home/furniture.
+- Decide whether the default menu should hard-cap its top-level actions in code
+  or rely on design review only. The current knowledge says it should stay
+  short; enforcement is still a product/tooling decision.
 
 ## Source Notes
 
@@ -207,9 +238,16 @@ using generic row aliases plus CSS props.
   https://mac-pet.com/pomodoro-mac/
 - Idle Pomodoro Pet example:
   https://haveanaverageday.itch.io/idle-pomodoro-pet
+- Deskgator product page:
+  https://mydeskgator.com/
+- Desktop Pet product page:
+  https://desktoppet.app/
 
 ## Version Log
 
+- 0.3.0, 2026-06-07: Added the context-menu scope rule from current Apple and
+  Microsoft guidance, recorded the short-menu budget, and added a durable market
+  read from current desktop-pet products reinforcing the pet-owned focus loop.
 - 0.2.0, 2026-06-05: Recorded the v0.9.4 runtime decision: tomato-owned focus,
   pet growth rewards, active action state, failure/wilt feedback, and the
   remaining requirement for true action-specific assets.
