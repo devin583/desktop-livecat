@@ -841,6 +841,31 @@ input {
   pointer-events: none;
 }
 
+.pet-touch-cue {
+  position: absolute;
+  left: 50%;
+  bottom: calc(294px * var(--pet-scale));
+  width: calc(26px * var(--pet-scale));
+  height: calc(24px * var(--pet-scale));
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(172, 95, 100, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 248, 237, 0.72);
+  color: #c8616b;
+  box-shadow: 0 calc(8px * var(--pet-scale)) calc(16px * var(--pet-scale)) rgba(91, 58, 66, 0.12);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: touch-cue-in 680ms cubic-bezier(0.18, 0.88, 0.22, 1) both;
+  z-index: 10;
+}
+
+.pet-touch-cue svg {
+  width: calc(13px * var(--pet-scale));
+  height: calc(13px * var(--pet-scale));
+  stroke-width: 2.4;
+}
+
 .pet-action-dock {
   position: absolute;
   left: 50%;
@@ -1613,6 +1638,22 @@ input {
   }
   to {
     transform: translateX(-100%);
+  }
+}
+
+@keyframes touch-cue-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.82);
+  }
+  36%,
+  82% {
+    opacity: 0.86;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0.72;
+    transform: translateX(-50%) translateY(-2px) scale(0.98);
   }
 }
 

@@ -205,8 +205,8 @@ using generic row aliases plus CSS props.
 
 ## Design Debt Backlog
 
-- Add per-action touch zones and make hover affordance visible without text-heavy
-  teaching.
+- Expand the first text-free petting cue into authored per-action touch zones
+  for head, body, paw, tail, and keyboard interactions.
 - Expand the first runtime action cooldown/animation lock into a fuller motion
   queue with authored anticipation, contact, hold, and settle phases.
 - Add `petting`, `feeding`, `playing`, and `completion-eat` states to premium

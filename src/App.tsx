@@ -1275,6 +1275,7 @@ function App() {
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
   const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
   const [controlPanelPlacement, setControlPanelPlacement] = useState<FloatingPanelPlacement | null>(null);
+  const [touchCueVisible, setTouchCueVisible] = useState(false);
   const [chatDraft, setChatDraft] = useState("");
   const [dragged, setDragged] = useState(false);
   const [installInput, setInstallInput] = useState("");
@@ -1283,6 +1284,7 @@ function App() {
   const pulsesRef = useRef<number[]>([]);
   const lookThrottleRef = useRef(0);
   const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
+  const touchCueVisibleRef = useRef(false);
   const dragCandidateRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const activeInteractionRef = useRef<ActiveInteraction | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
@@ -1698,6 +1700,12 @@ function App() {
     [],
   );
 
+  const setTouchCue = useCallback((visible: boolean) => {
+    if (touchCueVisibleRef.current === visible) return;
+    touchCueVisibleRef.current = visible;
+    setTouchCueVisible(visible);
+  }, []);
+
   const showPetBrainResponse = useCallback((response: PetBrainResponse) => {
     if (interactionTimeoutRef.current) {
       window.clearTimeout(interactionTimeoutRef.current);
@@ -1722,13 +1730,14 @@ function App() {
       until: now + response.bubbleDurationMs,
     };
     activeInteractionRef.current = nextInteraction;
+    setTouchCue(false);
     setActiveInteraction(nextInteraction);
     interactionTimeoutRef.current = window.setTimeout(() => {
       activeInteractionRef.current = null;
       setActiveInteraction(null);
       interactionTimeoutRef.current = null;
     }, response.bubbleDurationMs);
-  }, []);
+  }, [setTouchCue]);
 
   const triggerInteraction = useCallback(
     (
@@ -1801,6 +1810,7 @@ function App() {
         until: now + durationMs,
       };
       activeInteractionRef.current = nextInteraction;
+      setTouchCue(false);
       setActiveInteraction(nextInteraction);
       if (options.adjustCare !== false) {
         setState((current) => {
@@ -1867,7 +1877,7 @@ function App() {
         interactionTimeoutRef.current = null;
       }, durationMs);
     },
-    [selectedPet, setState, state.language],
+    [selectedPet, setState, setTouchCue, state.language],
   );
 
   const sendPetChat = useCallback(
@@ -2594,19 +2604,13 @@ function App() {
     };
   }, [checkForUpdates, refreshPets, selectNextPet]);
 
-  useEffect(
-    () => () => {
-      if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
-    },
-    [],
-  );
-
   const openPetContextMenu = (event: MouseEvent<HTMLElement>) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
     if (target.closest(nonPetPointerSelector) && !target.closest(".live2d-layer")) return;
     if (!target.closest(".live2d-layer")) return;
     event.preventDefault();
+    setTouchCue(false);
     const menuHeight = timerHasContext ? 580 : 490;
     const menu = floatingPanelPlacement(
       event.currentTarget.getBoundingClientRect(),
@@ -2621,7 +2625,10 @@ function App() {
 
   const updateLook = (event: PointerEvent<HTMLElement>) => {
     const target = event.target;
-    if (target instanceof Element && target.closest(nonPetPointerSelector)) return;
+    if (target instanceof Element && target.closest(nonPetPointerSelector)) {
+      setTouchCue(false);
+      return;
+    }
     const now = Date.now();
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
@@ -2629,6 +2636,7 @@ function App() {
     const boundedX = Math.max(-1, Math.min(1, x));
     const boundedY = Math.max(-1, Math.min(1, y));
     const pettingZone = boundedY > -0.35 && boundedY < 0.42 && Math.abs(boundedX) < 0.62;
+    setTouchCue(!state.lowPower && pettingZone && !dragged && !activeInteractionRef.current && !petMenu);
     const dragCandidate = dragCandidateRef.current;
     const pointerDistance = dragCandidate
       ? Math.hypot(event.clientX - dragCandidate.x, event.clientY - dragCandidate.y)
@@ -2650,6 +2658,7 @@ function App() {
         queuedInteractionRef.current = null;
       }
       activeInteractionRef.current = null;
+      setTouchCue(false);
       setActiveInteraction(null);
       setDragged(true);
     }
@@ -2674,6 +2683,7 @@ function App() {
         pettingRef.current.distance = 0;
         dragCandidateRef.current = null;
         setDragged(false);
+        setTouchCue(false);
         triggerInteraction("petting", "heart");
       }
     }
@@ -2685,6 +2695,7 @@ function App() {
       setPetMenu(null);
     }
     if (isPetSurfacePointer(event)) {
+      setTouchCue(false);
       dragCandidateRef.current = { at: Date.now(), x: event.clientX, y: event.clientY };
       event.currentTarget.setPointerCapture?.(event.pointerId);
     }
@@ -2762,7 +2773,7 @@ function App() {
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
-        }`}
+        } ${touchCueVisible ? "touch-cue-ready" : ""}`}
         aria-label={t.appStage}
         onContextMenu={openPetContextMenu}
         onPointerMove={updateLook}
@@ -2773,6 +2784,7 @@ function App() {
           dragCandidateRef.current = null;
           setDragged(false);
           setLook({ x: 0, y: 0 });
+          setTouchCue(false);
         }}
       >
         <div className="live2d-layer" data-tauri-drag-region>
@@ -2840,6 +2852,11 @@ function App() {
               </div>
             </div>
           )}
+          {touchCueVisible && !activeInteraction && !state.controlsOpen ? (
+            <div className="pet-touch-cue" aria-hidden="true">
+              <Heart size={13} />
+            </div>
+          ) : null}
           {activeInteraction?.prop ? (
             <div
               key={`prop-${activeInteraction.id}`}

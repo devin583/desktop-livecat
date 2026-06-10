@@ -4,6 +4,26 @@ This file tracks changes to the pet design and asset knowledge base. The
 recurring research automation should append here whenever it updates product or
 asset thinking.
 
+## 2026-06-10
+
+Version: 0.10.0
+Confidence: high that low-noise touch affordance improves interaction
+discoverability; medium that the current single head/body cue is enough before
+premium hit-area assets exist
+
+Changes:
+
+- Added a text-free pet touch cue that appears only when the pointer is inside
+  the current petting zone and no panel, menu, drag, or active reaction owns the
+  interaction.
+- Hid the cue as soon as a care reaction, Pet Brain reply, context menu, or drag
+  intent takes over, keeping it as an affordance rather than another persistent
+  decoration.
+- Removed a duplicate interaction-timeout cleanup effect so the new queue,
+  cooldown, and touch affordance logic share one cleanup path.
+- Kept this as a discoverability improvement, not a final hit-area system. The
+  next step is still authored head/body/paw/tail zones in premium assets.
+
 ## 2026-06-07
 
 Version: 0.9.0
