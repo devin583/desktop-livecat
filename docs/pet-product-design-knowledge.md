@@ -207,8 +207,8 @@ using generic row aliases plus CSS props.
 
 - Add per-action touch zones and make hover affordance visible without text-heavy
   teaching.
-- Add action cooldown and animation lock so actions do not interrupt themselves
-  too quickly.
+- Expand the first runtime action cooldown/animation lock into a fuller motion
+  queue with authored anticipation, contact, hold, and settle phases.
 - Add `petting`, `feeding`, `playing`, and `completion-eat` states to premium
   assets instead of reusing generic happy/focus loops.
 - Move settings access toward context menu plus subtle icon treatment.

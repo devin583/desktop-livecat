@@ -898,7 +898,21 @@ type ActiveInteraction = {
   prop: "fish" | "wand" | "brush" | "heart" | "bell" | "tomato" | "wiltedTomato" | null;
   reaction: string;
   durationMs: number;
+  startedAt: number;
   until: number;
+};
+
+type TriggerInteractionOptions = {
+  adjustCare?: boolean;
+  closeMenu?: boolean;
+  force?: boolean;
+  reaction?: string;
+};
+
+type QueuedInteraction = {
+  mood: InteractionMood;
+  options: TriggerInteractionOptions;
+  prop: ActiveInteraction["prop"];
 };
 
 type PetContextMenuState = {
@@ -927,6 +941,28 @@ const interactionDurationMs: Record<InteractionMood, number> = {
   praised: 4200,
   attention_call: 4300,
   failed: 5200,
+};
+
+const interactionMinimumHoldMs: Record<InteractionMood, number> = {
+  focus: 980,
+  petting: 860,
+  feeding: 1180,
+  playing: 1060,
+  cleaning: 980,
+  praised: 820,
+  attention_call: 780,
+  failed: 1280,
+};
+
+const interactionCooldownMs: Record<InteractionMood, number> = {
+  focus: 680,
+  petting: 760,
+  feeding: 980,
+  playing: 900,
+  cleaning: 820,
+  praised: 700,
+  attention_call: 680,
+  failed: 1100,
 };
 
 const interactionCareDelta: Record<
@@ -1248,7 +1284,11 @@ function App() {
   const lookThrottleRef = useRef(0);
   const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
   const dragCandidateRef = useRef<{ at: number; x: number; y: number } | null>(null);
+  const activeInteractionRef = useRef<ActiveInteraction | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
+  const queuedInteractionTimeoutRef = useRef<number | null>(null);
+  const queuedInteractionRef = useRef<QueuedInteraction | null>(null);
+  const interactionCooldownRef = useRef<Partial<Record<InteractionMood, number>>>({});
   const interactionIdRef = useRef(0);
   const t = copy[state.language];
 
@@ -1646,13 +1686,31 @@ function App() {
     );
   }, [state.language, state.pomodoro.completionReview, t.focusDoneTitle, t.untitledTask]);
 
+  useEffect(() => {
+    activeInteractionRef.current = activeInteraction;
+  }, [activeInteraction]);
+
+  useEffect(
+    () => () => {
+      if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
+      if (queuedInteractionTimeoutRef.current) window.clearTimeout(queuedInteractionTimeoutRef.current);
+    },
+    [],
+  );
+
   const showPetBrainResponse = useCallback((response: PetBrainResponse) => {
     if (interactionTimeoutRef.current) {
       window.clearTimeout(interactionTimeoutRef.current);
     }
+    if (queuedInteractionTimeoutRef.current) {
+      window.clearTimeout(queuedInteractionTimeoutRef.current);
+      queuedInteractionTimeoutRef.current = null;
+      queuedInteractionRef.current = null;
+    }
     const id = interactionIdRef.current + 1;
     interactionIdRef.current = id;
-    setActiveInteraction({
+    const now = Date.now();
+    const nextInteraction = {
       id,
       emotion: response.emotion,
       mood: response.motion,
@@ -1660,9 +1718,13 @@ function App() {
       prop: motionProp(response.motion),
       reaction: response.speech,
       durationMs: response.bubbleDurationMs,
-      until: Date.now() + response.bubbleDurationMs,
-    });
+      startedAt: now,
+      until: now + response.bubbleDurationMs,
+    };
+    activeInteractionRef.current = nextInteraction;
+    setActiveInteraction(nextInteraction);
     interactionTimeoutRef.current = window.setTimeout(() => {
+      activeInteractionRef.current = null;
       setActiveInteraction(null);
       interactionTimeoutRef.current = null;
     }, response.bubbleDurationMs);
@@ -1672,8 +1734,48 @@ function App() {
     (
       mood: InteractionMood,
       prop: ActiveInteraction["prop"],
-      options: { adjustCare?: boolean; closeMenu?: boolean; reaction?: string } = {},
+      options: TriggerInteractionOptions = {},
     ) => {
+      const now = Date.now();
+      const current = activeInteractionRef.current;
+      const cooldownUntil = interactionCooldownRef.current[mood] ?? 0;
+      if (!options.force && now < cooldownUntil) {
+        if (options.closeMenu !== false) setPetMenu(null);
+        return;
+      }
+      if (!options.force && current && current.until > now) {
+        const minHoldUntil = current.startedAt + interactionMinimumHoldMs[current.mood];
+        if (current.mood === mood && now < minHoldUntil) {
+          if (options.closeMenu !== false) setPetMenu(null);
+          return;
+        }
+        if (current.mood !== mood && now < minHoldUntil) {
+          if (queuedInteractionTimeoutRef.current) {
+            window.clearTimeout(queuedInteractionTimeoutRef.current);
+          }
+          queuedInteractionRef.current = {
+            mood,
+            prop,
+            options: {
+              ...options,
+              force: true,
+            },
+          };
+          queuedInteractionTimeoutRef.current = window.setTimeout(() => {
+            queuedInteractionTimeoutRef.current = null;
+            const queued = queuedInteractionRef.current;
+            queuedInteractionRef.current = null;
+            if (queued) triggerInteraction(queued.mood, queued.prop, queued.options);
+          }, Math.max(120, minHoldUntil - now));
+          if (options.closeMenu !== false) setPetMenu(null);
+          return;
+        }
+      }
+      if (queuedInteractionTimeoutRef.current) {
+        window.clearTimeout(queuedInteractionTimeoutRef.current);
+        queuedInteractionTimeoutRef.current = null;
+        queuedInteractionRef.current = null;
+      }
       if (interactionTimeoutRef.current) {
         window.clearTimeout(interactionTimeoutRef.current);
       }
@@ -1686,7 +1788,8 @@ function App() {
         pet: selectedPet,
       });
       const durationMs = options.reaction ? interactionDurationMs[mood] : brainResponse.bubbleDurationMs;
-      setActiveInteraction({
+      interactionCooldownRef.current[mood] = now + interactionCooldownMs[mood];
+      const nextInteraction = {
         id,
         emotion: brainResponse.emotion,
         mood,
@@ -1694,8 +1797,11 @@ function App() {
         prop,
         reaction: options.reaction ?? brainResponse.speech,
         durationMs,
-        until: Date.now() + durationMs,
-      });
+        startedAt: now,
+        until: now + durationMs,
+      };
+      activeInteractionRef.current = nextInteraction;
+      setActiveInteraction(nextInteraction);
       if (options.adjustCare !== false) {
         setState((current) => {
           const nextCare = applyCareDelta(current.petCare, interactionCareDelta[mood]);
@@ -1756,6 +1862,7 @@ function App() {
       }
       if (options.closeMenu !== false) setPetMenu(null);
       interactionTimeoutRef.current = window.setTimeout(() => {
+        activeInteractionRef.current = null;
         setActiveInteraction(null);
         interactionTimeoutRef.current = null;
       }, durationMs);
@@ -2537,6 +2644,12 @@ function App() {
         window.clearTimeout(interactionTimeoutRef.current);
         interactionTimeoutRef.current = null;
       }
+      if (queuedInteractionTimeoutRef.current) {
+        window.clearTimeout(queuedInteractionTimeoutRef.current);
+        queuedInteractionTimeoutRef.current = null;
+        queuedInteractionRef.current = null;
+      }
+      activeInteractionRef.current = null;
       setActiveInteraction(null);
       setDragged(true);
     }
@@ -2732,6 +2845,11 @@ function App() {
               key={`prop-${activeInteraction.id}`}
               className={`interaction-prop prop-${activeInteraction.prop} mood-prop-${activeInteraction.mood}`}
               aria-hidden="true"
+              style={
+                {
+                  "--interaction-duration": `${activeInteraction.durationMs}ms`,
+                } as CSSProperties
+              }
             >
               {activeInteraction.prop === "fish"
                 ? <Fish size={15} />
@@ -2752,6 +2870,11 @@ function App() {
               className={`pet-reaction-bubble reaction-${activeInteraction.mood}`}
               data-emotion={activeInteraction.emotion}
               data-motion={activeInteraction.motion}
+              style={
+                {
+                  "--interaction-duration": `${activeInteraction.durationMs}ms`,
+                } as CSSProperties
+              }
             >
               {activeInteraction.reaction}
             </div>

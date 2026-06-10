@@ -6,6 +6,29 @@ asset thinking.
 
 ## 2026-06-07
 
+Version: 0.9.0
+Confidence: high that action lock/cooldown is necessary for a smoother Codex-like
+pet rhythm; medium that this first runtime slice is sufficient without authored
+per-body-part animation assets
+
+Changes:
+
+- Added the first Motion Queue v2 runtime slice for care/chat reactions: active
+  interactions now have minimum readable hold windows, per-action cooldowns, and
+  a queued handoff path so repeated clicks do not restart the same motion and
+  different actions do not hard-cut each other immediately.
+- Made reaction bubbles and floating props inherit the Pet Brain interaction
+  duration instead of fading on a fixed short CSS timer. This keeps feeding,
+  playing, praise, focus, and failed-focus feedback visible for the full
+  reaction beat.
+- Cleared queued interactions when a drag intent takes over, preventing stale
+  care actions from firing after the user starts dragging the pet.
+- Kept this as a runtime pacing improvement only. It does not replace the
+  missing premium body assets for independent head, paw, ear, tail, mouth, and
+  keyboard motion.
+
+## 2026-06-07
+
 Version: 0.8.0
 Confidence: high that v0.9.9 is the correct Pet Brain foundation before adding
 any cloud or local model provider; high that explicit profile facts should be
