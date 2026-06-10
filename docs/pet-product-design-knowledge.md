@@ -59,7 +59,7 @@ The pet experience should be built from five layers.
 The pet should feel intentional, not human in a forced way.
 
 - Intent starts in the eyes. Gaze should lead or follow actions: look at food,
-  look toward the pointer, glance at the timer near completion.
+  look toward the pointer with easing, glance at the timer near completion.
 - Ears and tail are emotional amplifiers. They should move with different timing
   from the head so the pet does not feel like one rigid sticker.
 - The pet owns important objects. Tomato, timer chip, bell, toy, and food should

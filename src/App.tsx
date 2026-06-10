@@ -915,6 +915,11 @@ type QueuedInteraction = {
   prop: ActiveInteraction["prop"];
 };
 
+type LookPoint = {
+  x: number;
+  y: number;
+};
+
 type PetContextMenuState = {
   x: number;
   y: number;
@@ -1284,6 +1289,9 @@ function App() {
   const [cleanupStatus, setCleanupStatus] = useState("");
   const pulsesRef = useRef<number[]>([]);
   const lookThrottleRef = useRef(0);
+  const lookFrameRef = useRef<number | null>(null);
+  const lookTargetRef = useRef<LookPoint>({ x: 0, y: 0 });
+  const lookValueRef = useRef<LookPoint>({ x: 0, y: 0 });
   const pettingRef = useRef({ at: 0, x: 0, y: 0, distance: 0 });
   const touchCueVisibleRef = useRef(false);
   const dragCandidateRef = useRef<{ at: number; x: number; y: number } | null>(null);
@@ -1536,14 +1544,53 @@ function App() {
     return () => window.clearInterval(interval);
   }, [lastTypingPulse]);
 
+  const setLookTarget = useCallback(
+    (target: LookPoint) => {
+      const nextTarget = {
+        x: Math.max(-1, Math.min(1, target.x)),
+        y: Math.max(-1, Math.min(1, target.y)),
+      };
+      lookTargetRef.current = nextTarget;
+
+      if (state.lowPower || document.hidden) {
+        if (lookFrameRef.current) {
+          window.cancelAnimationFrame(lookFrameRef.current);
+          lookFrameRef.current = null;
+        }
+        lookValueRef.current = nextTarget;
+        setLook(nextTarget);
+        return;
+      }
+
+      if (lookFrameRef.current) return;
+
+      const step = () => {
+        const current = lookValueRef.current;
+        const targetNow = lookTargetRef.current;
+        const next = {
+          x: current.x + (targetNow.x - current.x) * 0.18,
+          y: current.y + (targetNow.y - current.y) * 0.18,
+        };
+        const settled = Math.abs(targetNow.x - next.x) < 0.012 && Math.abs(targetNow.y - next.y) < 0.012;
+        const value = settled ? targetNow : next;
+        lookValueRef.current = value;
+        setLook(value);
+        lookFrameRef.current = settled ? null : window.requestAnimationFrame(step);
+      };
+
+      lookFrameRef.current = window.requestAnimationFrame(step);
+    },
+    [state.lowPower],
+  );
+
   useEffect(() => {
     if (!lastMouseActivity) return undefined;
     const timeout = window.setTimeout(() => {
-      setLook({ x: 0, y: 0 });
+      setLookTarget({ x: 0, y: 0 });
       setLastMouseActivity(0);
     }, 1500);
     return () => window.clearTimeout(timeout);
-  }, [lastMouseActivity]);
+  }, [lastMouseActivity, setLookTarget]);
 
   useEffect(() => {
     if (!state.pomodoro.running) return;
@@ -1696,6 +1743,7 @@ function App() {
 
   useEffect(
     () => () => {
+      if (lookFrameRef.current) window.cancelAnimationFrame(lookFrameRef.current);
       if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
       if (queuedInteractionTimeoutRef.current) window.clearTimeout(queuedInteractionTimeoutRef.current);
       if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
@@ -2687,10 +2735,7 @@ function App() {
     if (now - lookThrottleRef.current >= throttleMs) {
       lookThrottleRef.current = now;
       setLastMouseActivity(now);
-      setLook({
-        x: boundedX,
-        y: boundedY,
-      });
+      setLookTarget({ x: boundedX, y: boundedY });
     }
 
     if (!state.lowPower && pettingZone) {
@@ -2807,7 +2852,7 @@ function App() {
         onPointerLeave={() => {
           dragCandidateRef.current = null;
           setDragged(false);
-          setLook({ x: 0, y: 0 });
+          setLookTarget({ x: 0, y: 0 });
           setTouchCue(false);
         }}
       >

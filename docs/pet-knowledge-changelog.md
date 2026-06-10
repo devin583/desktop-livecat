@@ -6,6 +6,25 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.12.0
+Confidence: high that gaze easing improves perceived smoothness without adding
+feature noise; medium that full intent still needs authored eye/head/timer
+glance poses in premium assets
+
+Changes:
+
+- Changed pointer gaze from direct `look` assignment to a target/current model
+  driven by `requestAnimationFrame`, so the head and eyes ease toward the
+  pointer instead of snapping.
+- Reused the same gaze target path for idle return and pointer leave, making the
+  pet settle back to neutral rather than instantly resetting to center.
+- Kept low-power and hidden-tab behavior immediate, avoiding unnecessary frame
+  work when the app is not actively interactive.
+- This is a runtime smoothness improvement only. It does not replace authored
+  gaze, eyelid, ear, or head-turn assets.
+
+## 2026-06-10
+
 Version: 0.11.0
 Confidence: high that drag release needs a quiet recovery cue for desktop-pet
 physicality; medium that the current floor-ring cue is enough before authored
