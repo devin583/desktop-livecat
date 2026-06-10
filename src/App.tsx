@@ -1385,6 +1385,11 @@ function App() {
     state.pomodoro.focusMode === "stopwatch"
       ? Math.min(1, state.pomodoro.remainingSeconds / plannedTimerSeconds)
       : Math.min(1, Math.max(0, 1 - state.pomodoro.remainingSeconds / plannedTimerSeconds));
+  const focusEnding =
+    state.pomodoro.running &&
+    state.pomodoro.focusMode === "pomo" &&
+    state.pomodoro.mode === "focus" &&
+    state.pomodoro.remainingSeconds <= 60;
   const timerBubbleTone = state.pomodoro.completionReview
     ? "complete"
     : state.pomodoro.running
@@ -1431,6 +1436,19 @@ function App() {
     (state.pomodoro.mode === "focus" ||
       Boolean(state.pomodoro.completionReview) ||
       activeInteraction?.prop === "wiltedTomato");
+  const shouldGlanceAtTimer =
+    timerHasContext && !state.controlsOpen && !dragged && !activeInteraction && !state.lowPower;
+  const timerGlanceX = timerBubbleTone === "complete" || focusEnding ? -0.2 : -0.14;
+  const timerGlanceY =
+    timerBubbleTone === "complete"
+      ? -0.68
+      : focusEnding
+        ? -0.62
+        : state.pomodoro.running
+          ? -0.52
+          : -0.38;
+  const idleLookX = shouldGlanceAtTimer ? timerGlanceX : 0;
+  const idleLookY = shouldGlanceAtTimer ? timerGlanceY : 0;
   const interactionActionClass = useCallback(
     (mood: InteractionMood) =>
       [
@@ -1597,11 +1615,16 @@ function App() {
   useEffect(() => {
     if (!lastMouseActivity) return undefined;
     const timeout = window.setTimeout(() => {
-      setLookTarget({ x: 0, y: 0 });
+      setLookTarget({ x: idleLookX, y: idleLookY });
       setLastMouseActivity(0);
     }, 1500);
     return () => window.clearTimeout(timeout);
-  }, [lastMouseActivity, setLookTarget]);
+  }, [idleLookX, idleLookY, lastMouseActivity, setLookTarget]);
+
+  useEffect(() => {
+    if (lastMouseActivity) return;
+    setLookTarget({ x: idleLookX, y: idleLookY });
+  }, [idleLookX, idleLookY, lastMouseActivity, setLookTarget]);
 
   useEffect(() => {
     if (!state.pomodoro.running) return;
@@ -2796,11 +2819,7 @@ function App() {
   const isTyping = Date.now() - lastTypingPulse < 1200;
   const activeTapSide = Date.now() - lastTypingPulse < 220 ? lastTapSide : null;
   const watchingMouse = !state.lowPower && Date.now() - lastMouseActivity < 1500;
-  const focusEnding =
-    state.pomodoro.running &&
-    state.pomodoro.focusMode === "pomo" &&
-    state.pomodoro.mode === "focus" &&
-    state.pomodoro.remainingSeconds <= 60;
+  const timerGlanceVisible = shouldGlanceAtTimer && !watchingMouse;
   const petMood: PetMood = dragged
     ? "dragged"
     : activeInteraction && activeInteraction.until > Date.now()
@@ -2852,7 +2871,9 @@ function App() {
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
-        } ${touchCueVisible ? "touch-cue-ready" : ""} ${settlePulse ? "settle-ready" : ""}`}
+        } ${touchCueVisible ? "touch-cue-ready" : ""} ${settlePulse ? "settle-ready" : ""} ${
+          timerGlanceVisible ? "timer-glance" : ""
+        }`}
         aria-label={t.appStage}
         onContextMenu={openPetContextMenu}
         onPointerMove={updateLook}
@@ -2862,7 +2883,8 @@ function App() {
         onPointerLeave={() => {
           dragCandidateRef.current = null;
           setDragged(false);
-          setLookTarget({ x: 0, y: 0 });
+          setLastMouseActivity(0);
+          setLookTarget({ x: idleLookX, y: idleLookY });
           setTouchCue(false);
         }}
       >
@@ -2989,7 +3011,11 @@ function App() {
             </div>
           ) : null}
           {timerHasContext ? (
-            <div className={`pet-timer-bubble timer-${timerBubbleTone}`}>
+            <div
+              className={`pet-timer-bubble timer-${timerBubbleTone} ${
+                timerGlanceVisible ? "timer-attended" : ""
+              }`}
+            >
               <div className="pet-timer-face">
                 <span>{secondsToClock(state.pomodoro.remainingSeconds)}</span>
               </div>

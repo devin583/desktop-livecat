@@ -6,6 +6,25 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.14.0
+Confidence: high that idle timer glance makes focus feel more pet-owned;
+medium that the current runtime-only gaze cue is enough for spritesheet pets
+without authored eye/head frames
+
+Changes:
+
+- Changed idle gaze recovery so the pet looks back toward the timer bubble when
+  a focus or break timer has context and the user is not moving the pointer.
+- Kept pointer gaze, drag, active reactions, low-power mode, and open controls
+  higher priority than timer glance, so the pet never fights direct user input.
+- Added a very subtle attended state to the timer face while the pet is idle and
+  looking at it. This keeps the integration visible for spritesheet pets whose
+  eyes cannot yet be independently animated.
+- This is a runtime attention cue only. Premium assets still need authored
+  glance poses for eyes, ears, head, and timer-owned props.
+
+## 2026-06-10
+
 Version: 0.13.0
 Confidence: high that queued action affordance improves interaction closure;
 medium that the current dot treatment is the final visual language before

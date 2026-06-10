@@ -60,6 +60,9 @@ The pet should feel intentional, not human in a forced way.
 
 - Intent starts in the eyes. Gaze should lead or follow actions: look at food,
   look toward the pointer with easing, glance at the timer near completion.
+- Timer glance is idle attention, not control capture. Pointer gaze, drag,
+  active reactions, open panels, and low-power mode must override it; the pet
+  should return to timer attention only after the user's direct input quiets.
 - Ears and tail are emotional amplifiers. They should move with different timing
   from the head so the pet does not feel like one rigid sticker.
 - The pet owns important objects. Tomato, timer chip, bell, toy, and food should
