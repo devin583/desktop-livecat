@@ -207,8 +207,9 @@ using generic row aliases plus CSS props.
 
 - Expand the first text-free petting cue into authored per-action touch zones
   for head, body, paw, tail, and keyboard interactions.
-- Expand the first runtime action cooldown/animation lock into a fuller motion
-  queue with authored anticipation, contact, hold, and settle phases.
+- Expand the first runtime action cooldown/animation lock and drag-release cue
+  into a fuller motion queue with authored anticipation, contact, hold, and
+  settle phases.
 - Add `petting`, `feeding`, `playing`, and `completion-eat` states to premium
   assets instead of reusing generic happy/focus loops.
 - Move settings access toward context menu plus subtle icon treatment.

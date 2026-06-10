@@ -1278,6 +1278,7 @@ function App() {
   const [touchCueVisible, setTouchCueVisible] = useState(false);
   const [chatDraft, setChatDraft] = useState("");
   const [dragged, setDragged] = useState(false);
+  const [settlePulse, setSettlePulse] = useState(0);
   const [installInput, setInstallInput] = useState("");
   const [installStatus, setInstallStatus] = useState("");
   const [cleanupStatus, setCleanupStatus] = useState("");
@@ -1289,6 +1290,7 @@ function App() {
   const activeInteractionRef = useRef<ActiveInteraction | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
   const queuedInteractionTimeoutRef = useRef<number | null>(null);
+  const settleTimeoutRef = useRef<number | null>(null);
   const queuedInteractionRef = useRef<QueuedInteraction | null>(null);
   const interactionCooldownRef = useRef<Partial<Record<InteractionMood, number>>>({});
   const interactionIdRef = useRef(0);
@@ -1696,6 +1698,7 @@ function App() {
     () => () => {
       if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
       if (queuedInteractionTimeoutRef.current) window.clearTimeout(queuedInteractionTimeoutRef.current);
+      if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
     },
     [],
   );
@@ -1705,6 +1708,24 @@ function App() {
     touchCueVisibleRef.current = visible;
     setTouchCueVisible(visible);
   }, []);
+
+  const clearSettleCue = useCallback(() => {
+    if (settleTimeoutRef.current) {
+      window.clearTimeout(settleTimeoutRef.current);
+      settleTimeoutRef.current = null;
+    }
+    setSettlePulse(0);
+  }, []);
+
+  const playSettleCue = useCallback(() => {
+    if (state.lowPower) return;
+    if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
+    setSettlePulse(Date.now());
+    settleTimeoutRef.current = window.setTimeout(() => {
+      settleTimeoutRef.current = null;
+      setSettlePulse(0);
+    }, 720);
+  }, [state.lowPower]);
 
   const showPetBrainResponse = useCallback((response: PetBrainResponse) => {
     if (interactionTimeoutRef.current) {
@@ -2696,6 +2717,7 @@ function App() {
     }
     if (isPetSurfacePointer(event)) {
       setTouchCue(false);
+      clearSettleCue();
       dragCandidateRef.current = { at: Date.now(), x: event.clientX, y: event.clientY };
       event.currentTarget.setPointerCapture?.(event.pointerId);
     }
@@ -2706,11 +2728,13 @@ function App() {
     const pointerDistance = candidate
       ? Math.hypot(event.clientX - candidate.x, event.clientY - candidate.y)
       : 0;
+    const hadDrag = dragged || Boolean(candidate && pointerDistance >= dragIntentDistancePx);
     dragCandidateRef.current = null;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
-    if (candidate && !dragged && pointerDistance < 14 && Date.now() - candidate.at < 520) {
+    if (candidate && !hadDrag && pointerDistance < 14 && Date.now() - candidate.at < 520) {
       triggerInteraction("petting", "heart", { closeMenu: false });
     }
+    if (hadDrag) playSettleCue();
     setDragged(false);
   };
 
@@ -2773,7 +2797,7 @@ function App() {
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
-        } ${touchCueVisible ? "touch-cue-ready" : ""}`}
+        } ${touchCueVisible ? "touch-cue-ready" : ""} ${settlePulse ? "settle-ready" : ""}`}
         aria-label={t.appStage}
         onContextMenu={openPetContextMenu}
         onPointerMove={updateLook}
@@ -2852,6 +2876,9 @@ function App() {
               </div>
             </div>
           )}
+          {settlePulse && !state.controlsOpen ? (
+            <div key={`settle-${settlePulse}`} className="pet-settle-cue" aria-hidden="true" />
+          ) : null}
           {touchCueVisible && !activeInteraction && !state.controlsOpen ? (
             <div className="pet-touch-cue" aria-hidden="true">
               <Heart size={13} />

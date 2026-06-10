@@ -6,6 +6,24 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.11.0
+Confidence: high that drag release needs a quiet recovery cue for desktop-pet
+physicality; medium that the current floor-ring cue is enough before authored
+drag/recover body frames exist
+
+Changes:
+
+- Added a low-noise drag-release settle cue: after a real drag, the pet now gets
+  a short floor-ring recovery beat instead of snapping silently back to idle.
+- Kept the settle cue separate from care reactions and speech bubbles, so
+  dragging does not create chatty or decorative noise.
+- Avoided whole-cat or keyboard squash for spritesheet pets; the cue sits under
+  the pet as an environmental recovery signal until premium drag/recover assets
+  can move body parts independently.
+- Skipped the cue in low-power mode and cleared it when a new drag starts.
+
+## 2026-06-10
+
 Version: 0.10.0
 Confidence: high that low-noise touch affordance improves interaction
 discoverability; medium that the current single head/body cue is enough before
