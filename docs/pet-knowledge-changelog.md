@@ -6,6 +6,28 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.13.0
+Confidence: high that queued action affordance improves interaction closure;
+medium that the current dot treatment is the final visual language before
+authored body-part action assets exist
+
+Changes:
+
+- Added a visible pending state for queued care actions. When the user taps a
+  different action before the current reaction has held long enough, the next
+  action now marks its button with a small breathing dot and soft border instead
+  of feeling ignored.
+- Shared the pending/active state across the compact pet dock, the right-click
+  care menu, and the full interaction panel so all command surfaces tell the
+  same interaction story.
+- Cleared pending state through the same queue cancellation path used by drag,
+  Pet Brain replies, and direct action execution, avoiding stale UI when an
+  interaction is interrupted.
+- Kept the affordance text-free and low-noise. This is a runtime closure cue,
+  not a substitute for authored transition poses.
+
+## 2026-06-10
+
 Version: 0.12.0
 Confidence: high that gaze easing improves perceived smoothness without adding
 feature noise; medium that full intent still needs authored eye/head/timer

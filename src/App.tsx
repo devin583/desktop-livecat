@@ -1278,6 +1278,7 @@ function App() {
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [lastMouseActivity, setLastMouseActivity] = useState(0);
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
+  const [queuedInteractionMood, setQueuedInteractionMood] = useState<InteractionMood | null>(null);
   const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
   const [controlPanelPlacement, setControlPanelPlacement] = useState<FloatingPanelPlacement | null>(null);
   const [touchCueVisible, setTouchCueVisible] = useState(false);
@@ -1430,6 +1431,16 @@ function App() {
     (state.pomodoro.mode === "focus" ||
       Boolean(state.pomodoro.completionReview) ||
       activeInteraction?.prop === "wiltedTomato");
+  const interactionActionClass = useCallback(
+    (mood: InteractionMood) =>
+      [
+        activeInteraction?.mood === mood ? "active" : "",
+        queuedInteractionMood === mood ? "pending" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    [activeInteraction?.mood, queuedInteractionMood],
+  );
 
   const registerPulse = useCallback((source = "browser-focus-fallback") => {
     const now = Date.now();
@@ -1775,15 +1786,20 @@ function App() {
     }, 720);
   }, [state.lowPower]);
 
+  const clearQueuedInteraction = useCallback(() => {
+    if (queuedInteractionTimeoutRef.current) {
+      window.clearTimeout(queuedInteractionTimeoutRef.current);
+      queuedInteractionTimeoutRef.current = null;
+    }
+    queuedInteractionRef.current = null;
+    setQueuedInteractionMood(null);
+  }, []);
+
   const showPetBrainResponse = useCallback((response: PetBrainResponse) => {
     if (interactionTimeoutRef.current) {
       window.clearTimeout(interactionTimeoutRef.current);
     }
-    if (queuedInteractionTimeoutRef.current) {
-      window.clearTimeout(queuedInteractionTimeoutRef.current);
-      queuedInteractionTimeoutRef.current = null;
-      queuedInteractionRef.current = null;
-    }
+    clearQueuedInteraction();
     const id = interactionIdRef.current + 1;
     interactionIdRef.current = id;
     const now = Date.now();
@@ -1806,7 +1822,7 @@ function App() {
       setActiveInteraction(null);
       interactionTimeoutRef.current = null;
     }, response.bubbleDurationMs);
-  }, [setTouchCue]);
+  }, [clearQueuedInteraction, setTouchCue]);
 
   const triggerInteraction = useCallback(
     (
@@ -1839,21 +1855,19 @@ function App() {
               force: true,
             },
           };
+          setQueuedInteractionMood(mood);
           queuedInteractionTimeoutRef.current = window.setTimeout(() => {
             queuedInteractionTimeoutRef.current = null;
             const queued = queuedInteractionRef.current;
             queuedInteractionRef.current = null;
+            setQueuedInteractionMood(null);
             if (queued) triggerInteraction(queued.mood, queued.prop, queued.options);
           }, Math.max(120, minHoldUntil - now));
           if (options.closeMenu !== false) setPetMenu(null);
           return;
         }
       }
-      if (queuedInteractionTimeoutRef.current) {
-        window.clearTimeout(queuedInteractionTimeoutRef.current);
-        queuedInteractionTimeoutRef.current = null;
-        queuedInteractionRef.current = null;
-      }
+      clearQueuedInteraction();
       if (interactionTimeoutRef.current) {
         window.clearTimeout(interactionTimeoutRef.current);
       }
@@ -1946,7 +1960,7 @@ function App() {
         interactionTimeoutRef.current = null;
       }, durationMs);
     },
-    [selectedPet, setState, setTouchCue, state.language],
+    [clearQueuedInteraction, selectedPet, setState, setTouchCue, state.language],
   );
 
   const sendPetChat = useCallback(
@@ -2721,11 +2735,7 @@ function App() {
         window.clearTimeout(interactionTimeoutRef.current);
         interactionTimeoutRef.current = null;
       }
-      if (queuedInteractionTimeoutRef.current) {
-        window.clearTimeout(queuedInteractionTimeoutRef.current);
-        queuedInteractionTimeoutRef.current = null;
-        queuedInteractionRef.current = null;
-      }
+      clearQueuedInteraction();
       activeInteractionRef.current = null;
       setTouchCue(false);
       setActiveInteraction(null);
@@ -3003,7 +3013,7 @@ function App() {
         >
           <button
             type="button"
-            className={activeInteraction?.mood === "petting" ? "active" : ""}
+            className={interactionActionClass("petting")}
             aria-label={t.interactPet}
             title={t.interactPet}
             onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
@@ -3012,7 +3022,7 @@ function App() {
           </button>
           <button
             type="button"
-            className={activeInteraction?.mood === "feeding" ? "active" : ""}
+            className={interactionActionClass("feeding")}
             aria-label={t.interactFeed}
             title={t.interactFeed}
             onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
@@ -3021,7 +3031,7 @@ function App() {
           </button>
           <button
             type="button"
-            className={activeInteraction?.mood === "playing" ? "active" : ""}
+            className={interactionActionClass("playing")}
             aria-label={t.interactPlay}
             title={t.interactPlay}
             onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
@@ -3085,7 +3095,7 @@ function App() {
               <div className="context-action-grid">
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "petting" ? "active" : ""}
+                  className={interactionActionClass("petting")}
                   onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
                 >
                   <HandHeart size={15} />
@@ -3093,7 +3103,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "feeding" ? "active" : ""}
+                  className={interactionActionClass("feeding")}
                   onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
                 >
                   <Fish size={15} />
@@ -3101,7 +3111,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "playing" ? "active" : ""}
+                  className={interactionActionClass("playing")}
                   onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
                 >
                   <Joystick size={15} />
@@ -3109,7 +3119,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "cleaning" ? "active" : ""}
+                  className={interactionActionClass("cleaning")}
                   onClick={() => triggerInteraction("cleaning", "brush", { closeMenu: false })}
                 >
                   <BrushCleaning size={15} />
@@ -3117,7 +3127,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "praised" ? "active" : ""}
+                  className={interactionActionClass("praised")}
                   onClick={() => triggerInteraction("praised", "heart", { closeMenu: false })}
                 >
                   <Heart size={15} />
@@ -3125,7 +3135,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "attention_call" ? "active" : ""}
+                  className={interactionActionClass("attention_call")}
                   onClick={() => triggerInteraction("attention_call", "bell", { closeMenu: false })}
                 >
                   <BellRing size={15} />
@@ -3572,7 +3582,7 @@ function App() {
               <div className="interaction-grid">
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "petting" ? "active" : ""}
+                  className={interactionActionClass("petting")}
                   title={t.interactPet}
                   onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
                 >
@@ -3581,7 +3591,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "feeding" ? "active" : ""}
+                  className={interactionActionClass("feeding")}
                   title={t.interactFeed}
                   onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
                 >
@@ -3590,7 +3600,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "playing" ? "active" : ""}
+                  className={interactionActionClass("playing")}
                   title={t.interactPlay}
                   onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
                 >
@@ -3599,7 +3609,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "cleaning" ? "active" : ""}
+                  className={interactionActionClass("cleaning")}
                   title={t.interactClean}
                   onClick={() => triggerInteraction("cleaning", "brush", { closeMenu: false })}
                 >
@@ -3608,7 +3618,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "praised" ? "active" : ""}
+                  className={interactionActionClass("praised")}
                   title={t.interactPraise}
                   onClick={() => triggerInteraction("praised", "heart", { closeMenu: false })}
                 >
@@ -3617,7 +3627,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className={activeInteraction?.mood === "attention_call" ? "active" : ""}
+                  className={interactionActionClass("attention_call")}
                   title={t.interactCall}
                   onClick={() => triggerInteraction("attention_call", "bell", { closeMenu: false })}
                 >

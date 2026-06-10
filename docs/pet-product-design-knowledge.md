@@ -95,6 +95,17 @@ Recommended easing:
 Do not use instant one-frame swaps for emotional actions. Do not let every
 animated layer start and stop at the same time.
 
+## Action Queue Feedback
+
+Direct care actions should be sequenced, not stacked. If the user triggers a
+second care action before the first has held for a readable beat, the next
+action should show a small pending affordance instead of restarting, ignoring,
+or visually piling up reactions.
+
+Pending affordances should be command-local, text-free, and short-lived: a small
+dot, ring, or button state is enough. The pet body should stay focused on the
+current performed action until the queued action takes over.
+
 ## Interaction Hierarchy
 
 Left click and hover:

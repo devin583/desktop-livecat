@@ -914,6 +914,7 @@ input {
 
 .pet-action-dock button,
 .pet-context-menu button {
+  position: relative;
   min-width: 0;
   border: 1px solid rgba(57, 78, 83, 0.14);
   border-radius: 8px;
@@ -933,11 +934,36 @@ input {
 .pet-action-dock button:hover,
 .pet-action-dock button:focus-visible,
 .pet-action-dock button.active,
+.pet-action-dock button.pending,
 .pet-context-menu button:hover,
 .pet-context-menu button:focus-visible,
-.pet-context-menu button.active {
+.pet-context-menu button.active,
+.pet-context-menu button.pending {
   background: #dff2ec;
   border-color: rgba(48, 127, 119, 0.28);
+}
+
+.pet-action-dock button.pending,
+.pet-context-menu button.pending,
+.interaction-grid button.pending {
+  box-shadow:
+    0 8px 18px rgba(39, 32, 36, 0.12),
+    0 0 0 2px rgba(74, 165, 155, 0.12);
+}
+
+.pet-action-dock button.pending::after,
+.pet-context-menu button.pending::after,
+.interaction-grid button.pending::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #4aa59b;
+  box-shadow: 0 0 0 0 rgba(74, 165, 155, 0.26);
+  animation: queued-action-dot 900ms cubic-bezier(0.22, 0.72, 0.22, 1) infinite;
 }
 
 .pet-context-menu {
@@ -1693,9 +1719,34 @@ input {
 }
 
 .interaction-grid button {
+  position: relative;
   height: 48px;
   grid-auto-flow: row;
   gap: 4px;
+}
+
+.interaction-grid button.active,
+.interaction-grid button.pending {
+  background: #dff2ec;
+  border-color: rgba(48, 127, 119, 0.28);
+}
+
+@keyframes queued-action-dot {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.82);
+    box-shadow: 0 0 0 0 rgba(74, 165, 155, 0.28);
+  }
+  70% {
+    opacity: 0.62;
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(74, 165, 155, 0);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(0.82);
+    box-shadow: 0 0 0 0 rgba(74, 165, 155, 0);
+  }
 }
 
 .install-row {
