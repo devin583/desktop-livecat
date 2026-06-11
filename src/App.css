@@ -919,7 +919,9 @@ input {
 }
 
 .controls-open .pet-action-dock,
-.controls-open .pet-stage:hover .pet-action-dock {
+.controls-open .pet-stage:hover .pet-action-dock,
+.context-open .pet-action-dock,
+.context-open.pet-stage:hover .pet-action-dock {
   opacity: 0;
   pointer-events: none;
   transform: translateX(calc(138px * var(--pet-scale))) translateY(6px);
@@ -2634,7 +2636,10 @@ input {
 
 .controls-open .pet-timer-bubble,
 .controls-open .focus-tomato,
-.controls-open .focus-reward-cue {
+.controls-open .focus-reward-cue,
+.context-open .pet-timer-bubble,
+.context-open .focus-tomato,
+.context-open .focus-reward-cue {
   display: none;
   opacity: 0;
   pointer-events: none;

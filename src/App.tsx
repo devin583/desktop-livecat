@@ -3231,7 +3231,9 @@ function App() {
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
-        } ${touchCueVisible ? "touch-cue-ready" : ""} ${settlePulse ? "settle-ready" : ""} ${
+        } ${petMenu ? "context-open" : ""} ${
+          touchCueVisible ? "touch-cue-ready" : ""
+        } ${settlePulse ? "settle-ready" : ""} ${
           timerGlanceVisible ? "timer-glance" : ""
         }`}
         aria-label={t.appStage}
