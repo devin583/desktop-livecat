@@ -95,6 +95,7 @@ import type {
   PetMemoryState,
   PetMood,
   PetInteractionZoneName,
+  PetInteractionZoneSpec,
   PetInteractionZones,
   PetPack,
   PomodoroMode,
@@ -1192,8 +1193,7 @@ function interactionZoneName(motion: PetBrainMotionCue): PetInteractionZoneName 
   return "head";
 }
 
-function interactionZone(motion: PetBrainMotionCue, pet: PetPack) {
-  const name = interactionZoneName(motion);
+function interactionZoneByName(name: PetInteractionZoneName, pet: PetPack): PetInteractionZoneSpec {
   return (
     pet.interaction_zones?.[name] ??
     defaultInteractionZones[name] ??
@@ -1201,18 +1201,55 @@ function interactionZone(motion: PetBrainMotionCue, pet: PetPack) {
   );
 }
 
+function interactionZone(motion: PetBrainMotionCue, pet: PetPack) {
+  return interactionZoneByName(interactionZoneName(motion), pet);
+}
+
 function interactionLookTarget(motion: PetBrainMotionCue, pet: PetPack): LookPoint {
   return interactionZone(motion, pet).look ?? defaultInteractionZones.head?.look ?? { x: 0, y: 0 };
 }
 
-function interactionOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
-  const overlay = interactionZone(motion, pet).overlay;
+function interactionZoneOverlayStyle(
+  name: PetInteractionZoneName,
+  pet: PetPack,
+  adjustment: { offsetX?: number; bottom?: number } = {},
+): CSSProperties | undefined {
+  const overlay = interactionZoneByName(name, pet).overlay;
   if (!overlay) return undefined;
-  const offsetSign = overlay.offsetX < 0 ? "-" : "+";
+  const offsetX = overlay.offsetX + (adjustment.offsetX ?? 0);
+  const bottom = overlay.bottom + (adjustment.bottom ?? 0);
+  const offsetSign = offsetX < 0 ? "-" : "+";
   return {
-    left: `calc(50% ${offsetSign} ${Math.abs(overlay.offsetX)}px * var(--pet-scale))`,
-    bottom: `calc(${overlay.bottom}px * var(--pet-scale))`,
+    left: `calc(50% ${offsetSign} ${Math.abs(offsetX)}px * var(--pet-scale))`,
+    bottom: `calc(${bottom}px * var(--pet-scale))`,
   };
+}
+
+function interactionOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
+  return interactionZoneOverlayStyle(interactionZoneName(motion), pet);
+}
+
+function interactionPropOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
+  const zoneName = interactionZoneName(motion);
+  const adjustmentByZone: Partial<
+    Record<PetInteractionZoneName, { offsetX?: number; bottom?: number }>
+  > = {
+    head: { offsetX: -46, bottom: -16 },
+    mouth: { offsetX: -30, bottom: -26 },
+    pawRight: { offsetX: 38, bottom: 48 },
+    bodyCenter: motion === "failed" ? { offsetX: -52, bottom: -16 } : { offsetX: -60, bottom: 8 },
+    earRight: { offsetX: 50, bottom: -14 },
+    timerProp: { offsetX: 4, bottom: 8 },
+  };
+  return interactionZoneOverlayStyle(zoneName, pet, adjustmentByZone[zoneName]);
+}
+
+function focusTomatoOverlayStyle(pet: PetPack): CSSProperties | undefined {
+  return interactionZoneOverlayStyle("timerProp", pet);
+}
+
+function focusRewardOverlayStyle(pet: PetPack): CSSProperties | undefined {
+  return interactionZoneOverlayStyle("timerProp", pet, { offsetX: -2, bottom: 60 });
 }
 
 function memoryDay(at: string) {
@@ -3127,6 +3164,7 @@ function App() {
               style={
                 {
                   "--interaction-duration": `${activeInteraction.durationMs}ms`,
+                  ...interactionPropOverlayStyle(activeInteraction.motion, selectedPet),
                 } as CSSProperties
               }
             >
@@ -3163,13 +3201,19 @@ function App() {
               className={`focus-tomato tomato-${tomatoStage}`}
               aria-label={tomatoLabel}
               title={tomatoLabel}
+              style={focusTomatoOverlayStyle(selectedPet)}
             >
               <span />
               <i />
             </div>
           ) : null}
           {completionRewardCue && !state.controlsOpen ? (
-            <div key={`reward-${completionRewardCue.id}`} className="focus-reward-cue" aria-hidden="true">
+            <div
+              key={`reward-${completionRewardCue.id}`}
+              className="focus-reward-cue"
+              style={focusRewardOverlayStyle(selectedPet)}
+              aria-hidden="true"
+            >
               <BadgeCheck size={13} />
               <span>{completionRewardCue.label}</span>
             </div>
