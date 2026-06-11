@@ -3437,6 +3437,19 @@ function App() {
               aria-hidden="true"
             />
           ) : null}
+          {activeInteraction && !state.controlsOpen && interactionContactMoods.has(activeInteraction.mood) ? (
+            <div
+              key={`hold-${activeInteraction.id}`}
+              className={`interaction-hold-cue contact-${activeInteraction.mood}`}
+              style={
+                {
+                  "--interaction-duration": `${activeInteraction.durationMs}ms`,
+                  ...interactionOverlayStyle(activeInteraction.motion, selectedPet),
+                } as CSSProperties
+              }
+              aria-hidden="true"
+            />
+          ) : null}
           {careRewardCue && !state.controlsOpen ? (
             <div
               key={`care-reward-${careRewardCue.id}`}

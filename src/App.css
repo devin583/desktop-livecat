@@ -718,7 +718,8 @@ input {
   animation-duration: 9s;
 }
 
-.low-power .interaction-contact-cue {
+.low-power .interaction-contact-cue,
+.low-power .interaction-hold-cue {
   display: none;
 }
 
@@ -2209,6 +2210,50 @@ input {
   z-index: 7;
 }
 
+.interaction-hold-cue {
+  --contact-color: rgba(198, 97, 107, 0.56);
+  position: absolute;
+  left: 50%;
+  bottom: calc(264px * var(--pet-scale));
+  width: calc(38px * var(--pet-scale));
+  height: calc(22px * var(--pet-scale));
+  border-radius: 999px;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.88);
+  transform-origin: center;
+  animation: interaction-hold-presence var(--interaction-duration, 4200ms) cubic-bezier(0.2, 0.84, 0.22, 1) both;
+  z-index: 6;
+}
+
+.interaction-hold-cue::before,
+.interaction-hold-cue::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.interaction-hold-cue::before {
+  inset: 0;
+  border: 1px solid var(--contact-color);
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at center, var(--contact-color) 0 16%, rgba(255, 255, 255, 0) 68%);
+  box-shadow: 0 0 calc(12px * var(--pet-scale)) rgba(255, 255, 255, 0.22);
+  opacity: 0.38;
+  animation: interaction-hold-breathe 1680ms cubic-bezier(0.2, 0.84, 0.22, 1) infinite;
+}
+
+.interaction-hold-cue::after {
+  left: 50%;
+  top: 50%;
+  width: calc(4px * var(--pet-scale));
+  height: calc(4px * var(--pet-scale));
+  border-radius: 999px;
+  background: var(--contact-color);
+  box-shadow: 0 0 calc(8px * var(--pet-scale)) var(--contact-color);
+  animation: interaction-hold-dot var(--interaction-duration, 4200ms) linear both;
+}
+
 .repeat-contact-cue {
   animation-duration: 640ms;
   filter: saturate(0.82);
@@ -2709,6 +2754,54 @@ input {
   100% {
     opacity: 0;
     transform: translateX(-50%) scale(1.42);
+  }
+}
+
+@keyframes interaction-hold-presence {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.78);
+  }
+  10% {
+    opacity: 0.54;
+    transform: translateX(-50%) scale(0.96);
+  }
+  72% {
+    opacity: 0.44;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+@keyframes interaction-hold-breathe {
+  0%,
+  100% {
+    opacity: 0.26;
+    transform: scale(0.96);
+  }
+  48% {
+    opacity: 0.46;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes interaction-hold-dot {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-38deg) translateX(calc(17px * var(--pet-scale))) scale(0.72);
+  }
+  12% {
+    opacity: 0.66;
+  }
+  76% {
+    opacity: 0.58;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(238deg) translateX(calc(17px * var(--pet-scale))) scale(0.58);
   }
 }
 
