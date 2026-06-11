@@ -233,6 +233,10 @@ const copy = {
     focusStartPet: "准备专注",
     focusPausedPet: "等你回来",
     focusRunningPet: "陪你专注",
+    focusReviewRestPet: "收好奖励",
+    focusReviewContinuePet: "再陪五分钟",
+    focusReviewAdjustPet: "补上奖励",
+    focusReviewSkipBreakPet: "马上继续",
     focusReward: "专注奖励",
     focusTomatoComplete: "番茄成熟",
     focusTomatoGrowing: "番茄成长中",
@@ -369,6 +373,10 @@ const copy = {
     focusStartPet: "Ready",
     focusPausedPet: "Waiting",
     focusRunningPet: "Focusing",
+    focusReviewRestPet: "Reward tucked",
+    focusReviewContinuePet: "Five more",
+    focusReviewAdjustPet: "Reward updated",
+    focusReviewSkipBreakPet: "Back to focus",
     focusReward: "Focus reward",
     focusTomatoComplete: "Tomato ripe",
     focusTomatoGrowing: "Tomato growing",
@@ -961,6 +969,8 @@ type TriggerInteractionOptions = {
   force?: boolean;
   reaction?: string;
 };
+
+type ReviewAction = "dismiss" | "continue5" | "adjust5" | "skipBreak";
 
 type QueuedInteraction = {
   mood: InteractionMood;
@@ -2529,7 +2539,46 @@ function App() {
     }));
   };
 
-  const reviewAction = (action: "dismiss" | "continue5" | "adjust5" | "skipBreak") => {
+  const reviewAction = (action: ReviewAction) => {
+    if (!state.pomodoro.completionReview) return;
+
+    const feedbackByAction: Record<
+      ReviewAction,
+      {
+        mood: InteractionMood;
+        prop: ActiveInteraction["prop"];
+        reaction: string;
+      }
+    > = {
+      dismiss: {
+        mood: "praised",
+        prop: "heart",
+        reaction: t.focusReviewRestPet,
+      },
+      continue5: {
+        mood: "focus",
+        prop: "tomato",
+        reaction: t.focusReviewContinuePet,
+      },
+      adjust5: {
+        mood: "praised",
+        prop: "heart",
+        reaction: t.focusReviewAdjustPet,
+      },
+      skipBreak: {
+        mood: "attention_call",
+        prop: "bell",
+        reaction: t.focusReviewSkipBreakPet,
+      },
+    };
+    const feedback = feedbackByAction[action];
+    triggerInteraction(feedback.mood, feedback.prop, {
+      adjustCare: false,
+      closeMenu: false,
+      force: true,
+      reaction: feedback.reaction,
+    });
+
     setState((current) => {
       const review = current.pomodoro.completionReview;
       if (!review) return current;
