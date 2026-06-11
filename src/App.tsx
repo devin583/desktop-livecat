@@ -3337,6 +3337,13 @@ function App() {
               aria-hidden="true"
             />
           ) : null}
+          {queuedInteractionMood && !state.controlsOpen && !repeatInteractionPulse ? (
+            <div
+              className={`interaction-contact-cue queued-contact-cue contact-${queuedInteractionMood}`}
+              style={interactionOverlayStyle(queuedInteractionMood, selectedPet)}
+              aria-hidden="true"
+            />
+          ) : null}
           {careRewardCue && !state.controlsOpen ? (
             <div
               key={`care-reward-${careRewardCue.id}`}
