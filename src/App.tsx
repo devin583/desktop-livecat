@@ -1151,6 +1151,55 @@ function focusRewardLabel(seconds: number, language: AppLanguage) {
   return `+${reward.experience} ${xp} · +${reward.coins} ${coins}`;
 }
 
+type CareRewardMetric = "bond" | "cleanliness" | "energy" | "fullness" | "happiness";
+
+function isCareRewardMetric(metric: string): metric is CareRewardMetric {
+  return (
+    metric === "bond" ||
+    metric === "cleanliness" ||
+    metric === "energy" ||
+    metric === "fullness" ||
+    metric === "happiness"
+  );
+}
+
+function careRewardLabel(mood: InteractionMood, language: AppLanguage) {
+  const delta = interactionCareDelta[mood];
+  const preferredMetric: Partial<Record<InteractionMood, CareRewardMetric>> = {
+    attention_call: "energy",
+    cleaning: "cleanliness",
+    feeding: "fullness",
+    petting: "happiness",
+    playing: "happiness",
+    praised: "bond",
+  };
+  const fallbackMetric = Object.entries(delta).find(
+    ([key, value]) => isCareRewardMetric(key) && Number(value) > 0,
+  )?.[0];
+  const metric =
+    preferredMetric[mood] ??
+    (fallbackMetric && isCareRewardMetric(fallbackMetric) ? fallbackMetric : undefined);
+  const value = metric ? Number(delta[metric] ?? 0) : 0;
+  if (!metric || !isCareRewardMetric(metric) || value <= 0) return null;
+  const labels =
+    language === "zh-CN"
+      ? {
+          bond: "亲密",
+          cleanliness: "清洁",
+          energy: "精力",
+          fullness: "饱腹",
+          happiness: "开心",
+        }
+      : {
+          bond: "bond",
+          cleanliness: "clean",
+          energy: "energy",
+          fullness: "full",
+          happiness: "happy",
+        };
+  return `+${value} ${labels[metric]}`;
+}
+
 function levelProgressPercent(care: PetCareState) {
   return Math.min(100, Math.round((care.experience / levelRequirement(care.level)) * 100));
 }
@@ -1262,6 +1311,10 @@ function focusTomatoOverlayStyle(pet: PetPack): CSSProperties | undefined {
 
 function focusRewardOverlayStyle(pet: PetPack): CSSProperties | undefined {
   return interactionZoneOverlayStyle("timerProp", pet, { offsetX: -2, bottom: 60 });
+}
+
+function careRewardOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
+  return interactionZoneOverlayStyle(interactionZoneName(motion), pet, { bottom: 42 });
 }
 
 function memoryDay(at: string) {
@@ -1452,6 +1505,11 @@ function App() {
   const [controlPanelPlacement, setControlPanelPlacement] = useState<FloatingPanelPlacement | null>(null);
   const [touchCueVisible, setTouchCueVisible] = useState(false);
   const [completionRewardCue, setCompletionRewardCue] = useState<{ id: string; label: string } | null>(null);
+  const [careRewardCue, setCareRewardCue] = useState<{
+    id: number;
+    label: string;
+    motion: PetBrainMotionCue;
+  } | null>(null);
   const [chatDraft, setChatDraft] = useState("");
   const [dragged, setDragged] = useState(false);
   const [settlePulse, setSettlePulse] = useState(0);
@@ -1470,6 +1528,7 @@ function App() {
   const interactionTimeoutRef = useRef<number | null>(null);
   const queuedInteractionTimeoutRef = useRef<number | null>(null);
   const completionRewardTimeoutRef = useRef<number | null>(null);
+  const careRewardTimeoutRef = useRef<number | null>(null);
   const completionReactionRef = useRef<string | null>(null);
   const settleTimeoutRef = useRef<number | null>(null);
   const queuedInteractionRef = useRef<QueuedInteraction | null>(null);
@@ -1953,6 +2012,7 @@ function App() {
       if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
       if (queuedInteractionTimeoutRef.current) window.clearTimeout(queuedInteractionTimeoutRef.current);
       if (completionRewardTimeoutRef.current) window.clearTimeout(completionRewardTimeoutRef.current);
+      if (careRewardTimeoutRef.current) window.clearTimeout(careRewardTimeoutRef.current);
       if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
     },
     [],
@@ -2096,6 +2156,17 @@ function App() {
       setTouchCue(false);
       setLookTarget(interactionLookTarget(brainResponse.motion, selectedPet));
       setActiveInteraction(nextInteraction);
+      if (options.adjustCare !== false && !state.lowPower && !state.controlsOpen) {
+        const rewardLabel = careRewardLabel(mood, state.language);
+        if (rewardLabel) {
+          if (careRewardTimeoutRef.current) window.clearTimeout(careRewardTimeoutRef.current);
+          setCareRewardCue({ id, label: rewardLabel, motion: brainResponse.motion });
+          careRewardTimeoutRef.current = window.setTimeout(() => {
+            careRewardTimeoutRef.current = null;
+            setCareRewardCue(null);
+          }, 2100);
+        }
+      }
       if (options.adjustCare !== false) {
         setState((current) => {
           const nextCare = applyCareDelta(current.petCare, interactionCareDelta[mood]);
@@ -2164,7 +2235,18 @@ function App() {
         }
       }, durationMs);
     },
-    [clearQueuedInteraction, idleLookX, idleLookY, selectedPet, setLookTarget, setState, setTouchCue, state.language],
+    [
+      clearQueuedInteraction,
+      idleLookX,
+      idleLookY,
+      selectedPet,
+      setLookTarget,
+      setState,
+      setTouchCue,
+      state.controlsOpen,
+      state.language,
+      state.lowPower,
+    ],
   );
 
   const sendPetChat = useCallback(
@@ -3216,6 +3298,16 @@ function App() {
               style={interactionOverlayStyle(activeInteraction.motion, selectedPet)}
               aria-hidden="true"
             />
+          ) : null}
+          {careRewardCue && !state.controlsOpen ? (
+            <div
+              key={`care-reward-${careRewardCue.id}`}
+              className="care-reward-cue"
+              style={careRewardOverlayStyle(careRewardCue.motion, selectedPet)}
+              aria-hidden="true"
+            >
+              {careRewardCue.label}
+            </div>
           ) : null}
           {activeInteraction?.prop ? (
             <div
