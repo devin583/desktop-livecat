@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -989,6 +990,8 @@ type PetContextMenuState = {
   y: number;
   maxHeight: number;
   transformOrigin: string;
+  anchorX: number;
+  anchorY: number;
 };
 
 type FloatingPanelPlacement = {
@@ -996,6 +999,8 @@ type FloatingPanelPlacement = {
   y: number;
   maxHeight: number;
   transformOrigin: string;
+  anchorX: number;
+  anchorY: number;
 };
 
 const stagePanelMargin = 10;
@@ -1440,6 +1445,37 @@ function mergeMemoryFacts(existing: PetMemoryFact[], incoming: PetMemoryFact[]) 
   return trimPetMemoryFacts(Array.from(keyed.values()));
 }
 
+function floatingPanelPlacementFromLocal(
+  stageWidth: number,
+  stageHeight: number,
+  localX: number,
+  localY: number,
+  width: number,
+  estimatedHeight: number,
+): FloatingPanelPlacement {
+  const availableWidth = Math.max(0, stageWidth - stagePanelMargin * 2);
+  const panelWidth = Math.min(width, availableWidth);
+  const availableHeight = Math.max(240, stageHeight - stagePanelMargin * 2);
+  const panelHeight = Math.min(estimatedHeight, availableHeight);
+  const opensLeft = localX + panelWidth + stagePanelMargin > stageWidth;
+  const opensUp = localY + panelHeight + stagePanelMargin > stageHeight;
+  const rawX = opensLeft ? localX - panelWidth : localX;
+  const rawY = opensUp ? localY - panelHeight : localY;
+  const maxX = Math.max(stagePanelMargin, stageWidth - panelWidth - stagePanelMargin);
+  const maxY = Math.max(stagePanelMargin, stageHeight - panelHeight - stagePanelMargin);
+  const x = Math.min(Math.max(stagePanelMargin, rawX), maxX);
+  const y = Math.min(Math.max(stagePanelMargin, rawY), maxY);
+
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    maxHeight: Math.round(panelHeight),
+    transformOrigin: `${opensLeft ? "right" : "left"} ${opensUp ? "bottom" : "top"}`,
+    anchorX: localX,
+    anchorY: localY,
+  };
+}
+
 function floatingPanelPlacement(
   stageRect: DOMRect,
   clientX: number,
@@ -1447,27 +1483,23 @@ function floatingPanelPlacement(
   width: number,
   estimatedHeight: number,
 ): FloatingPanelPlacement {
-  const availableWidth = Math.max(0, stageRect.width - stagePanelMargin * 2);
-  const panelWidth = Math.min(width, availableWidth);
-  const availableHeight = Math.max(240, stageRect.height - stagePanelMargin * 2);
-  const panelHeight = Math.min(estimatedHeight, availableHeight);
-  const localX = clientX - stageRect.left;
-  const localY = clientY - stageRect.top;
-  const opensLeft = localX + panelWidth + stagePanelMargin > stageRect.width;
-  const opensUp = localY + panelHeight + stagePanelMargin > stageRect.height;
-  const rawX = opensLeft ? localX - panelWidth : localX;
-  const rawY = opensUp ? localY - panelHeight : localY;
-  const maxX = Math.max(stagePanelMargin, stageRect.width - panelWidth - stagePanelMargin);
-  const maxY = Math.max(stagePanelMargin, stageRect.height - panelHeight - stagePanelMargin);
-  const x = Math.min(Math.max(stagePanelMargin, rawX), maxX);
-  const y = Math.min(Math.max(stagePanelMargin, rawY), maxY);
+  return floatingPanelPlacementFromLocal(
+    stageRect.width,
+    stageRect.height,
+    clientX - stageRect.left,
+    clientY - stageRect.top,
+    width,
+    estimatedHeight,
+  );
+}
 
-  return {
-    x,
-    y,
-    maxHeight: panelHeight,
-    transformOrigin: `${opensLeft ? "right" : "left"} ${opensUp ? "bottom" : "top"}`,
-  };
+function floatingPlacementChanged(current: FloatingPanelPlacement, next: FloatingPanelPlacement) {
+  return (
+    current.x !== next.x ||
+    current.y !== next.y ||
+    current.maxHeight !== next.maxHeight ||
+    current.transformOrigin !== next.transformOrigin
+  );
 }
 
 function stageElementFromEvent(event: MouseEvent<HTMLElement>) {
@@ -1537,6 +1569,9 @@ function App() {
   const careRewardTimeoutRef = useRef<number | null>(null);
   const completionReactionRef = useRef<string | null>(null);
   const settleTimeoutRef = useRef<number | null>(null);
+  const stageRef = useRef<HTMLElement | null>(null);
+  const petMenuRef = useRef<HTMLDivElement | null>(null);
+  const controlPanelRef = useRef<HTMLElement | null>(null);
   const queuedInteractionRef = useRef<QueuedInteraction | null>(null);
   const interactionCooldownRef = useRef<Partial<Record<InteractionMood, number>>>({});
   const interactionIdRef = useRef(0);
@@ -1686,6 +1721,59 @@ function App() {
           : -0.38;
   const idleLookX = shouldGlanceAtTimer ? timerGlanceX : 0;
   const idleLookY = shouldGlanceAtTimer ? timerGlanceY : 0;
+
+  useLayoutEffect(() => {
+    if (!petMenu || !stageRef.current || !petMenuRef.current) return;
+    const stageRect = stageRef.current.getBoundingClientRect();
+    const menuRect = petMenuRef.current.getBoundingClientRect();
+    const nextPlacement = floatingPanelPlacementFromLocal(
+      stageRect.width,
+      stageRect.height,
+      petMenu.anchorX,
+      petMenu.anchorY,
+      menuRect.width,
+      menuRect.height,
+    );
+
+    setPetMenu((current) => {
+      if (!current || current.anchorX !== petMenu.anchorX || current.anchorY !== petMenu.anchorY) {
+        return current;
+      }
+      return floatingPlacementChanged(current, nextPlacement)
+        ? { ...current, ...nextPlacement }
+        : current;
+    });
+  }, [petMenu, timerHasContext]);
+
+  useLayoutEffect(() => {
+    if (!state.controlsOpen || !controlPanelPlacement || !stageRef.current || !controlPanelRef.current) {
+      return;
+    }
+    const stageRect = stageRef.current.getBoundingClientRect();
+    const panelRect = controlPanelRef.current.getBoundingClientRect();
+    const nextPlacement = floatingPanelPlacementFromLocal(
+      stageRect.width,
+      stageRect.height,
+      controlPanelPlacement.anchorX,
+      controlPanelPlacement.anchorY,
+      panelRect.width,
+      panelRect.height,
+    );
+
+    setControlPanelPlacement((current) => {
+      if (
+        !current ||
+        current.anchorX !== controlPanelPlacement.anchorX ||
+        current.anchorY !== controlPanelPlacement.anchorY
+      ) {
+        return current;
+      }
+      return floatingPlacementChanged(current, nextPlacement)
+        ? { ...current, ...nextPlacement }
+        : current;
+    });
+  }, [controlPanelPlacement, state.controlPanelTab, state.controlsOpen, state.language]);
+
   const interactionActionClass = useCallback(
     (mood: InteractionMood) =>
       [
@@ -3086,6 +3174,8 @@ function App() {
       y: menu.y,
       maxHeight: menu.maxHeight,
       transformOrigin: menu.transformOrigin,
+      anchorX: menu.anchorX,
+      anchorY: menu.anchorY,
     });
   };
 
@@ -3227,6 +3317,7 @@ function App() {
       }
     >
       <section
+        ref={stageRef}
         className={`pet-stage mood-${petMood} renderer-${showSpritesheet ? "spritesheet" : live2dProbe.renderer} ${
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
@@ -3503,6 +3594,7 @@ function App() {
 
         {petMenu ? (
           <div
+            ref={petMenuRef}
             className="pet-context-menu"
             style={
               {
@@ -3706,6 +3798,7 @@ function App() {
         </button>
 
         <aside
+          ref={controlPanelRef}
           className={`control-strip ${state.controlsOpen ? "open" : ""}`}
           style={
             controlPanelPlacement
