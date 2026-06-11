@@ -9,6 +9,7 @@ const errors = [];
 const warnings = [];
 
 const renderModes = new Set(["live2d", "spritesheet", "hybrid"]);
+const interactionZoneNames = new Set(["head", "mouth", "pawLeft", "pawRight", "bodyCenter", "earRight", "timerProp"]);
 const animationStates = new Set([
   "idle",
   "typing",
@@ -113,6 +114,7 @@ function validatePack(packDir, folderName) {
 
   validatePersona(folderName, manifest.persona);
   validateQuality(folderName, manifest.quality);
+  validateInteractionZones(folderName, manifest.interactionZones);
   validateArtistWorkflow(packDir, folderName, manifest.artistWorkflow, sourceLayerMapPath, renderMode);
 }
 
@@ -308,6 +310,62 @@ function validateSpritesheetState(folderName, spritesheet, stateName, stateSpec,
 
   if (stateSpec.fallback !== undefined && !animationStates.has(stateSpec.fallback)) {
     fail(`${folderName}: ${label}.fallback is not a supported animation state.`);
+  }
+}
+
+function validateInteractionZones(folderName, zones) {
+  if (zones === undefined) return;
+  if (!zones || typeof zones !== "object" || Array.isArray(zones)) {
+    fail(`${folderName}: manifest.interactionZones must be an object when present.`);
+    return;
+  }
+
+  for (const [name, zone] of Object.entries(zones)) {
+    if (!interactionZoneNames.has(name)) {
+      fail(`${folderName}: manifest.interactionZones.${name} is not a supported zone.`);
+      continue;
+    }
+    if (!zone || typeof zone !== "object" || Array.isArray(zone)) {
+      fail(`${folderName}: manifest.interactionZones.${name} must be an object.`);
+      continue;
+    }
+    validatePoint(folderName, zone.look, `interactionZones.${name}.look`, -1, 1);
+    validateOverlay(folderName, zone.overlay, `interactionZones.${name}.overlay`);
+  }
+}
+
+function validatePoint(folderName, point, label, min, max, fields = {}) {
+  if (point === undefined) return;
+  if (!point || typeof point !== "object" || Array.isArray(point)) {
+    fail(`${folderName}: manifest.${label} must be an object when present.`);
+    return;
+  }
+  const xField = fields.xField ?? "x";
+  const yField = fields.yField ?? "y";
+  for (const field of [xField, yField]) {
+    if (typeof point[field] !== "number" || !Number.isFinite(point[field])) {
+      fail(`${folderName}: manifest.${label}.${field} must be a finite number.`);
+    } else if (point[field] < min || point[field] > max) {
+      fail(`${folderName}: manifest.${label}.${field} must be between ${min} and ${max}.`);
+    }
+  }
+}
+
+function validateOverlay(folderName, overlay, label) {
+  if (overlay === undefined) return;
+  if (!overlay || typeof overlay !== "object" || Array.isArray(overlay)) {
+    fail(`${folderName}: manifest.${label} must be an object when present.`);
+    return;
+  }
+  if (typeof overlay.offsetX !== "number" || !Number.isFinite(overlay.offsetX)) {
+    fail(`${folderName}: manifest.${label}.offsetX must be a finite number.`);
+  } else if (overlay.offsetX < -240 || overlay.offsetX > 240) {
+    fail(`${folderName}: manifest.${label}.offsetX must be between -240 and 240.`);
+  }
+  if (typeof overlay.bottom !== "number" || !Number.isFinite(overlay.bottom)) {
+    fail(`${folderName}: manifest.${label}.bottom must be a finite number.`);
+  } else if (overlay.bottom < 0 || overlay.bottom > 420) {
+    fail(`${folderName}: manifest.${label}.bottom must be between 0 and 420.`);
   }
 }
 

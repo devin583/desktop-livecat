@@ -30,6 +30,7 @@ struct PetPack {
     has_parameter_spec: bool,
     has_source_assets: bool,
     has_spritesheet: bool,
+    interaction_zones: Option<Value>,
     live2d_model: Option<String>,
     persona: Option<Value>,
     preview: Option<String>,
@@ -446,6 +447,7 @@ fn read_pet_pack(path: &Path) -> Option<PetPack> {
         has_spritesheet: spritesheet_image
             .as_ref()
             .is_some_and(|file| path.join(file).is_file()),
+        interaction_zones: manifest.get("interactionZones").cloned(),
         live2d_model,
         persona: manifest.get("persona").cloned(),
         preview: manifest_string(&manifest, "preview"),

@@ -48,6 +48,32 @@
     },
     "statesFile": "spritesheet/states.json"
   },
+  "interactionZones": {
+    "head": {
+      "look": { "x": -0.2, "y": -0.55 },
+      "overlay": { "offsetX": -46, "bottom": 284 }
+    },
+    "mouth": {
+      "look": { "x": -0.32, "y": -0.18 },
+      "overlay": { "offsetX": -42, "bottom": 212 }
+    },
+    "pawRight": {
+      "look": { "x": 0.42, "y": -0.1 },
+      "overlay": { "offsetX": 54, "bottom": 190 }
+    },
+    "bodyCenter": {
+      "look": { "x": -0.28, "y": -0.32 },
+      "overlay": { "offsetX": -52, "bottom": 242 }
+    },
+    "earRight": {
+      "look": { "x": 0.32, "y": -0.66 },
+      "overlay": { "offsetX": 38, "bottom": 300 }
+    },
+    "timerProp": {
+      "look": { "x": 0.44, "y": -0.52 },
+      "overlay": { "offsetX": 78, "bottom": 246 }
+    }
+  },
   "privacy": {
     "keyboardSync": "rhythm-only",
     "storesKeyValues": false

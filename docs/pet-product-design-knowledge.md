@@ -76,6 +76,9 @@ The pet should feel intentional, not human in a forced way.
 - If the pet is still a flattened spritesheet that includes props such as a
   keyboard, prefer gaze direction and contact cues over whole-sprite transforms.
   Moving the entire bitmap makes the pet feel like a sticker layer, not a body.
+- Runtime guesses should graduate into manifest-owned anchors. Once a pack has a
+  stable composition, put head, mouth, paw, body, ear, and timer positions in
+  `interactionZones` so the body contract travels with the asset pack.
 - Small imperfection makes life. Add anticipation, follow-through, settle,
   asymmetric blink timing, and occasional idle variation.
 - Do not over-interrupt. Desktop pets become annoying when they demand attention

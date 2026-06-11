@@ -6,6 +6,27 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.17.0
+Confidence: high that manifest-owned interaction zones are the right bridge from
+runtime guesses to premium body assets; medium that the current V2 coordinates
+need visual retuning after dedicated QA screenshots
+
+Changes:
+
+- Added optional `manifest.interactionZones` support for pet packs. Zones can now
+  define gaze targets and overlay anchors for `head`, `mouth`, `pawRight`,
+  `bodyCenter`, `earRight`, and `timerProp`.
+- Updated runtime gaze and contact cues to prefer the selected pet's manifest
+  zones, falling back to the existing default keyboard-cat coordinates for older
+  packs.
+- Added first-pass interaction zones to the orange and gray V2 keyboard cats so
+  their feeding, petting, playing, cleaning, praise, attention, and timer cues
+  are no longer purely magic pixels in React/CSS.
+- Added optional validator coverage for malformed `interactionZones` without
+  making the field mandatory for older packs.
+
+## 2026-06-10
+
 Version: 0.16.0
 Confidence: high that action-directed gaze improves intentionality without
 moving the whole spritesheet; medium that the exact target coordinates should

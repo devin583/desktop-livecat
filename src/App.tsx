@@ -94,6 +94,8 @@ import type {
   PetMemoryProfile,
   PetMemoryState,
   PetMood,
+  PetInteractionZoneName,
+  PetInteractionZones,
   PetPack,
   PomodoroMode,
   RuntimeInfo,
@@ -774,6 +776,7 @@ async function loadBrowserPreviewPetPack(petId: string): Promise<PetPack | null>
       has_parameter_spec: false,
       has_source_assets: Boolean(workflow?.primarySource),
       has_spritesheet: Boolean(spritesheet?.image),
+      interaction_zones: interactionZonesValue(manifest.interactionZones),
       live2d_model: null,
       persona: personaValue(manifest.persona),
       preview: stringValue(manifest.preview),
@@ -836,6 +839,55 @@ function stringArrayValue(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
     : [];
+}
+
+const interactionZoneNames: PetInteractionZoneName[] = [
+  "head",
+  "mouth",
+  "pawLeft",
+  "pawRight",
+  "bodyCenter",
+  "earRight",
+  "timerProp",
+];
+
+function finiteNumberValue(value: unknown) {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function interactionZonesValue(value: unknown): PetInteractionZones | null {
+  const zones = objectValue(value);
+  if (!zones) return null;
+
+  const parsed: PetInteractionZones = {};
+  for (const name of interactionZoneNames) {
+    const zone = objectValue(zones[name]);
+    if (!zone) continue;
+    const look = objectValue(zone.look);
+    const overlay = objectValue(zone.overlay);
+    const lookX = finiteNumberValue(look?.x);
+    const lookY = finiteNumberValue(look?.y);
+    const offsetX = finiteNumberValue(overlay?.offsetX);
+    const bottom = finiteNumberValue(overlay?.bottom);
+    const parsedZone = {
+      ...(lookX !== null && lookY !== null
+        ? { look: { x: clampNumber(lookX, -1, 1), y: clampNumber(lookY, -1, 1) } }
+        : {}),
+      ...(offsetX !== null && bottom !== null
+        ? { overlay: { offsetX: clampNumber(offsetX, -220, 220), bottom: clampNumber(bottom, 0, 420) } }
+        : {}),
+    };
+    if (Object.keys(parsedZone).length) {
+      parsed[name] = parsedZone;
+    }
+  }
+
+  return Object.keys(parsed).length ? parsed : null;
 }
 
 function personaValue(value: unknown): PetPack["persona"] {
@@ -1104,15 +1156,63 @@ function motionProp(motion: PetBrainMotionCue): ActiveInteraction["prop"] {
   return "heart";
 }
 
-function interactionLookTarget(motion: PetBrainMotionCue): LookPoint {
-  if (motion === "feeding") return { x: -0.32, y: -0.18 };
-  if (motion === "playing") return { x: 0.42, y: -0.1 };
-  if (motion === "cleaning") return { x: -0.28, y: -0.32 };
-  if (motion === "attention_call") return { x: 0.32, y: -0.66 };
-  if (motion === "focus") return { x: 0.44, y: -0.52 };
-  if (motion === "failed") return { x: -0.34, y: -0.26 };
-  if (motion === "praised") return { x: 0.04, y: -0.58 };
-  return { x: -0.2, y: -0.55 };
+const defaultInteractionZones: PetInteractionZones = {
+  head: {
+    look: { x: -0.2, y: -0.55 },
+    overlay: { offsetX: -46, bottom: 284 },
+  },
+  mouth: {
+    look: { x: -0.32, y: -0.18 },
+    overlay: { offsetX: -42, bottom: 212 },
+  },
+  pawRight: {
+    look: { x: 0.42, y: -0.1 },
+    overlay: { offsetX: 54, bottom: 190 },
+  },
+  bodyCenter: {
+    look: { x: -0.28, y: -0.32 },
+    overlay: { offsetX: -52, bottom: 242 },
+  },
+  earRight: {
+    look: { x: 0.32, y: -0.66 },
+    overlay: { offsetX: 38, bottom: 300 },
+  },
+  timerProp: {
+    look: { x: 0.44, y: -0.52 },
+    overlay: { offsetX: 78, bottom: 246 },
+  },
+};
+
+function interactionZoneName(motion: PetBrainMotionCue): PetInteractionZoneName {
+  if (motion === "feeding") return "mouth";
+  if (motion === "playing") return "pawRight";
+  if (motion === "cleaning" || motion === "failed") return "bodyCenter";
+  if (motion === "attention_call") return "earRight";
+  if (motion === "focus") return "timerProp";
+  return "head";
+}
+
+function interactionZone(motion: PetBrainMotionCue, pet: PetPack) {
+  const name = interactionZoneName(motion);
+  return (
+    pet.interaction_zones?.[name] ??
+    defaultInteractionZones[name] ??
+    defaultInteractionZones.head ?? { look: { x: 0, y: 0 } }
+  );
+}
+
+function interactionLookTarget(motion: PetBrainMotionCue, pet: PetPack): LookPoint {
+  return interactionZone(motion, pet).look ?? defaultInteractionZones.head?.look ?? { x: 0, y: 0 };
+}
+
+function interactionOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
+  const overlay = interactionZone(motion, pet).overlay;
+  if (!overlay) return undefined;
+  const offsetSign = overlay.offsetX < 0 ? "-" : "+";
+  return {
+    left: `calc(50% ${offsetSign} ${Math.abs(overlay.offsetX)}px * var(--pet-scale))`,
+    bottom: `calc(${overlay.bottom}px * var(--pet-scale))`,
+  };
 }
 
 function memoryDay(at: string) {
@@ -1859,7 +1959,7 @@ function App() {
     };
     activeInteractionRef.current = nextInteraction;
     setTouchCue(false);
-    setLookTarget(interactionLookTarget(response.motion));
+    setLookTarget(interactionLookTarget(response.motion, selectedPet));
     setActiveInteraction(nextInteraction);
     interactionTimeoutRef.current = window.setTimeout(() => {
       activeInteractionRef.current = null;
@@ -1869,7 +1969,7 @@ function App() {
         setLookTarget({ x: idleLookX, y: idleLookY });
       }
     }, response.bubbleDurationMs);
-  }, [clearQueuedInteraction, idleLookX, idleLookY, setLookTarget, setTouchCue]);
+  }, [clearQueuedInteraction, idleLookX, idleLookY, selectedPet, setLookTarget, setTouchCue]);
 
   const triggerInteraction = useCallback(
     (
@@ -1941,7 +2041,7 @@ function App() {
       };
       activeInteractionRef.current = nextInteraction;
       setTouchCue(false);
-      setLookTarget(interactionLookTarget(brainResponse.motion));
+      setLookTarget(interactionLookTarget(brainResponse.motion, selectedPet));
       setActiveInteraction(nextInteraction);
       if (options.adjustCare !== false) {
         setState((current) => {
@@ -2993,6 +3093,7 @@ function App() {
             <div
               key={`contact-${activeInteraction.id}`}
               className={`interaction-contact-cue contact-${activeInteraction.mood}`}
+              style={interactionOverlayStyle(activeInteraction.motion, selectedPet)}
               aria-hidden="true"
             />
           ) : null}

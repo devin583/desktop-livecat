@@ -31,6 +31,7 @@ export const fallbackPet: PetPack = {
   has_parameter_spec: true,
   has_source_assets: true,
   has_spritesheet: false,
+  interaction_zones: null,
   live2d_model: "model/livecat.model3.json",
   persona: null,
   preview: "preview/livecat.svg",

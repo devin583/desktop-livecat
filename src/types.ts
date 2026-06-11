@@ -53,6 +53,28 @@ export type PetSpritesheetSpec = {
   statesFile?: string;
 };
 
+export type PetInteractionZoneName =
+  | "head"
+  | "mouth"
+  | "pawLeft"
+  | "pawRight"
+  | "bodyCenter"
+  | "earRight"
+  | "timerProp";
+
+export type PetInteractionZoneSpec = {
+  look?: {
+    x: number;
+    y: number;
+  };
+  overlay?: {
+    offsetX: number;
+    bottom: number;
+  };
+};
+
+export type PetInteractionZones = Partial<Record<PetInteractionZoneName, PetInteractionZoneSpec>>;
+
 export type PetPersonaSpec = {
   name: string;
   species: string;
@@ -85,6 +107,7 @@ export type PetPack = {
   has_parameter_spec: boolean;
   has_source_assets: boolean;
   has_spritesheet: boolean;
+  interaction_zones: PetInteractionZones | null;
   live2d_model: string | null;
   persona: PetPersonaSpec | null;
   preview: string | null;

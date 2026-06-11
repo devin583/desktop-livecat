@@ -51,6 +51,11 @@ Optional fields:
 
 - `preview`: preview image path.
 - `tags`: searchable labels.
+- `interactionZones`: optional body anchors for runtime gaze and overlays.
+  Supported keys are `head`, `mouth`, `pawLeft`, `pawRight`, `bodyCenter`,
+  `earRight`, and `timerProp`. Each zone may define `look: { x, y }` in
+  normalized gaze space and `overlay: { offsetX, bottom }` in stage pixels at
+  `scale=1`.
 - `persona.name`: display identity used by custom-pet creation.
 - `persona.species`: species or object type.
 - `persona.style`: art direction notes.
