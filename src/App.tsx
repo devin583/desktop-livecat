@@ -1104,6 +1104,17 @@ function motionProp(motion: PetBrainMotionCue): ActiveInteraction["prop"] {
   return "heart";
 }
 
+function interactionLookTarget(motion: PetBrainMotionCue): LookPoint {
+  if (motion === "feeding") return { x: -0.32, y: -0.18 };
+  if (motion === "playing") return { x: 0.42, y: -0.1 };
+  if (motion === "cleaning") return { x: -0.28, y: -0.32 };
+  if (motion === "attention_call") return { x: 0.32, y: -0.66 };
+  if (motion === "focus") return { x: 0.44, y: -0.52 };
+  if (motion === "failed") return { x: -0.34, y: -0.26 };
+  if (motion === "praised") return { x: 0.04, y: -0.58 };
+  return { x: -0.2, y: -0.55 };
+}
+
 function memoryDay(at: string) {
   const date = new Date(at);
   if (!Number.isFinite(date.getTime())) return "";
@@ -1848,13 +1859,17 @@ function App() {
     };
     activeInteractionRef.current = nextInteraction;
     setTouchCue(false);
+    setLookTarget(interactionLookTarget(response.motion));
     setActiveInteraction(nextInteraction);
     interactionTimeoutRef.current = window.setTimeout(() => {
       activeInteractionRef.current = null;
       setActiveInteraction(null);
       interactionTimeoutRef.current = null;
+      if (Date.now() - lookThrottleRef.current > 1300) {
+        setLookTarget({ x: idleLookX, y: idleLookY });
+      }
     }, response.bubbleDurationMs);
-  }, [clearQueuedInteraction, setTouchCue]);
+  }, [clearQueuedInteraction, idleLookX, idleLookY, setLookTarget, setTouchCue]);
 
   const triggerInteraction = useCallback(
     (
@@ -1926,6 +1941,7 @@ function App() {
       };
       activeInteractionRef.current = nextInteraction;
       setTouchCue(false);
+      setLookTarget(interactionLookTarget(brainResponse.motion));
       setActiveInteraction(nextInteraction);
       if (options.adjustCare !== false) {
         setState((current) => {
@@ -1990,9 +2006,12 @@ function App() {
         activeInteractionRef.current = null;
         setActiveInteraction(null);
         interactionTimeoutRef.current = null;
+        if (Date.now() - lookThrottleRef.current > 1300) {
+          setLookTarget({ x: idleLookX, y: idleLookY });
+        }
       }, durationMs);
     },
-    [clearQueuedInteraction, selectedPet, setState, setTouchCue, state.language],
+    [clearQueuedInteraction, idleLookX, idleLookY, selectedPet, setLookTarget, setState, setTouchCue, state.language],
   );
 
   const sendPetChat = useCallback(

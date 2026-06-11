@@ -73,6 +73,9 @@ The pet should feel intentional, not human in a forced way.
   assets exist, use short localized pulses at approximate head, mouth, paw,
   body, or ear positions so the action reads as touching the pet rather than
   triggering detached UI.
+- If the pet is still a flattened spritesheet that includes props such as a
+  keyboard, prefer gaze direction and contact cues over whole-sprite transforms.
+  Moving the entire bitmap makes the pet feel like a sticker layer, not a body.
 - Small imperfection makes life. Add anticipation, follow-through, settle,
   asymmetric blink timing, and occasional idle variation.
 - Do not over-interrupt. Desktop pets become annoying when they demand attention

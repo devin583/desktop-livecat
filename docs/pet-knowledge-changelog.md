@@ -6,6 +6,26 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.16.0
+Confidence: high that action-directed gaze improves intentionality without
+moving the whole spritesheet; medium that the exact target coordinates should
+be retuned after premium body-part assets exist
+
+Changes:
+
+- Added action-directed gaze targets for care and focus reactions. When an
+  action starts, the pet now looks toward the relevant contact point: head for
+  petting/praise, mouth for feeding, paw side for play, body for cleaning, ear
+  side for attention, and timer/tomato for focus.
+- Returned gaze to the current idle or timer target after the reaction only when
+  the pointer has been quiet, so direct mouse input keeps priority.
+- Chose gaze over whole-sprite transforms for this iteration because the current
+  V2 spritesheet includes the keyboard in the same bitmap. Moving or squashing
+  the whole bitmap would repeat the earlier "cat and keyboard move together"
+  problem.
+
+## 2026-06-10
+
 Version: 0.15.0
 Confidence: high that localized contact cues make direct care actions feel more
 attached to the pet body; medium that current approximate coordinates are final
