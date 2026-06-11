@@ -2204,6 +2204,13 @@ input {
   z-index: 7;
 }
 
+.repeat-contact-cue {
+  animation-duration: 640ms;
+  filter: saturate(0.82);
+  opacity: 0.82;
+  z-index: 8;
+}
+
 .contact-petting {
   left: calc(50% - 46px * var(--pet-scale));
   bottom: calc(284px * var(--pet-scale));

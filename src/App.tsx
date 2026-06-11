@@ -1501,6 +1501,11 @@ function App() {
   const [lastMouseActivity, setLastMouseActivity] = useState(0);
   const [activeInteraction, setActiveInteraction] = useState<ActiveInteraction | null>(null);
   const [queuedInteractionMood, setQueuedInteractionMood] = useState<InteractionMood | null>(null);
+  const [repeatInteractionPulse, setRepeatInteractionPulse] = useState<{
+    id: number;
+    mood: InteractionMood;
+    motion: PetBrainMotionCue;
+  } | null>(null);
   const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
   const [controlPanelPlacement, setControlPanelPlacement] = useState<FloatingPanelPlacement | null>(null);
   const [touchCueVisible, setTouchCueVisible] = useState(false);
@@ -1527,6 +1532,7 @@ function App() {
   const activeInteractionRef = useRef<ActiveInteraction | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
   const queuedInteractionTimeoutRef = useRef<number | null>(null);
+  const repeatInteractionTimeoutRef = useRef<number | null>(null);
   const completionRewardTimeoutRef = useRef<number | null>(null);
   const careRewardTimeoutRef = useRef<number | null>(null);
   const completionReactionRef = useRef<string | null>(null);
@@ -2011,6 +2017,7 @@ function App() {
       if (lookFrameRef.current) window.cancelAnimationFrame(lookFrameRef.current);
       if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
       if (queuedInteractionTimeoutRef.current) window.clearTimeout(queuedInteractionTimeoutRef.current);
+      if (repeatInteractionTimeoutRef.current) window.clearTimeout(repeatInteractionTimeoutRef.current);
       if (completionRewardTimeoutRef.current) window.clearTimeout(completionRewardTimeoutRef.current);
       if (careRewardTimeoutRef.current) window.clearTimeout(careRewardTimeoutRef.current);
       if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
@@ -2050,6 +2057,25 @@ function App() {
     queuedInteractionRef.current = null;
     setQueuedInteractionMood(null);
   }, []);
+
+  const acknowledgeRepeatedInteraction = useCallback(
+    (mood: InteractionMood, current: ActiveInteraction | null) => {
+      if (state.lowPower || state.controlsOpen) return;
+      if (repeatInteractionTimeoutRef.current) {
+        window.clearTimeout(repeatInteractionTimeoutRef.current);
+      }
+      setRepeatInteractionPulse({
+        id: Date.now(),
+        mood,
+        motion: current?.motion ?? (mood as PetBrainMotionCue),
+      });
+      repeatInteractionTimeoutRef.current = window.setTimeout(() => {
+        repeatInteractionTimeoutRef.current = null;
+        setRepeatInteractionPulse(null);
+      }, 760);
+    },
+    [state.controlsOpen, state.lowPower],
+  );
 
   const showPetBrainResponse = useCallback((response: PetBrainResponse) => {
     if (interactionTimeoutRef.current) {
@@ -2094,12 +2120,14 @@ function App() {
       const current = activeInteractionRef.current;
       const cooldownUntil = interactionCooldownRef.current[mood] ?? 0;
       if (!options.force && now < cooldownUntil) {
+        acknowledgeRepeatedInteraction(mood, current?.mood === mood ? current : null);
         if (options.closeMenu !== false) setPetMenu(null);
         return;
       }
       if (!options.force && current && current.until > now) {
         const minHoldUntil = current.startedAt + interactionMinimumHoldMs[current.mood];
         if (current.mood === mood && now < minHoldUntil) {
+          acknowledgeRepeatedInteraction(mood, current);
           if (options.closeMenu !== false) setPetMenu(null);
           return;
         }
@@ -2128,6 +2156,7 @@ function App() {
         }
       }
       clearQueuedInteraction();
+      setRepeatInteractionPulse(null);
       if (interactionTimeoutRef.current) {
         window.clearTimeout(interactionTimeoutRef.current);
       }
@@ -2237,6 +2266,7 @@ function App() {
     },
     [
       clearQueuedInteraction,
+      acknowledgeRepeatedInteraction,
       idleLookX,
       idleLookY,
       selectedPet,
@@ -3296,6 +3326,14 @@ function App() {
               key={`contact-${activeInteraction.id}`}
               className={`interaction-contact-cue contact-${activeInteraction.mood}`}
               style={interactionOverlayStyle(activeInteraction.motion, selectedPet)}
+              aria-hidden="true"
+            />
+          ) : null}
+          {repeatInteractionPulse && !state.controlsOpen ? (
+            <div
+              key={`repeat-contact-${repeatInteractionPulse.id}`}
+              className={`interaction-contact-cue repeat-contact-cue contact-${repeatInteractionPulse.mood}`}
+              style={interactionOverlayStyle(repeatInteractionPulse.motion, selectedPet)}
               aria-hidden="true"
             />
           ) : null}
