@@ -987,6 +987,7 @@ type PetContextMenuState = {
   x: number;
   y: number;
   maxHeight: number;
+  transformOrigin: string;
 };
 
 type FloatingPanelPlacement = {
@@ -1410,7 +1411,7 @@ function floatingPanelPlacement(
   return {
     x,
     y,
-    maxHeight: Math.max(240, Math.min(availableHeight, stageRect.height - y - stagePanelMargin)),
+    maxHeight: panelHeight,
     transformOrigin: `${opensLeft ? "right" : "left"} ${opensUp ? "bottom" : "top"}`,
   };
 }
@@ -2962,7 +2963,12 @@ function App() {
       menuHeight,
     );
     setState((current) => ({ ...current, controlsOpen: false }));
-    setPetMenu({ x: menu.x, y: menu.y, maxHeight: menu.maxHeight });
+    setPetMenu({
+      x: menu.x,
+      y: menu.y,
+      maxHeight: menu.maxHeight,
+      transformOrigin: menu.transformOrigin,
+    });
   };
 
   const updateLook = (event: PointerEvent<HTMLElement>) => {
@@ -3326,7 +3332,14 @@ function App() {
         {petMenu ? (
           <div
             className="pet-context-menu"
-            style={{ left: petMenu.x, top: petMenu.y, maxHeight: petMenu.maxHeight } as CSSProperties}
+            style={
+              {
+                left: petMenu.x,
+                top: petMenu.y,
+                maxHeight: petMenu.maxHeight,
+                transformOrigin: petMenu.transformOrigin,
+              } as CSSProperties
+            }
             onPointerDown={(event) => event.stopPropagation()}
           >
             <div className="pet-context-head">
