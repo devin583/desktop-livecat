@@ -69,6 +69,10 @@ The pet should feel intentional, not human in a forced way.
   anchor to mouth, paw, head, or desk, not float as unrelated UI.
 - Local touch causes local response. Petting should move head, ears, eyelids,
   body lean, or paws. It should not compress the entire cat and keyboard.
+- Every direct care action needs a contact point. Before premium body-part
+  assets exist, use short localized pulses at approximate head, mouth, paw,
+  body, or ear positions so the action reads as touching the pet rather than
+  triggering detached UI.
 - Small imperfection makes life. Add anticipation, follow-through, settle,
   asymmetric blink timing, and occasional idle variation.
 - Do not over-interrupt. Desktop pets become annoying when they demand attention

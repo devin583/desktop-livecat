@@ -970,6 +970,15 @@ const interactionCooldownMs: Record<InteractionMood, number> = {
   failed: 1100,
 };
 
+const interactionContactMoods = new Set<InteractionMood>([
+  "petting",
+  "feeding",
+  "playing",
+  "cleaning",
+  "praised",
+  "attention_call",
+]);
+
 const interactionCareDelta: Record<
   InteractionMood,
   Partial<Record<Exclude<keyof PetCareState, "lastInteractionAt">, number>>
@@ -2960,6 +2969,13 @@ function App() {
             <div className="pet-touch-cue" aria-hidden="true">
               <Heart size={13} />
             </div>
+          ) : null}
+          {activeInteraction && !state.controlsOpen && interactionContactMoods.has(activeInteraction.mood) ? (
+            <div
+              key={`contact-${activeInteraction.id}`}
+              className={`interaction-contact-cue contact-${activeInteraction.mood}`}
+              aria-hidden="true"
+            />
           ) : null}
           {activeInteraction?.prop ? (
             <div

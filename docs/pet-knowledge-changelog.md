@@ -6,6 +6,27 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.15.0
+Confidence: high that localized contact cues make direct care actions feel more
+attached to the pet body; medium that current approximate coordinates are final
+without authored body-part hit zones
+
+Changes:
+
+- Added low-noise contact cues for petting, feeding, playing, cleaning, praise,
+  and attention-call actions. Each action now gets a short body-local pulse near
+  the intended contact point instead of relying only on a floating prop and a
+  speech bubble.
+- Kept contact cues text-free, under one second, and hidden in low-power mode so
+  they read as touch confirmation rather than extra decoration.
+- Positioned cues conservatively against the current keyboard-cat spritesheet
+  layout: head for petting/praise, mouth for feeding, paw side for play, body for
+  cleaning, and ear side for attention.
+- This is a runtime bridge until premium assets provide authored head, paw,
+  mouth, ear, and body zones.
+
+## 2026-06-10
+
 Version: 0.14.0
 Confidence: high that idle timer glance makes focus feel more pet-owned;
 medium that the current runtime-only gaze cue is enough for spritesheet pets
