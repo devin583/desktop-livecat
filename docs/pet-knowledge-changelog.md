@@ -6,6 +6,23 @@ asset thinking.
 
 ## 2026-06-10
 
+Version: 0.18.0
+Confidence: high that focus completion needs a pet-side reward receipt; medium
+that the current chip position should be visually retuned after screenshot QA
+
+Changes:
+
+- Added a short pet-stage reward cue when a focus completion review is created,
+  showing the earned XP and coins near the pet-owned timer/tomato area.
+- Guarded completion reaction playback by `recordId` so the same completed
+  session does not retrigger praise/reward cues when unrelated state changes
+  refresh callbacks.
+- Kept the reward cue temporary, hidden in low-power mode, and hidden while the
+  controls panel is open. The review card remains the detailed planning surface;
+  the pet stage only confirms that the reward landed.
+
+## 2026-06-10
+
 Version: 0.17.0
 Confidence: high that manifest-owned interaction zones are the right bridge from
 runtime guesses to premium body assets; medium that the current V2 coordinates

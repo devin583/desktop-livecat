@@ -175,6 +175,10 @@ The number can appear above or near the head, but only when it is anchored to th
 pet and visually belongs to the current state. A detached corner timer is a tool
 feature, not pet integration.
 
+Completion rewards need a pet-side receipt. A short XP/coin cue near the
+pet-owned tomato or timer proves that focus turned into growth; longer choices
+such as continue, adjust, dismiss, or skip break belong in the review card.
+
 ## 2026-06-07 Durable Market Read
 
 Current desktop-pet products still support the same product thesis instead of

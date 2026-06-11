@@ -1402,6 +1402,7 @@ function App() {
   const [petMenu, setPetMenu] = useState<PetContextMenuState | null>(null);
   const [controlPanelPlacement, setControlPanelPlacement] = useState<FloatingPanelPlacement | null>(null);
   const [touchCueVisible, setTouchCueVisible] = useState(false);
+  const [completionRewardCue, setCompletionRewardCue] = useState<{ id: string; label: string } | null>(null);
   const [chatDraft, setChatDraft] = useState("");
   const [dragged, setDragged] = useState(false);
   const [settlePulse, setSettlePulse] = useState(0);
@@ -1419,6 +1420,8 @@ function App() {
   const activeInteractionRef = useRef<ActiveInteraction | null>(null);
   const interactionTimeoutRef = useRef<number | null>(null);
   const queuedInteractionTimeoutRef = useRef<number | null>(null);
+  const completionRewardTimeoutRef = useRef<number | null>(null);
+  const completionReactionRef = useRef<string | null>(null);
   const settleTimeoutRef = useRef<number | null>(null);
   const queuedInteractionRef = useRef<QueuedInteraction | null>(null);
   const interactionCooldownRef = useRef<Partial<Record<InteractionMood, number>>>({});
@@ -1900,6 +1903,7 @@ function App() {
       if (lookFrameRef.current) window.cancelAnimationFrame(lookFrameRef.current);
       if (interactionTimeoutRef.current) window.clearTimeout(interactionTimeoutRef.current);
       if (queuedInteractionTimeoutRef.current) window.clearTimeout(queuedInteractionTimeoutRef.current);
+      if (completionRewardTimeoutRef.current) window.clearTimeout(completionRewardTimeoutRef.current);
       if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
     },
     [],
@@ -2210,12 +2214,30 @@ function App() {
   useEffect(() => {
     const review = state.pomodoro.completionReview;
     if (!review) return;
+    if (completionReactionRef.current === review.recordId) return;
+    completionReactionRef.current = review.recordId;
+    const rewardLabel = focusRewardLabel(review.durationSeconds, state.language);
     triggerInteraction("praised", "heart", {
       adjustCare: true,
       closeMenu: false,
-      reaction: `${t.focusCompletePet} · ${focusRewardLabel(review.durationSeconds, state.language)}`,
+      reaction: `${t.focusCompletePet} · ${rewardLabel}`,
     });
-  }, [state.pomodoro.completionReview?.recordId, triggerInteraction]);
+    if (!state.lowPower) {
+      if (completionRewardTimeoutRef.current) window.clearTimeout(completionRewardTimeoutRef.current);
+      setCompletionRewardCue({ id: review.recordId, label: rewardLabel });
+      completionRewardTimeoutRef.current = window.setTimeout(() => {
+        completionRewardTimeoutRef.current = null;
+        setCompletionRewardCue(null);
+      }, 3200);
+    }
+  }, [
+    state.language,
+    state.lowPower,
+    state.pomodoro.completionReview?.durationSeconds,
+    state.pomodoro.completionReview?.recordId,
+    t.focusCompletePet,
+    triggerInteraction,
+  ]);
 
   const setClickThroughPreview = () => {
     setState((current) => ({ ...current, clickThrough: true }));
@@ -3144,6 +3166,12 @@ function App() {
             >
               <span />
               <i />
+            </div>
+          ) : null}
+          {completionRewardCue && !state.controlsOpen ? (
+            <div key={`reward-${completionRewardCue.id}`} className="focus-reward-cue" aria-hidden="true">
+              <BadgeCheck size={13} />
+              <span>{completionRewardCue.label}</span>
             </div>
           ) : null}
           {timerHasContext ? (

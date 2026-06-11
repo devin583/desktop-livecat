@@ -722,6 +722,10 @@ input {
   display: none;
 }
 
+.low-power .focus-reward-cue {
+  display: none;
+}
+
 .settings-toggle {
   position: absolute;
   top: 12px;
@@ -2429,6 +2433,44 @@ input {
   display: none;
 }
 
+.focus-reward-cue {
+  position: absolute;
+  left: calc(50% + 76px * var(--pet-scale));
+  bottom: calc(306px * var(--pet-scale));
+  max-width: calc(150px * var(--pet-scale));
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: calc(5px * var(--pet-scale));
+  align-items: center;
+  padding: calc(5px * var(--pet-scale)) calc(8px * var(--pet-scale));
+  border: 1px solid rgba(90, 127, 91, 0.18);
+  border-radius: calc(9px * var(--pet-scale));
+  background: rgba(247, 252, 229, 0.94);
+  color: #4e693d;
+  box-shadow: 0 calc(9px * var(--pet-scale)) calc(18px * var(--pet-scale)) rgba(47, 64, 40, 0.14);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: focus-reward-cue 3200ms cubic-bezier(0.2, 0.84, 0.22, 1) both;
+  z-index: 11;
+}
+
+.focus-reward-cue svg {
+  width: calc(13px * var(--pet-scale));
+  height: calc(13px * var(--pet-scale));
+  stroke-width: 2.5;
+}
+
+.focus-reward-cue span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: calc(9px * var(--pet-scale));
+  font-weight: 860;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .pet-timer-bubble {
   position: absolute;
   left: 50%;
@@ -2548,7 +2590,8 @@ input {
 }
 
 .controls-open .pet-timer-bubble,
-.controls-open .focus-tomato {
+.controls-open .focus-tomato,
+.controls-open .focus-reward-cue {
   display: none;
   opacity: 0;
   pointer-events: none;
@@ -2833,6 +2876,26 @@ input {
   }
   46% {
     filter: brightness(1.045) saturate(1.08);
+  }
+}
+
+@keyframes focus-reward-cue {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(8px * var(--pet-scale))) scale(0.94);
+  }
+  14% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(calc(-3px * var(--pet-scale))) scale(1.02);
+  }
+  32%,
+  74% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-8px * var(--pet-scale))) scale(0.98);
   }
 }
 
