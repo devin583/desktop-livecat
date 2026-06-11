@@ -971,6 +971,7 @@ type TriggerInteractionOptions = {
 };
 
 type ReviewAction = "dismiss" | "continue5" | "adjust5" | "skipBreak";
+type PomodoroAction = "toggle" | "reset" | "skip";
 
 type QueuedInteraction = {
   mood: InteractionMood;
@@ -2296,7 +2297,7 @@ function App() {
     }, 10_000);
   };
 
-  const pomodoroAction = (action: "toggle" | "reset" | "skip") => {
+  const pomodoroAction = (action: PomodoroAction) => {
     const skippingFocus =
       action === "skip" &&
       state.pomodoro.focusMode === "pomo" &&
@@ -2446,6 +2447,11 @@ function App() {
         },
       };
     });
+  };
+
+  const contextPomodoroAction = (action: PomodoroAction) => {
+    setPetMenu(null);
+    pomodoroAction(action);
   };
 
   const finishStopwatch = () => {
@@ -3369,15 +3375,15 @@ function App() {
                     <small>{timerStageLabel}</small>
                   </div>
                   <div className="context-timer-actions">
-                    <button type="button" onClick={() => pomodoroAction("toggle")}>
+                    <button type="button" onClick={() => contextPomodoroAction("toggle")}>
                       {state.pomodoro.running ? <Pause size={15} /> : <Play size={15} />}
                       <span>{state.pomodoro.running ? t.pauseTimer : t.startTimer}</span>
                     </button>
-                    <button type="button" onClick={() => pomodoroAction("reset")}>
+                    <button type="button" onClick={() => contextPomodoroAction("reset")}>
                       <RotateCcw size={15} />
                       <span>{t.resetTimer}</span>
                     </button>
-                    <button type="button" onClick={() => pomodoroAction("skip")}>
+                    <button type="button" onClick={() => contextPomodoroAction("skip")}>
                       <SkipForward size={15} />
                       <span>{state.pomodoro.mode === "focus" ? t.skipTimer : t.skipBreak}</span>
                     </button>
@@ -3392,7 +3398,7 @@ function App() {
                 <button
                   type="button"
                   className={interactionActionClass("petting")}
-                  onClick={() => triggerInteraction("petting", "heart", { closeMenu: false })}
+                  onClick={() => triggerInteraction("petting", "heart")}
                 >
                   <HandHeart size={15} />
                   <span>{t.interactPet}</span>
@@ -3400,7 +3406,7 @@ function App() {
                 <button
                   type="button"
                   className={interactionActionClass("feeding")}
-                  onClick={() => triggerInteraction("feeding", "fish", { closeMenu: false })}
+                  onClick={() => triggerInteraction("feeding", "fish")}
                 >
                   <Fish size={15} />
                   <span>{t.interactFeed}</span>
@@ -3408,7 +3414,7 @@ function App() {
                 <button
                   type="button"
                   className={interactionActionClass("playing")}
-                  onClick={() => triggerInteraction("playing", "wand", { closeMenu: false })}
+                  onClick={() => triggerInteraction("playing", "wand")}
                 >
                   <Joystick size={15} />
                   <span>{t.interactPlay}</span>
@@ -3416,7 +3422,7 @@ function App() {
                 <button
                   type="button"
                   className={interactionActionClass("cleaning")}
-                  onClick={() => triggerInteraction("cleaning", "brush", { closeMenu: false })}
+                  onClick={() => triggerInteraction("cleaning", "brush")}
                 >
                   <BrushCleaning size={15} />
                   <span>{t.interactClean}</span>
@@ -3424,7 +3430,7 @@ function App() {
                 <button
                   type="button"
                   className={interactionActionClass("praised")}
-                  onClick={() => triggerInteraction("praised", "heart", { closeMenu: false })}
+                  onClick={() => triggerInteraction("praised", "heart")}
                 >
                   <Heart size={15} />
                   <span>{t.interactPraise}</span>
@@ -3432,7 +3438,7 @@ function App() {
                 <button
                   type="button"
                   className={interactionActionClass("attention_call")}
-                  onClick={() => triggerInteraction("attention_call", "bell", { closeMenu: false })}
+                  onClick={() => triggerInteraction("attention_call", "bell")}
                 >
                   <BellRing size={15} />
                   <span>{t.interactCall}</span>
