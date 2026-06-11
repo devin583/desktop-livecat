@@ -837,16 +837,19 @@ input {
   transform: scale(0.96);
 }
 
-.controls-open .status-capsule {
+.controls-open .status-capsule,
+.context-open .status-capsule {
   opacity: 0;
 }
 
-.controls-open .update-nudge {
+.controls-open .update-nudge,
+.context-open .update-nudge {
   opacity: 0;
   pointer-events: none;
 }
 
-.controls-open .settings-toggle {
+.controls-open .settings-toggle,
+.context-open .settings-toggle {
   opacity: 0;
   pointer-events: none;
 }
