@@ -3333,6 +3333,33 @@ function App() {
           >
             <Joystick size={15} />
           </button>
+          <button
+            type="button"
+            className={interactionActionClass("cleaning")}
+            aria-label={t.interactClean}
+            title={t.interactClean}
+            onClick={() => triggerInteraction("cleaning", "brush", { closeMenu: false })}
+          >
+            <BrushCleaning size={15} />
+          </button>
+          <button
+            type="button"
+            className={interactionActionClass("praised")}
+            aria-label={t.interactPraise}
+            title={t.interactPraise}
+            onClick={() => triggerInteraction("praised", "heart", { closeMenu: false })}
+          >
+            <Heart size={15} />
+          </button>
+          <button
+            type="button"
+            className={interactionActionClass("attention_call")}
+            aria-label={t.interactCall}
+            title={t.interactCall}
+            onClick={() => triggerInteraction("attention_call", "bell", { closeMenu: false })}
+          >
+            <BellRing size={15} />
+          </button>
         </div>
 
         {petMenu ? (
