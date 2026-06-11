@@ -397,7 +397,7 @@
         "durationMs": 1400
       }
     ],
-    "loopStartIndex": 2,
+    "loopStartIndex": null,
     "fallback": "happy"
   },
   "feeding": {
@@ -433,7 +433,7 @@
         "durationMs": 1300
       }
     ],
-    "loopStartIndex": 3,
+    "loopStartIndex": null,
     "fallback": "happy"
   },
   "playing": {
@@ -459,7 +459,7 @@
         "durationMs": 760
       }
     ],
-    "loopStartIndex": 1,
+    "loopStartIndex": null,
     "fallback": "happy"
   },
   "cleaning": {
@@ -495,7 +495,7 @@
         "durationMs": 960
       }
     ],
-    "loopStartIndex": 2,
+    "loopStartIndex": null,
     "fallback": "focus"
   },
   "praised": {
