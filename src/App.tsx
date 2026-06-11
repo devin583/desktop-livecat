@@ -658,7 +658,7 @@ function activityStateFromMood(
 ): PetAnimationState {
   if (mood === "typing" && tapSide === "left") return "tap_left";
   if (mood === "typing" && tapSide === "right") return "tap_right";
-  if (mood === "typing") return "idle";
+  if (mood === "typing") return "typing";
   if (mood === "focus" || mood === "focusEnding") return "focus";
   if (mood === "break" || mood === "longBreak") return "break";
   if (mood === "happy") return "happy";
