@@ -1313,6 +1313,10 @@ function pointerInsideInteractionZone(
   return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
 }
 
+function pointerInsidePettingZone(pet: PetPack, stageRect: DOMRect, clientX: number, clientY: number, scale: number) {
+  return pointerInsideInteractionZone("head", pet, stageRect, clientX, clientY, scale, { x: 54, y: 42 });
+}
+
 function interactionOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
   return interactionZoneOverlayStyle(interactionZoneName(motion), pet);
 }
@@ -3214,15 +3218,7 @@ function App() {
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
     const boundedX = Math.max(-1, Math.min(1, x));
     const boundedY = Math.max(-1, Math.min(1, y));
-    const pettingZone = pointerInsideInteractionZone(
-      "head",
-      selectedPet,
-      rect,
-      event.clientX,
-      event.clientY,
-      state.scale,
-      { x: 54, y: 42 },
-    );
+    const pettingZone = pointerInsidePettingZone(selectedPet, rect, event.clientX, event.clientY, state.scale);
     setTouchCue(!state.lowPower && pettingZone && !dragged && !activeInteractionRef.current && !petMenu);
     const dragCandidate = dragCandidateRef.current;
     const pointerDistance = dragCandidate
@@ -3290,9 +3286,16 @@ function App() {
       ? Math.hypot(event.clientX - candidate.x, event.clientY - candidate.y)
       : 0;
     const hadDrag = dragged || Boolean(candidate && pointerDistance >= dragIntentDistancePx);
+    const tapInPettingZone = pointerInsidePettingZone(
+      selectedPet,
+      event.currentTarget.getBoundingClientRect(),
+      event.clientX,
+      event.clientY,
+      state.scale,
+    );
     dragCandidateRef.current = null;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
-    if (candidate && !hadDrag && pointerDistance < 14 && Date.now() - candidate.at < 520) {
+    if (candidate && tapInPettingZone && !hadDrag && pointerDistance < 14 && Date.now() - candidate.at < 520) {
       triggerInteraction("petting", "heart", { closeMenu: false });
     }
     if (hadDrag) playSettleCue();
