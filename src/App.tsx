@@ -1205,6 +1205,33 @@ function careRewardLabel(mood: InteractionMood, language: AppLanguage) {
   return `+${value} ${labels[metric]}`;
 }
 
+function interactionActionLabel(mood: InteractionMood, language: AppLanguage) {
+  const t = copy[language];
+  switch (mood) {
+    case "petting":
+      return t.interactPet;
+    case "feeding":
+      return t.interactFeed;
+    case "playing":
+      return t.interactPlay;
+    case "cleaning":
+      return t.interactClean;
+    case "praised":
+      return t.interactPraise;
+    case "attention_call":
+      return t.interactCall;
+    case "focus":
+      return t.focus;
+    case "failed":
+      return t.focusTomatoWilted;
+  }
+}
+
+function queuedInteractionLabel(mood: InteractionMood, language: AppLanguage) {
+  const label = interactionActionLabel(mood, language);
+  return language === "zh-CN" ? `稍后${label}` : `Next: ${label}`;
+}
+
 function levelProgressPercent(care: PetCareState) {
   return Math.min(100, Math.round((care.experience / levelRequirement(care.level)) * 100));
 }
@@ -1346,6 +1373,10 @@ function focusRewardOverlayStyle(pet: PetPack): CSSProperties | undefined {
 
 function careRewardOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
   return interactionZoneOverlayStyle(interactionZoneName(motion), pet, { bottom: 42 });
+}
+
+function queuedInteractionOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
+  return interactionZoneOverlayStyle(interactionZoneName(motion), pet, { bottom: 54 });
 }
 
 function memoryDay(at: string) {
@@ -3476,11 +3507,20 @@ function App() {
             />
           ) : null}
           {queuedInteractionMood && !state.controlsOpen && !repeatInteractionPulse ? (
-            <div
-              className={`interaction-contact-cue queued-contact-cue contact-${queuedInteractionMood}`}
-              style={interactionOverlayStyle(queuedInteractionMood, selectedPet)}
-              aria-hidden="true"
-            />
+            <>
+              <div
+                className={`interaction-contact-cue queued-contact-cue contact-${queuedInteractionMood}`}
+                style={interactionOverlayStyle(queuedInteractionMood, selectedPet)}
+                aria-hidden="true"
+              />
+              <div
+                className={`interaction-queue-chip queue-${queuedInteractionMood}`}
+                style={queuedInteractionOverlayStyle(queuedInteractionMood, selectedPet)}
+                aria-hidden="true"
+              >
+                <span>{queuedInteractionLabel(queuedInteractionMood, state.language)}</span>
+              </div>
+            </>
           ) : null}
           {activeInteraction && !state.controlsOpen && interactionContactMoods.has(activeInteraction.mood) ? (
             <div
@@ -3663,6 +3703,8 @@ function App() {
               } as CSSProperties
             }
             onPointerDown={(event) => event.stopPropagation()}
+            onPointerUp={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="pet-context-head">
               <span>{selectedPet.name}</span>

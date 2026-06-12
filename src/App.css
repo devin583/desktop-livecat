@@ -2298,6 +2298,84 @@ input {
   z-index: 6;
 }
 
+.interaction-queue-chip {
+  --queue-color: #4aa59b;
+  position: absolute;
+  left: 50%;
+  bottom: calc(316px * var(--pet-scale));
+  min-width: calc(54px * var(--pet-scale));
+  max-width: calc(116px * var(--pet-scale));
+  min-height: calc(20px * var(--pet-scale));
+  display: inline-grid;
+  grid-template-columns: calc(5px * var(--pet-scale)) minmax(0, 1fr);
+  gap: calc(5px * var(--pet-scale));
+  align-items: center;
+  padding: calc(5px * var(--pet-scale)) calc(7px * var(--pet-scale));
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--queue-color) 42%, transparent);
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.9);
+  color: #44383e;
+  box-shadow: 0 calc(8px * var(--pet-scale)) calc(18px * var(--pet-scale)) rgba(43, 33, 38, 0.14);
+  font-size: calc(9px * var(--pet-scale));
+  font-weight: 850;
+  line-height: 1;
+  overflow: hidden;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%) translateY(calc(-5px * var(--pet-scale)));
+  transform-origin: center bottom;
+  animation: queue-chip-in 1180ms cubic-bezier(0.22, 0.72, 0.22, 1) infinite;
+  z-index: 9;
+}
+
+.interaction-queue-chip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interaction-queue-chip::before {
+  content: "";
+  width: calc(5px * var(--pet-scale));
+  height: calc(5px * var(--pet-scale));
+  border-radius: 999px;
+  background: var(--queue-color);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--queue-color) 26%, transparent);
+  animation: queued-action-dot 900ms cubic-bezier(0.22, 0.72, 0.22, 1) infinite;
+}
+
+.interaction-queue-chip.queue-petting,
+.interaction-queue-chip.queue-praised {
+  --queue-color: #c6616b;
+}
+
+.interaction-queue-chip.queue-feeding {
+  --queue-color: #3e6f8f;
+}
+
+.interaction-queue-chip.queue-playing {
+  --queue-color: #c06c42;
+}
+
+.interaction-queue-chip.queue-cleaning {
+  --queue-color: #6b5962;
+}
+
+.interaction-queue-chip.queue-attention_call {
+  --queue-color: #4aa59b;
+}
+
+.interaction-queue-chip.queue-focus {
+  --queue-color: #d79047;
+}
+
+.interaction-queue-chip.queue-failed {
+  --queue-color: #935255;
+}
+
 .contact-petting {
   left: calc(50% - 46px * var(--pet-scale));
   bottom: calc(284px * var(--pet-scale));
@@ -2843,6 +2921,18 @@ input {
   50% {
     opacity: 0.56;
     transform: translateX(-50%) scale(0.98);
+  }
+}
+
+@keyframes queue-chip-in {
+  0%,
+  100% {
+    opacity: 0.68;
+    transform: translateX(-50%) translateY(calc(-4px * var(--pet-scale))) scale(0.98);
+  }
+  50% {
+    opacity: 0.96;
+    transform: translateX(-50%) translateY(calc(-8px * var(--pet-scale))) scale(1);
   }
 }
 
