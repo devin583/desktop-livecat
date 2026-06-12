@@ -3322,9 +3322,7 @@ function App() {
           state.controlsOpen ? "controls-open" : ""
         } ${activeTapSide ? `tap-${activeTapSide}` : ""} ${
           state.lowPower ? "low-power" : ""
-        } ${petMenu ? "context-open" : ""} ${
-          touchCueVisible ? "touch-cue-ready" : ""
-        } ${settlePulse ? "settle-ready" : ""} ${
+        } ${petMenu ? "context-open" : ""} ${settlePulse ? "settle-ready" : ""} ${
           timerGlanceVisible ? "timer-glance" : ""
         }`}
         aria-label={t.appStage}
@@ -3410,9 +3408,20 @@ function App() {
             <div key={`settle-${settlePulse}`} className="pet-settle-cue" aria-hidden="true" />
           ) : null}
           {touchCueVisible && !activeInteraction && !state.controlsOpen ? (
-            <div className="pet-touch-cue" aria-hidden="true">
-              <Heart size={13} />
-            </div>
+            <>
+              <div
+                className="petting-zone-cue"
+                style={interactionOverlayStyle("petting", selectedPet)}
+                aria-hidden="true"
+              />
+              <div
+                className="pet-touch-cue"
+                style={interactionZoneOverlayStyle("head", selectedPet, { bottom: 10 })}
+                aria-hidden="true"
+              >
+                <Heart size={13} />
+              </div>
+            </>
           ) : null}
           {activeInteraction && !state.controlsOpen && interactionContactMoods.has(activeInteraction.mood) ? (
             <div
