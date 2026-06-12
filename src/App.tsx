@@ -1291,6 +1291,28 @@ function interactionZoneOverlayStyle(
   };
 }
 
+function pointerInsideInteractionZone(
+  name: PetInteractionZoneName,
+  pet: PetPack,
+  stageRect: DOMRect,
+  clientX: number,
+  clientY: number,
+  scale: number,
+  radius: { x: number; y: number },
+) {
+  const overlay = interactionZoneByName(name, pet).overlay;
+  if (!overlay) return false;
+  const localX = clientX - stageRect.left;
+  const localY = clientY - stageRect.top;
+  const centerX = stageRect.width / 2 + overlay.offsetX * scale;
+  const centerY = stageRect.height - overlay.bottom * scale;
+  const radiusX = Math.max(30, radius.x * scale);
+  const radiusY = Math.max(24, radius.y * scale);
+  const normalizedX = (localX - centerX) / radiusX;
+  const normalizedY = (localY - centerY) / radiusY;
+  return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
+}
+
 function interactionOverlayStyle(motion: PetBrainMotionCue, pet: PetPack): CSSProperties | undefined {
   return interactionZoneOverlayStyle(interactionZoneName(motion), pet);
 }
@@ -1508,6 +1530,7 @@ function stageElementFromEvent(event: MouseEvent<HTMLElement>) {
 
 const dragIntentDelayMs = 160;
 const dragIntentDistancePx = 28;
+const pettingStrokeDistancePx = 42;
 
 function App() {
   const [state, setState] = usePersistedState();
@@ -3191,7 +3214,15 @@ function App() {
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
     const boundedX = Math.max(-1, Math.min(1, x));
     const boundedY = Math.max(-1, Math.min(1, y));
-    const pettingZone = boundedY > -0.35 && boundedY < 0.42 && Math.abs(boundedX) < 0.62;
+    const pettingZone = pointerInsideInteractionZone(
+      "head",
+      selectedPet,
+      rect,
+      event.clientX,
+      event.clientY,
+      state.scale,
+      { x: 54, y: 42 },
+    );
     setTouchCue(!state.lowPower && pettingZone && !dragged && !activeInteractionRef.current && !petMenu);
     const dragCandidate = dragCandidateRef.current;
     const pointerDistance = dragCandidate
@@ -3224,11 +3255,13 @@ function App() {
     if (!state.lowPower && pettingZone) {
       const previous = pettingRef.current;
       const fresh = now - previous.at < 900;
-      const dx = fresh ? boundedX - previous.x : 0;
-      const dy = fresh ? boundedY - previous.y : 0;
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      const dx = fresh ? localX - previous.x : 0;
+      const dy = fresh ? localY - previous.y : 0;
       const distance = (fresh ? previous.distance : 0) + Math.hypot(dx, dy);
-      pettingRef.current = { at: now, x: boundedX, y: boundedY, distance };
-      if (distance > 0.55 && activeInteraction?.mood !== "petting") {
+      pettingRef.current = { at: now, x: localX, y: localY, distance };
+      if (distance > pettingStrokeDistancePx && activeInteraction?.mood !== "petting") {
         pettingRef.current.distance = 0;
         dragCandidateRef.current = null;
         setDragged(false);
